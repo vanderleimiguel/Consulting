@@ -56,6 +56,8 @@ User Function INPUTM21()
 	Private oSayDir, oSayDescNat
 	Private oGetDir, oGetNomeBanco
 	Private oBtnCar, oBtnExp, oBtnSai, oBtnLeg
+	Private oSayOGrp, oGetOGrp, oGetOGrp2, oSayODG1, oGetODG1, oSayOEmp, oGetOEmp, oGetOEmp2, oSayODE1, oGetODE1
+	Private oSayDGrp, oGetDGrp, oGetDGrp2, oSayDDG1, oGetDDG1, oSayDEmp, oGetDEmp, oGetDEmp2, oSayDDE1, oGetDDE1
 	//private oSayCNPJ,oSayNome,oSayDtArq,oSayBanco,oSayAgencia,oSayConta,oSayNatureza,oSayValor,oSayQuant
 	//Private oGetCNPJ,oGetNome,oGetDtArq,oGetBanco,oGetAgencia,oGetConta,oGetNatureza,oGetDescNat,oGetValor,oGetQuant
 	//Private oBtnVal
@@ -65,6 +67,8 @@ User Function INPUTM21()
 	Private cDir := ""
 	Private cNome, cCNPJ, cBanco, cAgencia, cConta, cNomeBanco, cNatureza, cDescNat, cLojDevNew, cStCteBx, cSTTitBx
 	Private nValor, nQuant, nOpcLog
+	Private cOriGrp, cOriDesGrp, cOriEmp, cOriDesEmp 
+	Private cDesGrp, cDesDesGrp, cDesEmp, cDesDesEmp 
 	Private dDtArq
 	Private aHeaderCTE := {}
 	Private aFieldsCTE := {}
@@ -89,14 +93,14 @@ Static Function fMontaTela()
 
 	Local cEstBT, cEstBTGrv, cEstBTCan, cEstBTExp, cEstBTSai, cEstBTVal, cEstBTImp, cEstBTLeg, cEstGet, cEstGet2, cEstPanel, cEstPanelBranco, cEstSay
 
-	aHeaderCTE := {"","","Chave","Cod_Grupo","Cod_Bem_Item", "Dt_Aquis", "Descr_Bem", "Plaqueta", "Inicio_Depr", "Taxa_Depr", "Depr_Balanco",;
+	aHeaderCTE := {"Sel","Imp","Proc","Chave","Cod_Grupo","Cod_Bem", "Item", "Dt_Aquis", "Descr_Bem", "Plaqueta", "Inicio_Depr", "Valor_Orig", "Taxa_Depr", "Depr_Balanco",;
 		"Depr_Mes", "Depr_Acum", "Saldo", "Data_Baixa", "Observação","Grupo"}
 
-	Aadd(aFieldsCTE, {.F.,oCorSit,oCor,"", "", "", "", "", "", "", "", "", "", "", "","","","","","","",""})
+	Aadd(aFieldsCTE, {.F.,oCorSit,oCor,"", "", "", "", "", "", "", "", "", "", "", "","","","","","","","",""})
 
 	cNatureza := Space(5)
 
-	DEFINE DIALOG oDlg TITLE "Importação, Baixa e Geração Ativo Fixo" FROM 180,180 TO 230,300 // Usando o método New
+	DEFINE DIALOG oDlg TITLE "Importação, Baixa e Geração Ativo Fixo" FROM 180,180 TO 230,345 // Usando o método New
 
 //Esta parte é a responsável pela criação dos estilos que serão aplicados em cada objeto posteriormente
 	cEstBT    := "QPushButton {background-image: url(rpo:totvsprinter_excel.png);background-repeat: none; margin: 2px;}"
@@ -162,18 +166,36 @@ Static Function fMontaTela()
 //Fim da seleção de estilos
 
 //Janela 1 --------------------------------------------------------------------------------------------------------------------------------------------------------------
-	oGroup   := TGroup():New(004,005,037,470,"",oDlg,,,.T.)
-	oGetDir  := TGet():New(012,015,bSetGet(cDir),oDlg,220,015,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,"Arquivo:")
-	oBtnCar  := TButton():New(010,234,"" 	                ,oDlg,{|| fAbreDir(@cDir) },20,20,,,.F.,.T.,.F.,,.F.,,,.F. )
-	oBtnVis  := TButton():New(010,300,"   Importar Arquivo" ,oDlg,{|| fImpArq()      },70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oGroup   := TGroup():New(004,005,037,640,"",oDlg,,,.T.)
+	oGetDir  := TGet():New(012,015,bSetGet(cDir),oDlg,470,015,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,"Arquivo:")
+	oBtnCar  := TButton():New(010,484,"" 	                ,oDlg,{|| fAbreDir(@cDir) },20,20,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnVis  := TButton():New(010,550,"   Importar Arquivo" ,oDlg,{|| fImpArq(cDir)      },70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
 	//oBtnVal  := TButton():New(010,364,"   Validar Arquivo"  ,oDlg,{|| fValidArq()     },70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
 //Janela 2--------------------------------------------------------------------------------------------------------------------------------------------------------------
-	oGroupCli 	  := TGroup():New(038,005,135,470,"Dados das Unidades/Empresas",oDlg,,,.T.)
+	oGroupCli 	  := TGroup():New(038,005,115,640,"Dados dos Grupos/Empresas",oDlg,,,.T.)
 
-	//oGetCNPJ      := TGet():New(055,015,bSetGet(cCNPJ)     ,oDlg,080,010,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
-	//oSayCNPJ      := TSay():New(045,015,{||"CNPJ:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
-	//oGetNome      := TGet():New(055,100,bSetGet(cNome)     ,oDlg,200,010,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
-	//oSayNome      := TSay():New(045,100,{||"Nome:" }       ,oDlg,,,.F.,,,.T.,,,200,20)
+	oSayOGrp      := TSay():New(050,015,{||"Grupo Origem:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
+	@060, 015 MSGET  oGetOGrp VAR cOriGrp SIZE 035, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	@120, 070 BTNBMP oGetOGrp2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cOriGrp := ChamaCons("SM0MRP",cOriGrp, "GrpOri") PIXEL
+	oSayODG1      := TSay():New(050,060,{||"Descricao Grupo Origem:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
+	@060, 060 MSGET oGetODG1 VAR cOriDesGrp SIZE 110, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	oSayOEmp      := TSay():New(050,195,{||"Empresa Origem:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
+	@060, 195 MSGET  oGetOEmp VAR cOriEmp SIZE 040, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	@120, 440 BTNBMP oGetOEmp2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cOriEmp := ChamaCons("SM0",cOriEmp, "EmpOri") PIXEL
+	oSayODE1      := TSay():New(050,245,{||"Descricao Empresa Origem:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
+	@060, 245 MSGET oGetODE1 VAR cOriDesEmp SIZE 110, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+
+	oSayDGrp      := TSay():New(080,015,{||"Grupo Destino:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
+	@090, 015 MSGET  oGetDGrp VAR cDesGrp SIZE 035, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	@180, 070 BTNBMP oGetDGrp2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cDesGrp := ChamaCons("SM0MRP",cDesGrp, "GrpDes") PIXEL
+	oSayDDG1      := TSay():New(080,060,{||"Descricao Grupo Destino:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
+	@090, 060 MSGET oGetDDG1 VAR cDesDesGrp SIZE 110, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	oSayDEmp      := TSay():New(080,195,{||"Empresa Destino:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
+	@090, 195 MSGET  oGetDEmp VAR cDesEmp SIZE 040, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	@180, 440 BTNBMP oGetDEmp2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cDesEmp := ChamaCons("SM0",cDesEmp, "EmpDes") PIXEL
+	oSayDDE1      := TSay():New(080,245,{||"Descricao Empresa Destino:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
+	@090, 245 MSGET oGetDDE1 VAR cDesDesEmp SIZE 110, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	
 	//oGetDtArq     := TGet():New(055,305,bSetGet(dDtArq)    ,oDlg,080,010,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
 	//oSayDtArq     := TSay():New(045,305,{||"Dt.Arquivo:"}  ,oDlg,,,.F.,,,.T.,,,080,20)
 
@@ -191,36 +213,39 @@ Static Function fMontaTela()
 	//oGetQuant     := TGet():New(115,270,bSetGet(nQuant)    ,oDlg,040,010,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
 	//oSayQuant     := TSay():New(105,270,{||"Quantidade:" } ,oDlg,,,.F.,,,.T.,,,040,15)
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-	oBtnLeg       := TButton():New(045,364,"   Legenda",oDlg,{|| fLegendaCTE() },70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnLeg       := TButton():New(080,550,"   Legenda",oDlg,{|| fLegendaCTE() },70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
 
-	oGroupCTE := TGroup()  :New(061,005,350,470,"Registros que compõem o arquivo",oDlg,,,.T.)
-	oBrw      := TWBrowse():New(071,010,455,195,,aHeaderCTE,,oDlg,,,,,,,,,,,,.F.,,.T.,,.F.)
+	oGroupCTE := TGroup()  :New(120,005,350,640,"Registros que compõem o arquivo",oDlg,,,.T.)
+	oBrw      := TWBrowse():New(130,010,620,220,,aHeaderCTE,,oDlg,,,,,,,,,,,,.F.,,.T.,,.F.)
 	oBrw:SetArray(aFieldsCTE)
 	oBrw:blDblClick := {|| (aFieldsCTE[oBrw:nAT,01] := !aFieldsCTE[oBrw:nAT,01]),fVldMarcTit() }
 	oBrw:bLine      := {|| {If(;
 		aFieldsCTE[oBrw:nAT,01],_oOk,_oNo),;
 		aFieldsCTE[oBrw:nAT,02],;
 		aFieldsCTE[oBrw:nAT,03],;
-		aFieldsCTE[oBrw:nAT,04],;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,05],"@E 99/99/9999")),;
+		aFieldsCTE[oBrw:nAT,04],;	
+		aFieldsCTE[oBrw:nAT,05],;
 		aFieldsCTE[oBrw:nAT,06],;
 		aFieldsCTE[oBrw:nAT,07],;
 		AllTrim(Transform(aFieldsCTE[oBrw:nAT,08],"@E 99/99/9999")),;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,09],"@E 999,999,999.99")),;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,10],"@E 999.99")),;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,11],"@E 999,999,999.99")),;
+		aFieldsCTE[oBrw:nAT,09],;
+		aFieldsCTE[oBrw:nAT,10],;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,11],"@E 99/99/9999")),;
 		AllTrim(Transform(aFieldsCTE[oBrw:nAT,12],"@E 999,999,999.99")),;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,13],"@E 999,999,999.99")),;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,13],"@E 999.99")),;
 		AllTrim(Transform(aFieldsCTE[oBrw:nAT,14],"@E 999,999,999.99")),;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,15],"@E 99/99/9999")),;
-		aFieldsCTE[oBrw:nAT,16],;
-		aFieldsCTE[oBrw:nAT,17] }}
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,15],"@E 999,999,999.99")),;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,16],"@E 999,999,999.99")),;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,17],"@E 999,999,999.99")),;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,18],"@E 99/99/9999")),;
+		aFieldsCTE[oBrw:nAT,19],;
+		aFieldsCTE[oBrw:nAT,20] }}
 
 	//oBtnGrv := TButton():New(353,190,"   Processa"     	  ,oDlg,{|| fGravar()         },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
 	//oBtnCan := TButton():New(353,260,"   Limpar Browse"   ,oDlg,{|| fLimpaBrw()		 },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
-	oBtnGrv := TButton():New(353,260,"   Processa"     	  ,oDlg,{|| fGravar()         },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
-	oBtnExp := TButton():New(353,330,"   Exp Log Excel"   ,oDlg,{|| fCriaLog(nOpcLog) },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
-	oBtnSai := TButton():New(353,400,"   Encerrar"        ,oDlg,{|| oDlg:End()        },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnGrv := TButton():New(353,410,"   Processa"     	  ,oDlg,{|| fGravar()         },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnExp := TButton():New(353,480,"   Exp Log Excel"   ,oDlg,{|| fCriaLog(nOpcLog) },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnSai := TButton():New(353,550,"   Encerrar"        ,oDlg,{|| oDlg:End()        },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
 
 /*Neste momento, para definirmos o estilo, usaremos a propriedade SetCss, no qual informaremos a ela a variavel que contém 
   o estilo que criamos anteriormente.*/
@@ -231,8 +256,8 @@ oBtnVis      :SetCss(cEstBTVis)
 oGetDir      :SetCss(cEstGet)
 
 oGroupCli    :SetCss(cEstPanelBranco)
-//oGetCNPJ     :SetCss(cEstGet2)
-//oGetNome     :SetCss(cEstGet2)
+// oGetCNPJ     :SetCss(cEstGet2)
+// oGetNome     :SetCss(cEstGet2)
 //GetDtArq    :SetCss(cEstGet2)
 //oGetBanco    :SetCss(cEstGet)
 //oGetNomeBanco:SetCss(cEstGet)
@@ -293,7 +318,7 @@ oBrw:bLine      := {|| {If(aFieldsCTE[oBrw:nAT,01],_oOk,_oNo), aFieldsCTE[oBrw:n
 						aFieldsCTE[oBrw:nAT,03], aFieldsCTE[oBrw:nAT,04], aFieldsCTE[oBrw:nAT,05], aFieldsCTE[oBrw:nAT,06],;
 						aFieldsCTE[oBrw:nAT,07], aFieldsCTE[oBrw:nAT,08], aFieldsCTE[oBrw:nAT,09], aFieldsCTE[oBrw:nAT,10],;
 						aFieldsCTE[oBrw:nAT,11], AllTrim(Transform(aFieldsCTE[oBrw:nAT,12],"@E 999,999,999.99")), aFieldsCTE[oBrw:nAT,13],;
-						aFieldsCTE[oBrw:nAT,15], aFieldsCTE[oBrw:nAT,16] }}
+						aFieldsCTE[oBrw:nAT,15], aFieldsCTE[oBrw:nAT,16], aFieldsCTE[oBrw:nAT,18], aFieldsCTE[oBrw:nAT,19], aFieldsCTE[oBrw:nAT,20] }}
 
 If DDATABASE <= GETMV("MV_DATAFIN")
 
@@ -472,7 +497,7 @@ Next nX
 
 If Empty(aFieldsCTE)
 	
-	Aadd(aFieldsCTE, {lMarca,oCorSit,oCor,"", "", "", "", "", "", "", "", "", "", "", "", ""})
+	Aadd(aFieldsCTE, {lMarca,oCorSit,oCor,"", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""})
 
 EndIf
 
@@ -507,7 +532,7 @@ oBrw:bLine      := {|| {If(aFieldsCTE[oBrw:nAT,01],_oOk,_oNo), aFieldsCTE[oBrw:n
 						aFieldsCTE[oBrw:nAT,03], aFieldsCTE[oBrw:nAT,04], aFieldsCTE[oBrw:nAT,05], aFieldsCTE[oBrw:nAT,06],;
 						aFieldsCTE[oBrw:nAT,07], aFieldsCTE[oBrw:nAT,08], aFieldsCTE[oBrw:nAT,09], aFieldsCTE[oBrw:nAT,10],;
 						aFieldsCTE[oBrw:nAT,11], AllTrim(Transform(aFieldsCTE[oBrw:nAT,12],"@E 999,999,999.99")), aFieldsCTE[oBrw:nAT,13],;
-						aFieldsCTE[oBrw:nAT,15], aFieldsCTE[oBrw:nAT,16] }}
+						aFieldsCTE[oBrw:nAT,15], aFieldsCTE[oBrw:nAT,16], aFieldsCTE[oBrw:nAT,17], aFieldsCTE[oBrw:nAT,18], aFieldsCTE[oBrw:nAT,19] }}
 
 
 Return()
@@ -798,104 +823,199 @@ Else
 	nQuant -= 1
 EndIf
 
-//oGetValor:Refresh()
-//oGetQuant:Refresh()
+// oGetValor:Refresh()
+// oGetQuant:Refresh()
 
 Return()
 
 
 
-Static Function fImpArq()
+Static Function fImpArq(cArqOri)
 ************************************************************************************************************************
 *    Função para visualizar o Lote selecionado a partir da consulta padrão.
 **
 ***
-****           
-Local aLote
-Local cQueryLote := ""
-Local cLoteCan := Space(7)
-Local oDlgL, oGroupLot, oSayLote, oGetLote, oBtnCLot
-Local cArea:=getArea() 
+****    
+	Local cArea:=getArea() 
+    Local nTotLinhas  := 0
+    Local cLinAtu     := ""
+    Local nLinhaAtu   := 0
+    Local aLinha      := {}
+    Local aColSN1     := {}
+    Local aColSN3     := {}    
+    Local oArquivo
+    Local aLinhas
+    Local cChave	:= ""
+    Local cCodGrp   := ""
+    Local cCodBem   := ""
+    Local cItem     := ""
+    Local dDtAquis
+    Local cDescBem  := ""
+    Local cPlaqueta := ""
+    Local dIniDepr
+    Local nVlrOrig  := 0
+    Local nTaxa     := 0
+    Local nDeprBal  := 0
+    Local nDeprMes  := 0
+    Local nDeprAcu  := 0
+	Local nSaldo    := 0
+    Local dDataBaix 
+    Local cObserv   := ""
+    Local cGrupo    := ""
+	Private cCodUser  	:= RetCodUsr()
+	Private aCampos 	:= {}
+	Private cAliasTmp 	:= "SZZ_" + cCodUser
+	Private aColunas 	:= {}
+	Private oTempTable
 
-oDlgL    := TDialog():New(10,90,230,400,"Digite o Numero do Lote",,,,,,,,,.T.,,,,,)
-oDlgL    :lCentered := .T.
+   //Definindo o arquivo a ser lido
+    oArquivo := FWFileReader():New(cArqOri)
+     
+    //Se o arquivo pode ser aberto
+    If (oArquivo:Open())
+ 
+        //Se não for fim do arquivo
+        If ! (oArquivo:EoF())
+ 
+            //Definindo o tamanho da régua
+            aLinhas := oArquivo:GetAllLines()
+            nTotLinhas := Len(aLinhas)
+            ProcRegua(nTotLinhas)
+             
+            //Método GoTop não funciona (dependendo da versão da LIB), deve fechar e abrir novamente o arquivo
+            oArquivo:Close()
+            oArquivo := FWFileReader():New(cArqOri)
+            oArquivo:Open()
 
-oGroupLot:= TGroup():New(005,005,080,150,"",oDlgL,,,.T.,) 
+			//Campos da Temporária
+			AADD(aCampos,{"CHAVE"		,"C"	,24		,0		})
+			AADD(aCampos,{"CODGRUP"    	,"C"	,4		,0		})
+			AADD(aCampos,{"CODBEM"    	,"C"	,10		,0		})
+			AADD(aCampos,{"ITEM"   		,"C"	,4		,0		})
+			AADD(aCampos,{"DTAQUIS"   	,"D"	,8		,0		})
+			AADD(aCampos,{"DESCBEM"   	,"C"	,40		,0		})
+			AADD(aCampos,{"PLAQUET"  	,"C"	,20		,0		})
+			AADD(aCampos,{"DTIDEPR"   	,"D"	,8		,0		})
+			AADD(aCampos,{"VALORIG"   	,"N"	,16		,2		})
+			AADD(aCampos,{"TAXA"  		,"N"	,16		,2		})
+			AADD(aCampos,{"DEPRBAL"  	,"N"	,16		,2		})
+			AADD(aCampos,{"DEPMES"  	,"N"	,16		,2		})
+			AADD(aCampos,{"DEPRACU"   	,"N"	,16		,2		})
+			AADD(aCampos,{"SALDO"   	,"N"	,16		,2		})
+			AADD(aCampos,{"DTBAIXA"   	,"D"	,8		,0		})
+			AADD(aCampos,{"OBSERV" 		,"C"	,40		,0		})
+			AADD(aCampos,{"GRUPO" 		,"C"	,40		,0		})
 
-oSayLote := TSay():New(017,015,{||"Lote    "},oDlgL,,,.F.,,,.T.,,,40,09)
-oGetLote := TGet():New(015,045,bSetGet(cLoteCan),OdlgL,040,11,"@!",{|| fValids("LT",cLoteCan)},,,,,,.T.,,,{|| .T.},,,,,,,,,,,) 
-oBtnCLot := TButton():New(090,097,"Confirmar" ,oDlgL,{|| (oDlgL:End()) },40,12,,,.T.,.T.,,"Confirmar" ,,,,)
+			//Cria a tabela temporária
+			oTempTable:= FWTemporaryTable():New(cAliasTmp)
+			oTempTable:SetFields( aCampos )
+			oTempTable:Create()
+            
+			//Enquanto tiver linhas
+            While (oArquivo:HasLine())
+                aColSN1     := {}
+                aColSN3     := {}  
+                //Incrementa na tela a mensagem
+                nLinhaAtu++
 
-oDlgL:Activate()
+                IncProc("Analisando linha " + cValToChar(nLinhaAtu) + " de " + cValToChar(nTotLinhas) + "...")
+                 
+                //Pegando a linha atual e transformando em array
+                cLinAtu := oArquivo:GetLine()
+                aLinha  := StrTokArr2(cLinAtu, ";", .T. )
 
-	cQueryLote := " SELECT DT6_FILDOC,DT6_DOC,DT6_DATEMI,DT6_PREFIX, DT6_NUM, DT6_TIPO, DT6_VALFAT, "
-	cQueryLote += " DT6_CLIDEV,DT6_LOJDEV,DT6_VALIMP,DT6_XSTABX,DT6_XLOTBX,DT6_SERIE, "
-	cQueryLote += " A1_CGC, A1_NOME, E1_NUM, E1_PREFIXO, E1_TIPO, E1_EMISSAO, E1_NATUREZ, "
-	cQueryLote += " E1_HIST, E1_LA, E1_SALDO, E1_VALOR, E5_BANCO, E5_AGENCIA, E5_CONTA, E5_VALOR, E5_LA, E5_LOTE, E5_RECONC	"
-	cQueryLote += " FROM "+RetSQLName("DT6") +" DT6(NOLOCK) "
-	cQueryLote += " INNER JOIN "+RetSQLName("SA1")+" SA1(NOLOCK) ON 
-	cQueryLote += " 		A1_COD = DT6_CLIDEV AND A1_LOJA = DT6_LOJDEV AND SA1.D_E_L_E_T_ = ''
-	cQueryLote += " INNER JOIN "+RetSQLName("SE1")+" SE1(NOLOCK) ON 
-	cQueryLote += " 		E1_NUM = DT6_NUM AND E1_PREFIXO = DT6_PREFIX AND E1_TIPO = DT6_TIPO 
-	cQueryLote += " 	AND E1_CLIENTE = DT6_CLIDEV AND E1_LOJA = DT6_LOJDEV AND SE1.D_E_L_E_T_ = ''
-	cQueryLote += " LEFT JOIN "+RetSQLName("SE5")+" SE5(NOLOCK) ON
-	cQueryLote += " 		E5_NUMERO = E1_NUM	AND E5_PREFIXO = E1_PREFIXO	AND E5_TIPO = E1_TIPO
-	cQueryLote += " 	AND E5_CLIFOR = E1_CLIENTE AND E5_LOJA = E1_LOJA AND SE5.D_E_L_E_T_ = ''
-	cQueryLote += " WHERE DT6.D_E_L_E_T_ = ' ' "
-	cQueryLote += "   AND DT6_XLOTBX = '"+cLoteCan+"' "
-	cQueryLote += " ORDER BY DT6_PREFIX, DT6_NUM, DT6_TIPO"
+                //Define linhas a processar
+                If nLinhaAtu >= 3 .AND. nLinhaAtu <= 100
+
+                    cChave		:= aLinha[1]
+                    cCodGrp		:= PadL(aLinha[2],4,"0")                 
+                    cCodBem   	:= aLinha[3]
+                    cItem  		:= PadL(aLinha[4],3,"0")
+                    dDtAquis  	:= CTOD(aLinha[5])
+                    cDescBem  	:= aLinha[6]
+                    cPlaqueta  	:= aLinha[7]
+                    dIniDepr  	:= CTOD(aLinha[8]) 
+					nVlrOrig	:= TratNum(aLinha[9])
+					nTaxa		:= TratNum(aLinha[10])
+					nDeprBal	:= TratNum(aLinha[11])
+					nDeprMes	:= TratNum(aLinha[12])
+					nDeprAcu	:= TratNum(aLinha[13])
+					nSaldo		:= TratNum(aLinha[14])
+					dDataBaix	:= CTOD(aLinha[15]) 
+					cObserv		:= aLinha[16]
+					cGrupo		:= aLinha[17]
+
+					//Grava na temporária
+					RecLock(cAliasTmp, .T.)
+
+					(cAliasTmp)->CHAVE		:= cChave
+					(cAliasTmp)->CODGRUP  	:= cCodGrp
+					(cAliasTmp)->CODBEM  	:= cCodBem
+					(cAliasTmp)->ITEM  		:= cItem
+					(cAliasTmp)->DTAQUIS  	:= dDtAquis
+					(cAliasTmp)->DESCBEM  	:= cDescBem
+					(cAliasTmp)->PLAQUET  	:= cPlaqueta
+					(cAliasTmp)->DTIDEPR  	:= dIniDepr
+					(cAliasTmp)->VALORIG 	:= nVlrOrig
+					(cAliasTmp)->TAXA 		:= nTaxa
+					(cAliasTmp)->DEPRBAL 	:= nDeprBal
+					(cAliasTmp)->DEPMES  	:= nDeprMes
+					(cAliasTmp)->DEPRACU  	:= nDeprAcu
+					(cAliasTmp)->SALDO  	:= nSaldo
+					(cAliasTmp)->DTBAIXA 	:= dDataBaix
+					(cAliasTmp)->OBSERV 	:= cObserv
+					(cAliasTmp)->GRUPO  	:= cGrupo
+					(cAliasTmp)->(MsUnlock())
+
+                EndIf
+            EndDo
+
+        Else
+            MsgStop("Arquivo não tem conteúdo!", "Atenção")
+        EndIf
+
+        //Fecha o arquivo
+        oArquivo:Close()
+    Else
+        MsgStop("Arquivo não pode ser aberto!", "Atenção")
+    EndIf
+
+	(cAliasTmp)->(dbGoTop())
 	
-	dbUseArea(.T., "TOPCONN", TCGenQry(,,cQueryLote), 'LOTEDT6', .F., .F.)
-	
-	dbSelectArea("LOTEDT6")
-	LOTEDT6->(dbGoTop())
-	
-	If LOTEDT6->(Eof())
+	If (cAliasTmp)->(Eof())
 	
 	  aFieldsCTE := {.F.,oCancela, oVermelho, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "","",""}
 	
-	  LOTEDT6->(DbCloseArea())
+	  (cAliasTmp)->(DbCloseArea())
 	  	   
 	Else
 	
-		cCNPJ    := LOTEDT6->A1_CGC
-		cNome    := LOTEDT6->A1_NOME
-		cBanco   := LOTEDT6->E5_BANCO
-		cAgencia := LOTEDT6->E5_AGENCIA
-		cConta   := LOTEDT6->E5_CONTA
-		cNatureza:= LOTEDT6->E1_NATUREZ
-		cDescNat := Posicione('SED',1,xFilial('SED')+cNatureza,'ED_DESCRIC') 
-		
 		aFieldsCTE := {}
-		While LOTEDT6->(!Eof())                    
-
-			Aadd(aFieldsCTE,{.F., oBandVerm, oVermelho, LOTEDT6->DT6_FILDOC, "", "", LOTEDT6->E1_VALOR, LOTEDT6->DT6_SERIE , LOTEDT6->DT6_DOC,;
-								  LOTEDT6->DT6_VALFAT, LOTEDT6->DT6_VALIMP, "", LOTEDT6->DT6_NUM,  LOTEDT6->E1_EMISSAO, LOTEDT6->DT6_PREFIX,;
-								  LOTEDT6->DT6_TIPO, LOTEDT6->DT6_CLIDEV, LOTEDT6->DT6_LOJDEV, "", "", "", "", ""}) 
+		While (cAliasTmp)->(!Eof())                    
+			oCorTit := oVerde
+			Aadd(aFieldsCTE,{.F., oCorTit, oVermelho, (cAliasTmp)->CHAVE, (cAliasTmp)->CODGRUP, (cAliasTmp)->CODBEM,;
+								 (cAliasTmp)->ITEM, (cAliasTmp)->DTAQUIS , (cAliasTmp)->DESCBEM, (cAliasTmp)->PLAQUET,;
+								 (cAliasTmp)->DTIDEPR, (cAliasTmp)->VALORIG, (cAliasTmp)->TAXA, (cAliasTmp)->DEPRBAL,;
+								 (cAliasTmp)->DEPMES, (cAliasTmp)->DEPRACU, (cAliasTmp)->SALDO, (cAliasTmp)->DTBAIXA,;
+								 (cAliasTmp)->OBSERV, (cAliasTmp)->GRUPO}) 
 			
 			dbSkip()
 		
 		End
 	   
-		  LOTEDT6->(DbCloseArea())
+		  (cAliasTmp)->(DbCloseArea())
 
 	EndIf
 	
-//oGetCNPJ     :Refresh()
-//oGetNome     :Refresh()
-//oGetBanco    :Refresh()
-//oGetAgencia  :Refresh()
-//oGetConta    :Refresh()
-//oGetNatureza :Refresh()
-//oGetDescNat  :Refresh()
-
-oBrw:SetArray(aFieldsCTE)
-oBrw:bLine      := {|| {_oNo, oBandVerm, oVermelho,;
-						aFieldsCTE[oBrw:nAT,04], aFieldsCTE[oBrw:nAT,05], aFieldsCTE[oBrw:nAT,06],	aFieldsCTE[oBrw:nAT,07],;
-						aFieldsCTE[oBrw:nAT,08], aFieldsCTE[oBrw:nAT,09], aFieldsCTE[oBrw:nAT,10], aFieldsCTE[oBrw:nAT,11],;
-						aFieldsCTE[oBrw:nAT,12], aFieldsCTE[oBrw:nAT,13], aFieldsCTE[oBrw:nAT,14], aFieldsCTE[oBrw:nAT,15] }}
-                   
-restArea(cArea)
+	oBrw:SetArray(aFieldsCTE)
+	oBrw:bLine      := {|| {_oNo, oVerde, oVermelho,;
+							aFieldsCTE[oBrw:nAT,04], aFieldsCTE[oBrw:nAT,05], aFieldsCTE[oBrw:nAT,06],	aFieldsCTE[oBrw:nAT,07],;
+							aFieldsCTE[oBrw:nAT,08], aFieldsCTE[oBrw:nAT,09], aFieldsCTE[oBrw:nAT,10], aFieldsCTE[oBrw:nAT,11],;
+							aFieldsCTE[oBrw:nAT,12], aFieldsCTE[oBrw:nAT,13], aFieldsCTE[oBrw:nAT,14], aFieldsCTE[oBrw:nAT,15],;
+							aFieldsCTE[oBrw:nAT,16], aFieldsCTE[oBrw:nAT,17], aFieldsCTE[oBrw:nAT,18], aFieldsCTE[oBrw:nAT,19],;
+							aFieldsCTE[oBrw:nAT,20] }}
+					
+	restArea(cArea)
 
 Return
 
@@ -1750,3 +1870,43 @@ Static Function fValids(cTipo, cLote)
 	EndIf
 
 Return(lRet)
+
+/*---------------------------------------------------------------------*
+ | Func:  TratNum                                                      |
+ | Desc:  Função que trata dados numericos                             |
+ *---------------------------------------------------------------------*/
+Static Function TratNum(_nNum)
+    Local nRet  := 0
+
+    If _nNum == ""
+        nRet := 0
+    Else
+        nRet := StrTran(_nNum, '.', '')
+        nRet := VAL(AllTrim(StrTran(nRet, ',', '.')))
+    EndIf
+
+Return nRet
+
+/*---------------------------------------------------------------------*
+ | Func:  ChamaCons                                                    |
+ | Desc:  Função que chama consulta padrão                             |
+ *---------------------------------------------------------------------*/
+Static Function ChamaCons(consulta,campo,Chamada)
+
+    if ConPad1(NIL,NIL,NIL,consulta)
+        campo    := aCpoRet[1]
+    endif
+
+	If Chamada	= "GrpOri"
+		cOriDesGrp 	:= FWGrpName(campo)		
+	ElseIf Chamada 	= "EmpOri"
+		cOriDesEmp	:= FwFilialName( cOriGrp, campo, 1 )
+		// cOriDesEmp 	:= FWCompanyName( cOriGrp, campo )
+	ElseIf Chamada	 = "GrpDes"
+		cDesDesGrp 	:= FWGrpName(campo)
+	ElseIf Chamada 	= "EmpDes"
+		cDesDesEmp 	:= FwFilialName( cDesGrp, campo, 1 )
+		// cDesDesEmp 	:= FWCompanyName( cDesGrp, campo )
+	EndIf
+	
+Return campo
