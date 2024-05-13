@@ -56,8 +56,8 @@ User Function INPUTM21()
 	Private oSayDir, oSayDescNat
 	Private oGetDir, oGetNomeBanco
 	Private oBtnCar, oBtnExp, oBtnSai, oBtnLeg
-	Private oSayOGrp, oGetOGrp, oGetOGrp2, oSayODG1, oGetODG1, oSayOEmp, oGetOEmp, oGetOEmp2, oSayODE1, oGetODE1
-	Private oSayDGrp, oGetDGrp, oGetDGrp2, oSayDDG1, oGetDDG1, oSayDEmp, oGetDEmp, oGetDEmp2, oSayDDE1, oGetDDE1
+	Private oSayOGrp, oGetOGrp, oGetOGrp2, oSayODG1, oGetODG1, oSayOFil, oGetOFil, oGetOFil2, oSayODE1, oGetODE1
+	Private oSayDGrp, oGetDGrp, oGetDGrp2, oSayDDG1, oGetDDG1, oSayDFil, oGetDFil, oGetDFil2, oSayDDE1, oGetDDE1
 	//private oSayCNPJ,oSayNome,oSayDtArq,oSayBanco,oSayAgencia,oSayConta,oSayNatureza,oSayValor,oSayQuant
 	//Private oGetCNPJ,oGetNome,oGetDtArq,oGetBanco,oGetAgencia,oGetConta,oGetNatureza,oGetDescNat,oGetValor,oGetQuant
 	//Private oBtnVal
@@ -67,8 +67,8 @@ User Function INPUTM21()
 	Private cDir := ""
 	Private cNome, cCNPJ, cBanco, cAgencia, cConta, cNomeBanco, cNatureza, cDescNat, cLojDevNew, cStCteBx, cSTTitBx
 	Private nValor, nQuant, nOpcLog
-	Private cOriGrp, cOriDesGrp, cOriEmp, cOriDesEmp 
-	Private cDesGrp, cDesDesGrp, cDesEmp, cDesDesEmp 
+	Private cOriGrp, cOriDesGrp, cOriFil, cOriDesFil
+	Private cDesGrp, cDesDesGrp, cDesFil, cDesDesFil
 	Private dDtArq
 	Private aHeaderCTE := {}
 	Private aFieldsCTE := {}
@@ -169,49 +169,33 @@ Static Function fMontaTela()
 	oGroup   := TGroup():New(004,005,037,640,"",oDlg,,,.T.)
 	oGetDir  := TGet():New(012,015,bSetGet(cDir),oDlg,470,015,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,"Arquivo:")
 	oBtnCar  := TButton():New(010,484,"" 	                ,oDlg,{|| fAbreDir(@cDir) },20,20,,,.F.,.T.,.F.,,.F.,,,.F. )
-	oBtnVis  := TButton():New(010,550,"   Importar Arquivo" ,oDlg,{|| fImpArq(cDir)      },70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnVis  := TButton():New(010,550,"   Importar Arquivo" ,oDlg,({|| Processa({|| fImpArq(cDir)}, "Importação de Registros", "Importando...")}),70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
 	//oBtnVal  := TButton():New(010,364,"   Validar Arquivo"  ,oDlg,{|| fValidArq()     },70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
 //Janela 2--------------------------------------------------------------------------------------------------------------------------------------------------------------
-	oGroupCli 	  := TGroup():New(038,005,115,640,"Dados dos Grupos/Empresas",oDlg,,,.T.)
+	oGroupCli 	  := TGroup():New(038,005,115,640,"Dados dos Grupos/Filiais",oDlg,,,.T.)
 
 	oSayOGrp      := TSay():New(050,015,{||"Grupo Origem:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
 	@060, 015 MSGET  oGetOGrp VAR cOriGrp SIZE 035, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
 	@120, 070 BTNBMP oGetOGrp2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cOriGrp := ChamaCons("SM0MRP",cOriGrp, "GrpOri") PIXEL
 	oSayODG1      := TSay():New(050,060,{||"Descricao Grupo Origem:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
-	@060, 060 MSGET oGetODG1 VAR cOriDesGrp SIZE 110, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
-	oSayOEmp      := TSay():New(050,195,{||"Empresa Origem:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
-	@060, 195 MSGET  oGetOEmp VAR cOriEmp SIZE 040, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
-	@120, 440 BTNBMP oGetOEmp2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cOriEmp := ChamaCons("SM0",cOriEmp, "EmpOri") PIXEL
-	oSayODE1      := TSay():New(050,245,{||"Descricao Empresa Origem:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
-	@060, 245 MSGET oGetODE1 VAR cOriDesEmp SIZE 110, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	@060, 060 MSGET oGetODG1 VAR cOriDesGrp SIZE 110, 015 OF oDlg WHEN .F. Picture "@!" COLORS 0, 16777215 PIXEL
+	oSayOFil      := TSay():New(050,195,{||"Filial Origem:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
+	@060, 195 MSGET  oGetOFil VAR cOriFil SIZE 040, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	@120, 440 BTNBMP oGetOFil2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cOriFil := ChamaCons("SM0",cOriFil, "FilOri") PIXEL
+	oSayODE1      := TSay():New(050,245,{||"Descricao Filial Origem:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
+	@060, 245 MSGET oGetODE1 VAR cOriDesFil SIZE 110, 015 OF oDlg WHEN .F. Picture "@!" COLORS 0, 16777215 PIXEL
 
 	oSayDGrp      := TSay():New(080,015,{||"Grupo Destino:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
 	@090, 015 MSGET  oGetDGrp VAR cDesGrp SIZE 035, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
 	@180, 070 BTNBMP oGetDGrp2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cDesGrp := ChamaCons("SM0MRP",cDesGrp, "GrpDes") PIXEL
 	oSayDDG1      := TSay():New(080,060,{||"Descricao Grupo Destino:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
-	@090, 060 MSGET oGetDDG1 VAR cDesDesGrp SIZE 110, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
-	oSayDEmp      := TSay():New(080,195,{||"Empresa Destino:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
-	@090, 195 MSGET  oGetDEmp VAR cDesEmp SIZE 040, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
-	@180, 440 BTNBMP oGetDEmp2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cDesEmp := ChamaCons("SM0",cDesEmp, "EmpDes") PIXEL
-	oSayDDE1      := TSay():New(080,245,{||"Descricao Empresa Destino:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
-	@090, 245 MSGET oGetDDE1 VAR cDesDesEmp SIZE 110, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
-	
-	//oGetDtArq     := TGet():New(055,305,bSetGet(dDtArq)    ,oDlg,080,010,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
-	//oSayDtArq     := TSay():New(045,305,{||"Dt.Arquivo:"}  ,oDlg,,,.F.,,,.T.,,,080,20)
+	@090, 060 MSGET oGetDDG1 VAR cDesDesGrp SIZE 110, 015 OF oDlg WHEN .F. Picture "@!" COLORS 0, 16777215 PIXEL
+	oSayDFil      := TSay():New(080,195,{||"Filial Destino:"   }     ,oDlg,,,.F.,,,.T.,,,080,15)
+	@090, 195 MSGET  oGetDFil VAR cDesFil SIZE 040, 015 OF oDlg Picture "@!" COLORS 0, 16777215 PIXEL
+	@180, 440 BTNBMP oGetDFil2 RESOURCE "PESQUISA" SIZE 030, 030 OF oDlg ACTION cDesFil := ChamaCons("SM0",cDesFil, "FilDes") PIXEL
+	oSayDDE1      := TSay():New(080,245,{||"Descricao Filial Destino:" }       ,oDlg,,,.F.,,,.T.,,,100,20)
+	@090, 245 MSGET oGetDDE1 VAR cDesDesFil SIZE 110, 015 OF oDlg WHEN .F. Picture "@!" COLORS 0, 16777215 PIXEL
 
-	//oGetBanco     := TGet():New(085,015,bSetGet(cBanco)    ,oDlg,040,010,   ,{|| CarregaSA6(@cBanco)}          ,,,,   ,,.T.,,   ,{||.T. },   ,   ,,   ,   ,"SA6",      ,,,,,,,,,,,)
-	//oSayBanco     := TSay():New(075,015,{||"Banco:"   }    ,oDlg,   ,   ,.F.,                                  ,,.T.,,,040,15)
-	//oGetAgencia   := TGet():New(085,060,bSetGet(cAgencia)  ,oDlg,040,010,   ,{|| CarregaSA6(@cBanco,@cAgencia)}        ,,,,,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
-	//oSayAgencia   := TSay():New(075,060,{||"Agencia:" }    ,oDlg,,,.F.,,,.T.,                                          ,,040,15)
-	//oGetConta     := TGet():New(085,100,bSetGet(cConta)    ,oDlg,080,010,   ,{|| CarregaSA6(@cBanco,@cAgencia,@cConta)}, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
-	//oSayConta     := TSay():New(075,100,{||"Conta:" }      ,oDlg,,,.F.,,,.T.,,,080,15)
-	//oGetNatureza  := TGet():New(115,015,bSetGet(cNatureza) ,oDlg,040,010,,{|X| cDescNat   := Posicione('SED',1,xFilial('SED')+cNatureza,'ED_DESCRIC')}, ,,,   ,,.T.,,   ,{||.T. },   ,   ,,   ,   ,"SED",   ,,,,,,,,,,,)
-	//oSayNatureza  := TSay():New(105,015,{||"Natureza:"   } ,oDlg,,,.F.,,,.T.,,,040,15)
-	//oGetDescNat   := TGet():New(115,060,bSetGet(cDescNat)  ,oDlg,120,010,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
-	//oGetValor     := TGet():New(115,185,bSetGet(nValor)    ,oDlg,080,010,"@E 99,999,999.99",, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
-	//oSayValor     := TSay():New(105,185,{||"Valor:"   }    ,oDlg,,,.F.,,,.T.,,,040,15)
-	//oGetQuant     := TGet():New(115,270,bSetGet(nQuant)    ,oDlg,040,010,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,,,,,)
-	//oSayQuant     := TSay():New(105,270,{||"Quantidade:" } ,oDlg,,,.F.,,,.T.,,,040,15)
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------
 	oBtnLeg       := TButton():New(080,550,"   Legenda",oDlg,{|| fLegendaCTE() },70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
 
@@ -223,7 +207,7 @@ Static Function fMontaTela()
 		aFieldsCTE[oBrw:nAT,01],_oOk,_oNo),;
 		aFieldsCTE[oBrw:nAT,02],;
 		aFieldsCTE[oBrw:nAT,03],;
-		aFieldsCTE[oBrw:nAT,04],;	
+		aFieldsCTE[oBrw:nAT,04],;
 		aFieldsCTE[oBrw:nAT,05],;
 		aFieldsCTE[oBrw:nAT,06],;
 		aFieldsCTE[oBrw:nAT,07],;
@@ -788,43 +772,43 @@ Static Function fVldMarcTit()
 ***
 ****           
 
-If aFieldsCTE[oBrw:nAT,06] = ""
-	aFieldsCTE[oBrw:nAT,01] := .F.
-	Return(.F.)
-EndIf
+	If aFieldsCTE[oBrw:nAT,06] = ""
+		aFieldsCTE[oBrw:nAT,01] := .F.
+		Return(.F.)
+	EndIf
 
-If aFieldsCTE[oBrw:nAT,02] = oCancela .Or. aFieldsCTE[oBrw:nAT,03] = oPreto .Or. aFieldsCTE[oBrw:nAT,03] = oVermelho
-	msgAlert("O Título não pode ser marcado pois não está apto a ser faturado","ATENÇÃO!")
-	aFieldsCTE[oBrw:nAT,01] := .F.
-	Return(.F.)
-EndIf
+	If aFieldsCTE[oBrw:nAT,02] = oCancela .Or. aFieldsCTE[oBrw:nAT,03] = oPreto .Or. aFieldsCTE[oBrw:nAT,03] = oVermelho
+		msgAlert("O Título não pode ser marcado pois não está apto a ser faturado","ATENÇÃO!")
+		aFieldsCTE[oBrw:nAT,01] := .F.
+		Return(.F.)
+	EndIf
 
-If aFieldsCTE[oBrw:nAT,01] .And. aFieldsCTE[oBrw:nAT,02] = oBandAmar .And. aFieldsCTE[oBrw:nAT,03] = oLaranja
-	msgAlert("Saldo insuficiente para baixar o Título. Favor Verificar.","ATENÇÃO!")
-	aFieldsCTE[oBrw:nAT,01] := .F.
-	Return(.F.)
-EndIf
+	If aFieldsCTE[oBrw:nAT,01] .And. aFieldsCTE[oBrw:nAT,02] = oBandAmar .And. aFieldsCTE[oBrw:nAT,03] = oLaranja
+		msgAlert("Saldo insuficiente para baixar o Título. Favor Verificar.","ATENÇÃO!")
+		aFieldsCTE[oBrw:nAT,01] := .F.
+		Return(.F.)
+	EndIf
 
-If aFieldsCTE[oBrw:nAT,01] .And. aFieldsCTE[oBrw:nAT,02] = oBandAmar .And. aFieldsCTE[oBrw:nAT,03] = oAzul
-	msgAlert("Existe diferença de valor. Favor fazer um RA manual e corrigir a planilha.","ATENÇÃO!")
-	aFieldsCTE[oBrw:nAT,01] := .F.
-	Return(.F.)
-EndIf
+	If aFieldsCTE[oBrw:nAT,01] .And. aFieldsCTE[oBrw:nAT,02] = oBandAmar .And. aFieldsCTE[oBrw:nAT,03] = oAzul
+		msgAlert("Existe diferença de valor. Favor fazer um RA manual e corrigir a planilha.","ATENÇÃO!")
+		aFieldsCTE[oBrw:nAT,01] := .F.
+		Return(.F.)
+	EndIf
 
-If aFieldsCTE[oBrw:nAT,01] .And. aFieldsCTE[oBrw:nAT,02] = oBandVerm
-	msgAlert("Será gerada automaticamente uma baixa parcial para esse título.","ATENÇÃO!")
-EndIf
+	If aFieldsCTE[oBrw:nAT,01] .And. aFieldsCTE[oBrw:nAT,02] = oBandVerm
+		msgAlert("Será gerada automaticamente uma baixa parcial para esse título.","ATENÇÃO!")
+	EndIf
 
-If aFieldsCTE[oBrw:nAT,01]
-	nValor += aFieldsCTE[oBrw:nAT,10]
-	nQuant += 1
-Else
-	nValor -= aFieldsCTE[oBrw:nAT,10]
-	nQuant -= 1
-EndIf
+	If aFieldsCTE[oBrw:nAT,01]
+		nValor += aFieldsCTE[oBrw:nAT,10]
+		nQuant += 1
+	Else
+		nValor -= aFieldsCTE[oBrw:nAT,10]
+		nQuant -= 1
+	EndIf
 
-// oGetValor:Refresh()
-// oGetQuant:Refresh()
+	// oGetValor:Refresh()
+	// oGetQuant:Refresh()
 
 Return()
 
@@ -862,6 +846,9 @@ Static Function fImpArq(cArqOri)
     Local dDataBaix 
     Local cObserv   := ""
     Local cGrupo    := ""
+	Local dDtValid  
+	Local nLinInic  := 0
+	Local nLinImp   := 0
 	Private cCodUser  	:= RetCodUsr()
 	Private aCampos 	:= {}
 	Private cAliasTmp 	:= "SZZ_" + cCodUser
@@ -880,7 +867,7 @@ Static Function fImpArq(cArqOri)
             //Definindo o tamanho da régua
             aLinhas := oArquivo:GetAllLines()
             nTotLinhas := Len(aLinhas)
-            ProcRegua(nTotLinhas)
+            // ProcRegua(nTotLinhas)
              
             //Método GoTop não funciona (dependendo da versão da LIB), deve fechar e abrir novamente o arquivo
             oArquivo:Close()
@@ -915,17 +902,20 @@ Static Function fImpArq(cArqOri)
             While (oArquivo:HasLine())
                 aColSN1     := {}
                 aColSN3     := {}  
+
                 //Incrementa na tela a mensagem
                 nLinhaAtu++
-
-                IncProc("Analisando linha " + cValToChar(nLinhaAtu) + " de " + cValToChar(nTotLinhas) + "...")
+                // IncProc("Analisando linha " + cValToChar(nLinhaAtu) + " de " + cValToChar(nTotLinhas) + "...")
                  
                 //Pegando a linha atual e transformando em array
                 cLinAtu := oArquivo:GetLine()
                 aLinha  := StrTokArr2(cLinAtu, ";", .T. )
 
-                //Define linhas a processar
-                If nLinhaAtu >= 3 .AND. nLinhaAtu <= 100
+				//Define linhas a processar
+				dDtValid  	:= CTOD(aLinha[5])
+				If dDtValid > CTOD("01/01/2000") .AND. ValType(dDtValid) = "D"               
+                // If nLinhaAtu >= 3 .AND. nLinhaAtu <= 100
+					nLinInic++
 
                     cChave		:= aLinha[1]
                     cCodGrp		:= PadL(aLinha[2],4,"0")                 
@@ -998,10 +988,10 @@ Static Function fImpArq(cArqOri)
 								 (cAliasTmp)->DTIDEPR, (cAliasTmp)->VALORIG, (cAliasTmp)->TAXA, (cAliasTmp)->DEPRBAL,;
 								 (cAliasTmp)->DEPMES, (cAliasTmp)->DEPRACU, (cAliasTmp)->SALDO, (cAliasTmp)->DTBAIXA,;
 								 (cAliasTmp)->OBSERV, (cAliasTmp)->GRUPO}) 
-			
+			nLinImp++
 			dbSkip()
-		
 		End
+			MsgInfo("Foram importados: " + cValToChar(nLinImp) + " registros de um total de: " + cValToChar(nLinInic) + " registros!", "Registros importados!")
 	   
 		  (cAliasTmp)->(DbCloseArea())
 
@@ -1805,21 +1795,12 @@ Static Function fLegendaCTE()
 
 	Private cCadLegen := "Legenda Browse"
 
-	Private aCores2 := {{                    ,"== SITUAÇÃO DO CTE PARA BAIXA =="   },;
-		{ "IC_TOOLBARSTATUS_GREEN","CTE apto a ser baixado"             },;
-		{ "IC_TOOLBARSTATUS_BLUE" ,"Valor Planilha maior que Valor CTE" },;
-		{ "IC_TOOLBARSTATUS_RED"  ,"Valor Planilha menor que Valor CTE" },;
-		{ "BR_CANCEL"             ,"CTE não pode ser baixado"           },;
+	Private aCores2 := {{         ,"      ====  STATUS DE IMPORTACAO   ====     " },;
+		{ "BR_VERDE"			  ,"Importado com Sucesso"              },;
 		{                         ,"__________________________________" },;
-		{                         ,"      ==== STATUS DO CTE ====     " },;
-		{ "BR_LARANJA"            ,"CTE/Planilha com diferença"         },;  //Fatura/CTE/Planilha com diferença  FLAG = "D"
-	{ "BR_VIOLETA"            ,"Fatura/Planilha com diferença"      },;  //Fatura/Planilha com diferença  FLAG = "D"
-	{ "BR_PRETO"              ,"CTE nao existe Protheus"            },;  //Erro               FLAG = "E"
-	{ "BR_VERMELHO"           ,"Fatura e CTE Baixado"               },;  //Baixado            FLAG = "B"
-	{ "BR_PINK"               ,"Fatura em Borderô"                  },;  //Em Borderô         FLAG = "R"
-	{ "BR_VERDE"              ,"Fatura/CTE/Planilha normal"         },;  //Fatura normal      FLAG = "T"
-	{ "BR_AZUL"               ,"Fatura nao existe"                  },;  //Fatura nao existe  FLAG = "F"
-	{ "BR_MARROM"             ,"Planilha com ST"                    }}   //Planilha com ST    FLAG = "S"
+		{                         ,"      ==== STATUS DE PROCESSAMENTO ====     " },;
+		{ "BR_VERMELHO"           ,"Nao Processado"                     },; 
+		{ "BR_VERDE"              ,"Processado"                         }}  
 
 
 	BrwLegenda(cCadLegen,"Situação dos CTE's",aCores2)
@@ -1837,7 +1818,7 @@ Static Function fLegendaCan()
 
 	Private cLegenCan := "Legenda Cancelamento Lote"
 
-	Private aCoresCan := {{                  ,"== SITUAÇÃO INCLUSÃO TITULO =="      },;
+	Private aCoresCan := {{       ,"== SITUAÇÃO INCLUSÃO TITULO =="      },;
 		{ "BR_VERDE"              ,"Inclusão de Título não contabilizada"},;
 		{ "BR_VERMELHO"           ,"Inclusão de Título contabilizada"    },;
 		{                         ,"__________________________________"  },;
@@ -1893,20 +1874,24 @@ Return nRet
  *---------------------------------------------------------------------*/
 Static Function ChamaCons(consulta,campo,Chamada)
 
-    if ConPad1(NIL,NIL,NIL,consulta)
-        campo    := aCpoRet[1]
-    endif
+    If (Chamada = "FilOri" .AND. Empty(cOriDesGrp)) .OR. (Chamada = "FilDes" .AND. Empty(cDesDesGrp))
+		MsgStop("Insira primeiro o grupo e em seguida a filial", "Bloqueio")
+	Else
+		//Chama consulta padrão
+		if ConPad1(NIL,NIL,NIL,consulta)
+			campo    := aCpoRet[1]
+		endif
 
-	If Chamada	= "GrpOri"
-		cOriDesGrp 	:= FWGrpName(campo)		
-	ElseIf Chamada 	= "EmpOri"
-		cOriDesEmp	:= FwFilialName( cOriGrp, campo, 1 )
-		// cOriDesEmp 	:= FWCompanyName( cOriGrp, campo )
-	ElseIf Chamada	 = "GrpDes"
-		cDesDesGrp 	:= FWGrpName(campo)
-	ElseIf Chamada 	= "EmpDes"
-		cDesDesEmp 	:= FwFilialName( cDesGrp, campo, 1 )
-		// cDesDesEmp 	:= FWCompanyName( cDesGrp, campo )
+		//Busca descrições do grupo e filial
+		If Chamada	= "GrpOri"
+			cOriDesGrp 	:= FWGrpName(campo)		
+		ElseIf Chamada 	= "FilOri"
+			cOriDesFil	:= FwFilialName( cOriGrp, campo, 1 )
+		ElseIf Chamada	 = "GrpDes"
+			cDesDesGrp 	:= FWGrpName(campo)
+		ElseIf Chamada 	= "FilDes"
+			cDesDesFil 	:= FwFilialName( cDesGrp, campo, 1 )
+		EndIf
 	EndIf
 	
 Return campo
