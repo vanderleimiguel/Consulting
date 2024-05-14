@@ -93,10 +93,10 @@ Static Function fMontaTela()
 
 	Local cEstBT, cEstBTGrv, cEstBTCan, cEstBTExp, cEstBTSai, cEstBTVal, cEstBTImp, cEstBTLeg, cEstGet, cEstGet2, cEstPanel, cEstPanelBranco, cEstSay
 
-	aHeaderCTE := {"Sel","Imp","Proc","Chave","Cod_Grupo","Cod_Bem", "Item", "Dt_Aquis", "Descr_Bem", "Plaqueta", "Inicio_Depr", "Valor_Orig", "Taxa_Depr", "Depr_Balanco",;
+	aHeaderCTE := {"Imp","Proc","Chave","Cod_Grupo","Cod_Bem", "Item", "Dt_Aquis", "Descr_Bem", "Plaqueta", "Inicio_Depr", "Valor_Orig", "Taxa_Depr", "Depr_Balanco",;
 		"Depr_Mes", "Depr_Acum", "Saldo", "Data_Baixa", "Observação","Grupo"}
 
-	Aadd(aFieldsCTE, {.F.,oCorSit,oCor,"", "", "", "", "", "", "", "", "", "", "", "","","","","","","","",""})
+	Aadd(aFieldsCTE, {oCorSit,oCor,"", "", "", "", "", "", "", "", "", "", "", "","","","","","","","",""})
 
 	cNatureza := Space(5)
 
@@ -202,28 +202,27 @@ Static Function fMontaTela()
 	oGroupCTE := TGroup()  :New(120,005,350,640,"Registros que compõem o arquivo",oDlg,,,.T.)
 	oBrw      := TWBrowse():New(130,010,620,220,,aHeaderCTE,,oDlg,,,,,,,,,,,,.F.,,.T.,,.F.)
 	oBrw:SetArray(aFieldsCTE)
-	oBrw:blDblClick := {|| (aFieldsCTE[oBrw:nAT,01] := !aFieldsCTE[oBrw:nAT,01]),fVldMarcTit() }
-	oBrw:bLine      := {|| {If(;
-		aFieldsCTE[oBrw:nAT,01],_oOk,_oNo),;
+	// oBrw:blDblClick := {|| (aFieldsCTE[oBrw:nAT,01] := !aFieldsCTE[oBrw:nAT,01]),fVldMarcTit() }
+	oBrw:bLine      := {|| {;
+		aFieldsCTE[oBrw:nAT,01],;
 		aFieldsCTE[oBrw:nAT,02],;
 		aFieldsCTE[oBrw:nAT,03],;
 		aFieldsCTE[oBrw:nAT,04],;
 		aFieldsCTE[oBrw:nAT,05],;
 		aFieldsCTE[oBrw:nAT,06],;
-		aFieldsCTE[oBrw:nAT,07],;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,08],"@E 99/99/9999")),;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,07],"@E 99/99/9999")),;
+		aFieldsCTE[oBrw:nAT,08],;
 		aFieldsCTE[oBrw:nAT,09],;
-		aFieldsCTE[oBrw:nAT,10],;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,11],"@E 99/99/9999")),;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,12],"@E 999,999,999.99")),;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,13],"@E 999.99")),;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,10],"@E 99/99/9999")),;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,11],"@E 999,999,999.99")),;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,12],"@E 999.99")),;
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,13],"@E 999,999,999.99")),;
 		AllTrim(Transform(aFieldsCTE[oBrw:nAT,14],"@E 999,999,999.99")),;
 		AllTrim(Transform(aFieldsCTE[oBrw:nAT,15],"@E 999,999,999.99")),;
 		AllTrim(Transform(aFieldsCTE[oBrw:nAT,16],"@E 999,999,999.99")),;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,17],"@E 999,999,999.99")),;
-		AllTrim(Transform(aFieldsCTE[oBrw:nAT,18],"@E 99/99/9999")),;
-		aFieldsCTE[oBrw:nAT,19],;
-		aFieldsCTE[oBrw:nAT,20] }}
+		AllTrim(Transform(aFieldsCTE[oBrw:nAT,17],"@E 99/99/9999")),;
+		aFieldsCTE[oBrw:nAT,18],;
+		aFieldsCTE[oBrw:nAT,19] }}
 
 	//oBtnGrv := TButton():New(353,190,"   Processa"     	  ,oDlg,{|| fGravar()         },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
 	//oBtnCan := TButton():New(353,260,"   Limpar Browse"   ,oDlg,{|| fLimpaBrw()		 },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
@@ -983,7 +982,7 @@ Static Function fImpArq(cArqOri)
 		aFieldsCTE := {}
 		While (cAliasTmp)->(!Eof())                    
 			oCorTit := oVerde
-			Aadd(aFieldsCTE,{.F., oCorTit, oVermelho, (cAliasTmp)->CHAVE, (cAliasTmp)->CODGRUP, (cAliasTmp)->CODBEM,;
+			Aadd(aFieldsCTE,{oCorTit, oVermelho, (cAliasTmp)->CHAVE, (cAliasTmp)->CODGRUP, (cAliasTmp)->CODBEM,;
 								 (cAliasTmp)->ITEM, (cAliasTmp)->DTAQUIS , (cAliasTmp)->DESCBEM, (cAliasTmp)->PLAQUET,;
 								 (cAliasTmp)->DTIDEPR, (cAliasTmp)->VALORIG, (cAliasTmp)->TAXA, (cAliasTmp)->DEPRBAL,;
 								 (cAliasTmp)->DEPMES, (cAliasTmp)->DEPRACU, (cAliasTmp)->SALDO, (cAliasTmp)->DTBAIXA,;
@@ -998,12 +997,12 @@ Static Function fImpArq(cArqOri)
 	EndIf
 	
 	oBrw:SetArray(aFieldsCTE)
-	oBrw:bLine      := {|| {_oNo, oVerde, oVermelho,;
-							aFieldsCTE[oBrw:nAT,04], aFieldsCTE[oBrw:nAT,05], aFieldsCTE[oBrw:nAT,06],	aFieldsCTE[oBrw:nAT,07],;
-							aFieldsCTE[oBrw:nAT,08], aFieldsCTE[oBrw:nAT,09], aFieldsCTE[oBrw:nAT,10], aFieldsCTE[oBrw:nAT,11],;
-							aFieldsCTE[oBrw:nAT,12], aFieldsCTE[oBrw:nAT,13], aFieldsCTE[oBrw:nAT,14], aFieldsCTE[oBrw:nAT,15],;
-							aFieldsCTE[oBrw:nAT,16], aFieldsCTE[oBrw:nAT,17], aFieldsCTE[oBrw:nAT,18], aFieldsCTE[oBrw:nAT,19],;
-							aFieldsCTE[oBrw:nAT,20] }}
+	oBrw:bLine      := {|| {oVerde, oVermelho,;
+							aFieldsCTE[oBrw:nAT,03], aFieldsCTE[oBrw:nAT,04], aFieldsCTE[oBrw:nAT,05],	aFieldsCTE[oBrw:nAT,06],;
+							aFieldsCTE[oBrw:nAT,07], aFieldsCTE[oBrw:nAT,08], aFieldsCTE[oBrw:nAT,09], aFieldsCTE[oBrw:nAT,10],;
+							aFieldsCTE[oBrw:nAT,11], aFieldsCTE[oBrw:nAT,12], aFieldsCTE[oBrw:nAT,13], aFieldsCTE[oBrw:nAT,14],;
+							aFieldsCTE[oBrw:nAT,15], aFieldsCTE[oBrw:nAT,16], aFieldsCTE[oBrw:nAT,17], aFieldsCTE[oBrw:nAT,18],;
+							aFieldsCTE[oBrw:nAT,19] }}
 					
 	restArea(cArea)
 
@@ -1020,12 +1019,19 @@ Static Function fGravar()
 	****
 
 	If Empty(cDir)
-
 		msgalert("Nenhum arquivo selecionado. Não é possível processar Baixa.","ATENÇÃO")
-
-	ElseIf msgYesNo("Este processo realizará a baixa automática para todos os títulos selecionados. Deseja continuar?","PERGUNTA")
-
-		fGeraBaixa()
+	ElseIf Empty(cOriGrp) .OR. Empty(cOriFil) .OR. Empty(cDesGrp) .OR. Empty(cDesFil)
+		MsgStop("Os dados de grupo/filial origem e destino, devem estar preenchidos","Bloqueio")
+		Return
+	ElseIf cOriFil <> cFilAnt
+ 		MsgStop("Filial de origem selecionada, diferente da filial logada","Bloqueio")
+		Return
+	ElseIf cOriGrp <> cEmpAnt
+ 		MsgStop("Grupo de origem selecionado, diferente do grupo logado","Bloqueio")
+		Return
+	ElseIf msgYesNo("Este processo realizará a o processamento de todos os ativos listado. Deseja continuar?","PERGUNTA")
+		BaixaAtivo()
+		// fGeraBaixa()
 
 	EndIf
 
@@ -1895,3 +1901,76 @@ Static Function ChamaCons(consulta,campo,Chamada)
 	EndIf
 	
 Return campo
+
+/*---------------------------------------------------------------------*
+ | Func:  BaixaAtivo                                                   |
+ | Desc:  Função que baixa ativo                                       |
+ *---------------------------------------------------------------------*/
+Static Function BaixaAtivo()
+	Local aArea 		:= GetArea()
+	Local cBase 		:= ""
+	Local cItem 		:= ""
+	Local cTipo 		:= ""
+	Local cTpSaldo 		:= ""
+	Local cBaixa 		:= ""
+	Local nQtdBaixa 	:= 0
+	Local cMotivo 		:= ""
+	Local cMetDepr 		:= ""
+	Local cNumNF 		:= ""
+	Local cSerieNF 		:= ""
+	Local nValNF 		:= 0
+	
+	Local aCab := {}
+	Local aAtivo := {}
+	Local aParam := {}
+	
+	Private lMsErroAuto := .F.
+	Private lMsHelpAuto := .T.
+
+    (cAliasTmp)->(DbGoTop())
+	While (cAliasTmp)->(!Eof())  
+
+		cBase		:= "0000000005"
+		cItem		:= "0001"
+		cMotivo		:= "08"
+		nQtdBaixa	:= 1
+		cMetDepr	:= GetMV('MV_ATFDPBX')
+		cTipo		:= 01"
+		cBaixa		:= "0"
+		cTpSaldo	:= "1"
+
+		aCab := { {"FN6_FILIAL" ,XFilial("FN6") ,NIL},;
+		{"FN6_CBASE" ,cBase ,NIL},;
+		{"FN6_CITEM" ,cItem ,NIL},;
+		{"FN6_MOTIVO" ,cMotivo ,NIL},;
+		{"FN6_BAIXA" ,100 ,NIL},;
+		{"FN6_QTDBX" ,nQtdBaixa ,NIL},;
+		{"FN6_DTBAIX" ,dDatabase ,NIL},;
+		{"FN6_DEPREC" ,cMetDepr ,NIL}}
+		
+		aAtivo := {{"N3_FILIAL" ,XFilial("SN3") ,NIL},;
+		{"N3_CBASE" ,cBase ,NIL},;
+		{"N3_ITEM" ,cItem ,NIL},;
+		{"N3_TIPO" ,cTipo ,NIL},;
+		{"N3_BAIXA" ,cBaixa ,NIL},;
+		{"N3_TPSALDO" ,cTpSaldo ,NIL}}
+		
+		//Array contendo os parametros do F12
+		aAdd( aParam, {"MV_PAR01", 1} ) //Pergunta 01 - Mostra Lanc. Contab? 1 = Sim ; 2 = Não
+		aAdd( aParam, {"MV_PAR02", 2} ) //Pergunta 02 - Aglutina Lancamento Contabil ? 1 = Sim ; 2 = Não
+		aAdd( aParam, {"MV_PAR03", 1} ) //Pergunta 03 - Contabaliza On-Line? 1 = Sim ; 2 = Não
+		aAdd( aParam, {"MV_PAR04", 2} ) //Pergunta 04 - Visualização ? 2 = Tipos de Ativos   // deve se usar obrigatoriamente o número 2
+		
+		Begin Transaction
+		MsExecAuto({|a,b,c,d,e,f|ATFA036(a,b,c,d,e,f)},aCab,aAtivo,3,,.T./*lBaixaTodos*/,aParam)
+		If lMsErroAuto
+		MostraErro()
+		DisarmTransaction()
+		EndIf
+		End Transaction
+	
+		(cAliasTmp)->(DbSkip())
+	EndDo
+	RestArea(aArea)
+
+Return
