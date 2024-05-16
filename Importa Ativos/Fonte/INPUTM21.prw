@@ -1,34 +1,21 @@
-/*                          
-+-----------------------------------------------------------------------+
-¦Programa  ¦INPUTM21 ¦ Autor ¦ Inacio Silva           ¦ Data ¦01.03.2016¦
-+----------+------------------------------------------------------------¦
-¦Descriçào ¦Baixa Automática 2.0. Reformulação do processo utilizado    ¦
-¦          ¦pelo departamento financeiro para baixa de CTE's de clientes¦
-¦          ¦conforme planilha CSV.                                      ¦
-¦          ¦                                                            ¦
-+----------+------------------------------------------------------------¦
-¦ Uso      ¦ ESPECIFICO PARA EXPRESSO NEPOMUCENO                        ¦
-+-----------------------------------------------------------------------¦
-¦           ATUALIZACOES SOFRIDAS DESDE A CONSTRUCAO INICIAL            ¦
-+-----------------------------------------------------------------------¦
-¦PROGRAMADOR      ¦ DATA       ¦ MOTIVO DA ALTERACAO                    ¦
-+-----------------+------------+----------------------------------------¦
-¦                 |            ¦     ff                                   ¦                                                 
-+-----------------------------------------------------------------------+
-*/
 #include "protheus.ch"
 #include "rwmake.ch"
 #include "TOTVS.CH"
 #include 'dbtree.ch'
 
-User Function INPUTM21()
-	************************************************************************************************************************
-	*    Função principal que realiza a chamada da aplicação
-	**
-	***
-	****
-	Private oDlg
+//Variáveis que existirão mesmo após sair do prw
+Static cEmpBkp := ""
+Static cFilBkp := ""
 
+/*/{Protheus.doc} INPUTM21
+Funcao para processamneto de ativos
+@author Wagner Neves
+@since 06/05/2024
+@version 1.0
+@type function
+/*/
+User Function INPUTM21()
+	Private oDlg
 	Private _oOk      := LoadBitmap(GetResources(),"LBOK")
 	Private _oNo      := LoadBitmap(GetResources(),"LBNO")
 	Private oCinza    := LoadBitmap(GetResources(),"BR_CINZA")
@@ -58,11 +45,7 @@ User Function INPUTM21()
 	Private oBtnCar, oBtnExp, oBtnSai, oBtnLeg
 	Private oSayOGrp, oGetOGrp, oGetOGrp2, oSayODG1, oGetODG1, oSayOFil, oGetOFil, oGetOFil2, oSayODE1, oGetODE1
 	Private oSayDGrp, oGetDGrp, oGetDGrp2, oSayDDG1, oGetDDG1, oSayDFil, oGetDFil, oGetDFil2, oSayDDE1, oGetDDE1
-	//private oSayCNPJ,oSayNome,oSayDtArq,oSayBanco,oSayAgencia,oSayConta,oSayNatureza,oSayValor,oSayQuant
-	//Private oGetCNPJ,oGetNome,oGetDtArq,oGetBanco,oGetAgencia,oGetConta,oGetNatureza,oGetDescNat,oGetValor,oGetQuant
-	//Private oBtnVal
 	Private oBtnGrv
-	//Private oBtnCan
 	Private oBtnVis
 	Private cDir := ""
 	Private cNome, cCNPJ, cBanco, cAgencia, cConta, cNomeBanco, cNatureza, cDescNat, cLojDevNew, cStCteBx, cSTTitBx
@@ -246,7 +229,6 @@ Static Function fMontaTela()
 	ACTIVATE DIALOG oDlg CENTERED 
 
 Return
-
 
 /*---------------------------------------------------------------------*
  | Func:  fAbreDir                                                     |
@@ -467,20 +449,17 @@ Static Function fProcessa()
  		MsgStop("Grupo de origem selecionado, diferente do grupo logado","Bloqueio")
 		Return
 	ElseIf msgYesNo("Este processo realizará a o processamento de todos os ativos listado. Deseja continuar?","PERGUNTA")
-		//Baixa de Ativo
-		Processa({|| BaixaAtivo()}, "Baixa de Ativos", "Baixando...")
+		Processa({|| ProcAtivo()}, "Processamento de Ativos", "Processando...")
 		
-		// fGeraBaixa()
-
 	EndIf
 
 Return()
 
 /*---------------------------------------------------------------------*
- | Func:  BaixaAtivo                                                   |
- | Desc:  Função que baixa ativo                                       |
+ | Func:  ProcAtivo                                                    |
+ | Desc:  Função que processa ativo                                    |
  *---------------------------------------------------------------------*/
-Static Function BaixaAtivo()
+Static Function ProcAtivo()
 	Local aArea 		:= GetArea()
 	Local cBase 		:= ""
 	Local cItem 		:= ""
@@ -493,19 +472,37 @@ Static Function BaixaAtivo()
 	Local aCab 			:= {}
 	Local aAtivo 		:= {}
 	Local aParam 		:= {}
-	Local nBaixaOk     	:= 0
-	Local nBaixaErr		:= 0
+	Local nProcOk     	:= 0
+	Local nProcErr		:= 0
 	Local cBaixaAtu     := ""
 	Local nX
-		
+    Local nQtd 			:= 0
+    Local cPlaq 		:= "00001"
+    Local cPatrim 		:= ""
+    Local cGrupo 		:= ""
+    Local dAquisic 
+    Local dIndDepr 
+    Local cDescric 		:= ""
+    Local cHistor 		:= ""
+    Local cContab 		:= ""
+    Local cCusto 		:= ""
+    Local cSubCon 		:= ""
+    Local cClvlCon 		:= ""
+    Local nValor1 		:= 0
+    Local nTaxa1 		:= 0
+	Local nValor 		:= 0
+    Local nTaxa 		:= 0
+    Local aParam2 		:= {}
+    Local aCab2 		:= {}
+    Local aItens 		:= {}	
 	Private lMsErroAuto := .F.
 	Private lMsHelpAuto := .T.
 
 	//Percorre todos os ativos para baixa
 	For nX := 1 To Len(aFieldsCTE)
 
-		cBase		:= aFieldsCTE[nX][05]//(cAliasTmp)->CODBEM
-		cItem		:= aFieldsCTE[nX][06]//(cAliasTmp)->ITEM
+		cBase		:= aFieldsCTE[nX][05]
+		cItem		:= aFieldsCTE[nX][06]
 		cMotivo		:= "10"
 		nQtdBaixa	:= 1
 		cMetDepr	:= "0"
@@ -516,7 +513,12 @@ Static Function BaixaAtivo()
         If SN3->(DBSeek(FWXFilial('SN3') + cBase + cItem))
 			cTipo		:= SN3->N3_TIPO
 			cBaixaAtu	:= SN3->N3_BAIXA
-
+    		cHistor 	:= SN3->N3_HISTOR
+    		cContab 	:= SN3->N3_CCONTAB
+    		cCusto 		:= SN3->N3_CUSTBEM
+    		cSubCon 	:= SN3->N3_SUBCCON
+    		cClvlCon 	:= SN3->N3_CLVLCON
+			
 			If cBaixaAtu = "0"
 				aCab := { {"FN6_FILIAL" ,XFilial("FN6") ,NIL},;
 				{"FN6_CBASE" 	,cBase 		,NIL},;
@@ -543,29 +545,104 @@ Static Function BaixaAtivo()
 				Begin Transaction
 				MsExecAuto({|a,b,c,d,e,f|ATFA036(a,b,c,d,e,f)},aCab,aAtivo,3,,.T./*lBaixaTodos*/,aParam)
 				If lMsErroAuto
-					nBaixaErr++
+					nProcErr++
 					// MostraErro()
 					DisarmTransaction()
 				Else
-					nBaixaOk++
-					aFieldsCTE[nX][02] := oVerde
+    				nQtd 		:= 1
+    				// cPlaq 		:= AllTrim(aFieldsCTE[nX][09])
+    				cPatrim 	:= "N"
+    				cGrupo 		:= aFieldsCTE[nX][04]
+    				dAquisic	:= aFieldsCTE[nX][07] //:= dDataBase //:= CTOD("01/06/20")//dDataBase
+    				dIndDepr 	:= aFieldsCTE[nX][10]//:= RetDinDepr(dDataBase)
+    				cDescric 	:= aFieldsCTE[nX][08]
+    				nValor1 	:= aFieldsCTE[nX][11]
+    				nTaxa1 		:= aFieldsCTE[nX][12]
+    				aParam2 	:= {}
+    				aCab2 		:= {}
+    				aItens 		:= {}
+
+					lMsErroAuto := .F.
+					lMsHelpAuto := .T.
+
+					//Troca a filial para a nova
+    				zAltFil(cDesGrp , cDesFil)
+
+					cItem	:= SOMA1(cItem)
+					cPlaq	:= SOMA1(cPlaq)
+
+
+					AAdd(aCab2,{"N1_FILIAL" 	, cDesFil ,NIL})
+					AAdd(aCab2,{"N1_CBASE" 	, cBase ,NIL})
+					AAdd(aCab2,{"N1_ITEM" 	, cItem ,NIL})
+					AAdd(aCab2,{"N1_AQUISIC"	, dAquisic ,NIL})
+					AAdd(aCab2,{"N1_DESCRIC"	, cDescric ,NIL})
+					AAdd(aCab2,{"N1_QUANTD" 	, nQtd ,NIL})
+					AAdd(aCab2,{"N1_CHAPA" 	, cPlaq ,NIL})
+					AAdd(aCab2,{"N1_PATRIM" 	, cPatrim ,NIL})
+					AAdd(aCab2,{"N1_GRUPO" 	, cGrupo ,NIL})
+					//Coloque os campos desejados aqui 
+
+					aItens := {}
+					AAdd(aItens,{;
+					{"N3_FILIAL" 	, cDesFil ,NIL},;
+					{"N3_CBASE" 	, cBase ,NIL},;
+					{"N3_ITEM" 		, cItem ,NIL},;
+					{"N3_TIPO" 		, cTipo ,NIL},;
+					{"N3_BAIXA" 	, "0" ,NIL},;
+					{"N3_HISTOR" 	, cHistor ,NIL},;
+					{"N3_CCONTAB" 	, cContab ,NIL},;
+					{"N3_CUSTBEM" 	, cCusto ,NIL},;
+					{"N3_CDEPREC" 	, cContab ,NIL},;
+					{"N3_CDESP" 	, cContab ,NIL},;
+					{"N3_CCORREC" 	, cContab ,NIL},;
+					{"N3_CCUSTO" 	, cCusto ,NIL},;
+					{"N3_DINDEPR" 	, dIndDepr ,NIL},;
+					{"N3_VORIG1" 	, nValor1 ,NIL},;
+					{"N3_TXDEPR1" 	, nTaxa1 ,NIL},;
+					{"N3_VORIG2" 	, nValor ,NIL},;
+					{"N3_TXDEPR2" 	, nTaxa ,NIL},;
+					{"N3_VORIG3" 	, nValor ,NIL},;
+					{"N3_TXDEPR3" 	, nTaxa ,NIL},;
+					{"N3_VORIG4" 	, nValor ,NIL},;
+					{"N3_TXDEPR4" 	, nTaxa ,NIL},;
+					{"N3_VORIG5" 	, nValor ,NIL},;
+					{"N3_SUBCCON" 	, cSubCon ,NIL},;
+					{"N3_CLVLCON" 	, cClvlCon ,NIL},;
+					{"N3_TXDEPR5" 	, nTaxa ,NIL};
+					})
+
+					Begin Transaction
+					MSExecAuto({|x,y,z| Atfa012(x,y,z)},aCab2,aItens,3,aParam2)
+					If lMsErroAuto 
+					    nProcErr++
+						// MostraErro()
+						DisarmTransaction()
+					Else
+						nProcOk++
+						aFieldsCTE[nX][02] := oVerde
+					Endif
+					End Transaction
+			
+					//Voltando o backup da empresa e filial
+					zAltFil( , , .T.)
 				EndIf
 				End Transaction
 			Else
-		    	nBaixaErr++
+		    	nProcErr++
 			EndIf
 		Else
-		    nBaixaErr++
+		    nProcErr++
         EndIf
 	Next
 
 	//Mensagem de finalizacao de baixas
-	If nBaixaErr = 0 .AND. nBaixaOk > 0
-		MsgInfo("Foram baixados "+cValToChar(nBaixaOk)+" ativos com sucesso.","Baixa de Ativos")
-	ElseIf nBaixaErr > 0 .AND. nBaixaOk > 0
-		MsgInfo("Foram baixados "+cValToChar(nBaixaOk)+" ativos com sucesso e "+cValToChar(nBaixaErr)+" ativos não foram baixados.","Baixa de Ativos")
-	ElseIf nBaixaErr > 0 .AND. nBaixaOk = 0
-	    MsgInfo("Não foram baixados nenhum ativo.","Baixa de Ativos")
+	If nProcErr = 0 .AND. nProcOk > 0
+		MsgInfo("Foram processados "+cValToChar(nProcOk)+" ativos com sucesso.","Processamento de Ativos")
+	ElseIf nProcErr > 0 .AND. nProcOk > 0
+		MsgInfo("Foram processados "+cValToChar(nProcOk)+" ativos com sucesso e "+cValToChar(nProcErr)+" ativos não foram processados.","Processamento de Ativos")
+	ElseIf nProcErr > 0 .AND. nProcOk = 0
+	    MsgInfo("Não foram processados nenhum ativo.","Processamento de Ativos")
 	EndIf
 
 	//Atualiza Browse
@@ -646,6 +723,59 @@ Static Function fLegendaATV()
 
 Return(.T.)
 
+/*---------------------------------------------------------------------*
+ | Func:  zAltFil                                                      |
+ | Desc:  Função para alterar empresa e filial                         |
+ *---------------------------------------------------------------------*/
+Static Function zAltFil(cEmpNov, cFilNov, lVolta)
+    Local aArea := FWGetArea()
+    Default cEmpNov := cEmpAnt
+    Default cFilNov := cFilAnt
+    Default lVolta  := .F.
+  
+    //Se for para voltar o backup
+    If lVolta
+        //Se tiver empresa e filial de backup
+        If ! Empty(cEmpBkp) .And. ! Empty(cFilBkp)
+            cEmpAnt := cEmpBkp
+            cFilAnt := cFilBkp
+            cNumEmp := cEmpAnt + cFilAnt
+  
+            //Agora zera os backups
+            cEmpBkp := ""
+            cFilBkp := ""
+        EndIf
+  
+    //Se não, será feito a troca para a filial
+    Else
+	//Se não tiver backup da empresa, realiza
+        If Empty(cEmpBkp)
+            cEmpBkp := cOriGrp
+        EndIf
+  
+        //Se não tiver backup da filial, realiza
+        If Empty(cFilBkp)
+            cFilBkp := cOriFil
+        EndIf
+  
+        //Se os parâmetros vieram vazios, coloca conteúdo default para não dar problema na troca
+        If Empty(cEmpNov)
+            cEmpNov := cEmpAnt
+        EndIf
+        If Empty(cFilNov)
+            cFilNov := cFilAnt
+        EndIf
+  
+        //Realiza a troca de filial para as novas
+        cEmpAnt := cEmpNov
+        cFilAnt := cFilNov
+        cNumEmp := cEmpAnt + cFilAnt
+    EndIf
+	//Realiza a troca da empresa e filial
+    OpenFile(cNumEmp)
+  
+    FWRestArea(aArea)
+Return
 
 // Static Function fValidArq()
 // ************************************************************************************************************************
