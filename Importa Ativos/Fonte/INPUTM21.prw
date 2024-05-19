@@ -6,6 +6,10 @@
 //Variáveis que existirão mesmo após sair do prw
 Static cEmpBkp := ""
 Static cFilBkp := ""
+Static nTotRegua := 0
+Static nAtuRegua := 0
+Static nPerRegua := 0
+Static aRegua1   := {.F., .F., .F.}
 
 /*/{Protheus.doc} INPUTM21
 Funcao para processamneto de ativos
@@ -41,11 +45,14 @@ User Function INPUTM21()
 	Private oGroup, oGroupCli, oGroupATV
 	Private oSayDir, oSayDescNat
 	Private oGetDir, oGetNomeBanco
-	Private oBtnCar, oBtnExp, oBtnSai, oBtnLeg
+	Private oBtnCar, oBtnExp, oBtnSai, oBtnLeg, oBtnCont
 	Private oSayOGrp, oGetOGrp, oGetOGrp2, oSayODG1, oGetODG1, oSayOFil, oGetOFil, oGetOFil2, oSayODE1, oGetODE1
 	Private oSayDGrp, oGetDGrp, oGetDGrp2, oSayDDG1, oGetDDG1, oSayDFil, oGetDFil, oGetDFil2, oSayDDE1, oGetDDE1
 	Private oBtnGrv
 	Private oBtnVis
+	Private oProcess
+	Private oProcess2
+	Private oProcess3
 	Private cDir := ""
 	Private cNome, cCNPJ, cBanco, cAgencia, cConta, cNomeBanco, cNatureza, cDescNat, cLojDevNew, cStATVBx, cSTTitBx
 	Private nValor, nQuant, nOpcLog
@@ -152,7 +159,8 @@ Static Function fMontaTela()
 	oGroup   := TGroup():New(004,005,037,640,"",oDlg,,,.T.)
 	oGetDir  := TGet():New(012,015,bSetGet(cDir),oDlg,470,015,  ,, ,,,   ,,.T.,,   ,{||.F. },   ,   ,,   ,   ,"",      ,,,,,,,"Arquivo:")
 	oBtnCar  := TButton():New(010,484,"" 	                ,oDlg,{|| fAbreDir(@cDir) },20,20,,,.F.,.T.,.F.,,.F.,,,.F. )
-	oBtnVis  := TButton():New(010,550,"   Importar Arquivo" ,oDlg,({|| Processa({|| fImpArq(cDir)}, "Importação de Registros", "Importando...")}),70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
+	// oBtnVis  := TButton():New(010,550,"   Importar Arquivo" ,oDlg,({|| Processa({|| fImpArq(cDir)}, "Importação de Registros", "Importando...")}),70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnVis  := TButton():New(010,550,"   Importar Arquivo" ,oDlg,{|| fImpAux(cDir)} ,70,20,,,.F.,.T.,.F.,,.F.,,,.F. )
 //Janela 2--------------------------------------------------------------------------------------------------------------------------------------------------------------
 	oGroupCli 	  := TGroup():New(038,005,115,640,"Dados dos Grupos/Filiais",oDlg,,,.T.)
 
@@ -205,9 +213,10 @@ Static Function fMontaTela()
 		aFieldsATV[oBrw:nAT,18],;
 		aFieldsATV[oBrw:nAT,19] }}
 
-	oBtnGrv := TButton():New(353,410,"   Processa"     	  ,oDlg,{|| fProcessa()         },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
-	oBtnExp := TButton():New(353,480,"   Ver Log" 		  ,oDlg,{|| MostraLog() },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
-	oBtnSai := TButton():New(353,550,"   Encerrar"        ,oDlg,{|| oDlg:End()        },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnGrv := TButton():New(353,340,"   Processa"     	  ,oDlg,{|| fProcessa()         },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnCont:= TButton():New(353,410,"   Contabiliza"  	  ,oDlg,{|| fContaAux()         },70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnExp := TButton():New(353,480,"   Ver Log" 		  ,oDlg,{|| MostraLog() 		},70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
+	oBtnSai := TButton():New(353,550,"   Encerrar"        ,oDlg,{|| oDlg:End()        	},70,23,,,.F.,.T.,.F.,,.F.,,,.F. )
 
 	/*Neste momento, para definirmos o estilo, usaremos a propriedade SetCss, no qual informaremos a ela a variavel que contém 
 	o estilo que criamos anteriormente.*/
@@ -221,6 +230,7 @@ Static Function fMontaTela()
 	oBtnGrv      :SetCss(cEstBTGrv) 
 	oBtnExp      :SetCss(cEstBTExp) 
 	oBtnSai      :SetCss(cEstBTSai) 
+	oBtnCont     :SetCss(cEstBTGrv) 
 
 	ACTIVATE DIALOG oDlg CENTERED 
 
@@ -238,44 +248,75 @@ Static Function fAbreDir(cDir)
 Return
 
 /*---------------------------------------------------------------------*
+ | Func:  fImpAux                                                      |
+ | Desc:  Função que inicia regua de processamento e chama importação  |
+ *---------------------------------------------------------------------*/
+Static Function fImpAux(_cArqOri) 
+	
+	//Ativa regua de processamento e chama funcao
+    oProcess := MsNewProcess():New({|| fImpArq(_cArqOri) }, "Processando...", "Aguarde...", .T.)
+    oProcess:Activate()
+
+Return
+
+/*---------------------------------------------------------------------*
  | Func:  fImpArq                                                      |
  | Desc:  Função que importa arquivo para browse e monta tabela        |
  *---------------------------------------------------------------------*/
 Static Function fImpArq(cArqOri) 
-	Local cArea:=getArea() 
-    Local nTotLinhas  := 0
-    Local cLinAtu     := ""
-    Local nLinhaAtu   := 0
-    Local aLinha      := {}
-    Local aColSN1     := {}
-    Local aColSN3     := {}    
+	Local cArea			:=getArea() 
+    Local nTotLinhas  	:= 0
+    Local cLinAtu     	:= ""
+    Local nLinhaAtu   	:= 0
+    Local aLinha      	:= {}
+    Local aColSN1     	:= {}
+    Local aColSN3     	:= {}    
     Local oArquivo
     Local aLinhas
-    Local cChave	:= ""
-    Local cCodGrp   := ""
-    Local cCodBem   := ""
-    Local cItem     := ""
+    Local cChave		:= ""
+    Local cCodGrp   	:= ""
+    Local cCodBem   	:= ""
+    Local cItem     	:= ""
     Local dDtAquis
-    Local cDescBem  := ""
-    Local cPlaqueta := ""
+    Local cDescBem  	:= ""
+    Local cPlaqueta 	:= ""
     Local dIniDepr
-    Local nVlrOrig  := 0
-    Local nTaxa     := 0
-    Local nDeprBal  := 0
-    Local nDeprMes  := 0
-    Local nDeprAcu  := 0
-	Local nSaldo    := 0
+    Local nVlrOrig  	:= 0
+    Local nTaxa     	:= 0
+    Local nDeprBal  	:= 0
+    Local nDeprMes  	:= 0
+    Local nDeprAcu  	:= 0
+	Local nSaldo    	:= 0
     Local dDataBaix 
-    Local cObserv   := ""
-    Local cGrupo    := ""
+    Local cObserv   	:= ""
+    Local cGrupo    	:= ""
 	Local dDtValid  
-	Local nLinInic  := 0
-	Local nLinImp   := 0
+	Local nLinInic  	:= 0
+	Local nLinImp		:= 0
+	Local cQuery    	:= ""
+	Local cAliasZW2 	:= GetNextAlias()
+	Local nTotZW2   	:= 0
 	Private aCampos 	:= {}
 	Private aColunas 	:= {}
 	Private oTempTable
 
-   //Definindo o arquivo a ser lido
+	//Verifica se possui ativos para contabilizar
+	cQuery := "SELECT ZW2_CBASE, ZW2_ITEM, ZW2_STATUS "
+	cQuery += "FROM "+RetSqlName("ZW2")+" ZW2 "
+	cQuery += "WHERE ZW2_STATUS='2' "
+	cQuery += "AND ZW2.D_E_L_E_T_ = '' "
+	DbUseArea(.T.,'TOPCONN',TcGenQry(,,cQuery),cAliasZW2,.F.,.T.)
+	(cAliasZW2)->(DbGoTop())
+	Count To nTotZW2
+
+	If nTotZW2 > 0
+	    MsgStop("Existem itens processados que nao foram contabilizados, antes de importar os itens precisam ser contabilizados!", "Bloqueio")
+		(cAliasZW2)->(DbCloseArea())
+		Return
+	EndIf
+	(cAliasZW2)->(DbCloseArea())
+
+   	//Definindo o arquivo a ser lido
     oArquivo := FWFileReader():New(cArqOri)
      
     //Se o arquivo pode ser aberto
@@ -287,7 +328,9 @@ Static Function fImpArq(cArqOri)
             //Definindo o tamanho da régua
             aLinhas := oArquivo:GetAllLines()
             nTotLinhas := Len(aLinhas)
-            // ProcRegua(nTotLinhas)
+
+			//Define a régua
+    		zProcRegua(oProcess, nTotLinhas, 5)
              
             //Método GoTop não funciona (dependendo da versão da LIB), deve fechar e abrir novamente o arquivo
             oArquivo:Close()
@@ -328,7 +371,6 @@ Static Function fImpArq(cArqOri)
 
                 //Incrementa na tela a mensagem
                 nLinhaAtu++
-                // IncProc("Analisando linha " + cValToChar(nLinhaAtu) + " de " + cValToChar(nTotLinhas) + "...")
                  
                 //Pegando a linha atual e transformando em array
                 cLinAtu := oArquivo:GetLine()
@@ -337,8 +379,10 @@ Static Function fImpArq(cArqOri)
 				//Define linhas a processar
 				dDtValid  	:= CTOD(aLinha[5])
 				If dDtValid > CTOD("01/01/2000") .AND. ValType(dDtValid) = "D"               
-                // If nLinhaAtu >= 3 .AND. nLinhaAtu <= 100
 					nLinInic++
+
+					//Incrementa a régua
+        			zIncProc(oProcess, aLinha[3] + PadL(aLinha[4],4,"0"))
 
                     cChave		:= aLinha[1]
                     cCodGrp		:= PadL(aLinha[2],4,"0")                 
@@ -393,7 +437,6 @@ Static Function fImpArq(cArqOri)
         MsgStop("Arquivo não pode ser aberto!", "Atenção")
     EndIf
 
-
 	//Monta browse com ativos da tambela temporaria
 	(cAliasTmp)->(dbGoTop())
 	If (cAliasTmp)->(Eof())
@@ -447,8 +490,9 @@ Static Function fProcessa()
 	ElseIf lProcess
 	 	MsgStop("Ativos já foram processados!","Bloqueio")
 		Return
-	ElseIf msgYesNo("Este processo realizará a o processamento de todos os ativos listado. Deseja continuar?","PERGUNTA")
-		Processa({|| ProcAtivo()}, "Processamento de Ativos", "Processando...")
+	ElseIf msgYesNo("Este processo realizará o processamento de todos os ativos listado. Deseja continuar?","PERGUNTA")
+    	oProcess2 := MsNewProcess():New({|| ProcAtivo()}, "Processando...", "Aguarde...", .T.)
+    	oProcess2:Activate()
 	EndIf
 
 Return()
@@ -488,20 +532,24 @@ Static Function ProcAtivo()
     Local cClvlCon 		:= ""
     Local nValor1 		:= 0
     Local nTaxa1 		:= 0
-	Local nValor 		:= 0
-    Local nTaxa 		:= 0
     Local aParam2 		:= {}
     Local aCab2 		:= {}
     Local aItens 		:= {}	
 	Local cStBaixa		:= ""
 	Local cStInclus		:= ""
 	Local cStProces		:= ""
+	Local nDprAcum		:= 0
+	Local nDprMes		:= 0
+	Local nDprBal		:= 0
 	Private lMsErroAuto := .F.
 	Private lMsHelpAuto := .T.
 
+	//Define a régua		
+	zProcRegua(oProcess2, Len(aFieldsATV), 5)
+
 	//Percorre todos os ativos para baixa
 	For nX := 1 To Len(aFieldsATV)
-
+	
 		cStBaixa	:= ""
 		cStInclus	:= ""
 		cStProces	:= ""
@@ -512,6 +560,9 @@ Static Function ProcAtivo()
 		cMetDepr	:= "0"
 		cBaixa		:= "0"
 		cTpSaldo	:= "1"
+
+		//Incrementa a régua
+        zIncProc(oProcess2, cBase + cItem)
 
 		SN3->(DbSetOrder(1))
         If SN3->(DBSeek(FWXFilial('SN3') + cBase + cItem))
@@ -557,6 +608,10 @@ Static Function ProcAtivo()
 					DisarmTransaction()
 				Else
 					cStBaixa	:= "Baixado com sucesso"
+
+					//Grava para contabilização
+					fGravaCT2(cBase, cItem, "1")
+
     				nQtd 		:= 1
     				// cPlaq 		:= AllTrim(aFieldsATV[nX][09])
     				cPatrim 	:= "N"
@@ -566,6 +621,9 @@ Static Function ProcAtivo()
     				cDescric 	:= aFieldsATV[nX][08]
     				nValor1 	:= aFieldsATV[nX][11]
     				nTaxa1 		:= aFieldsATV[nX][12]
+					nDprAcum	:= aFieldsATV[nX][15]
+					nDprMes		:= aFieldsATV[nX][14]
+					nDprBal		:= aFieldsATV[nX][13]
     				aParam2 	:= {}
     				aCab2 		:= {}
     				aItens 		:= {}
@@ -607,16 +665,11 @@ Static Function ProcAtivo()
 					{"N3_DINDEPR" 	, dIndDepr	,NIL},;
 					{"N3_VORIG1" 	, nValor1 	,NIL},;
 					{"N3_TXDEPR1" 	, nTaxa1 	,NIL},;
-					{"N3_VORIG2" 	, nValor 	,NIL},;
-					{"N3_TXDEPR2" 	, nTaxa 	,NIL},;
-					{"N3_VORIG3" 	, nValor 	,NIL},;
-					{"N3_TXDEPR3" 	, nTaxa 	,NIL},;
-					{"N3_VORIG4" 	, nValor 	,NIL},;
-					{"N3_TXDEPR4" 	, nTaxa 	,NIL},;
-					{"N3_VORIG5" 	, nValor 	,NIL},;
+					{"N3_VRDBAL1" 	, nDprBal 	,NIL},;
+					{"N3_VRDMES1" 	, nDprMes 	,NIL},;
+					{"N3_VRDACM1" 	, nDprAcum 	,NIL},;
 					{"N3_SUBCCON" 	, cSubCon 	,NIL},;
-					{"N3_CLVLCON" 	, cClvlCon 	,NIL},;
-					{"N3_TXDEPR5" 	, nTaxa 	,NIL};
+					{"N3_CLVLCON" 	, cClvlCon 	,NIL};
 					})
 
 					Begin Transaction
@@ -637,6 +690,11 @@ Static Function ProcAtivo()
 			
 					//Voltando o backup da empresa e filial
 					zAltFil( , , .T.)
+
+					If cStInclus	= "Incluido com sucesso"
+						//Grava para contabilização
+						fGravaCT2(cBase, cItem, "2")
+					EndIf
 				EndIf
 				End Transaction
 			Else
@@ -658,7 +716,6 @@ Static Function ProcAtivo()
 		GravLog(cBase, cItem, cStBaixa, cStInclus, cStProces)
 	Next
 
-
 	//Mensagem de finalizacao de baixas
 	If nProcErr = 0 .AND. nProcOk > 0
 		MsgInfo("Foram processados "+cValToChar(nProcOk)+" ativos com sucesso.","Processamento de Ativos")
@@ -666,6 +723,11 @@ Static Function ProcAtivo()
 		MsgInfo("Foram processados "+cValToChar(nProcOk)+" ativos com sucesso e "+cValToChar(nProcErr)+" ativos não foram processados.","Processamento de Ativos")
 	ElseIf nProcErr > 0 .AND. nProcOk = 0
 	    MsgInfo("Não foram processados nenhum ativo.","Processamento de Ativos")
+	EndIf
+
+	//Contabilizar
+	If msgYesNo("Deseja contabilizar as baixas e inclusões?","Contabilização") .AND. nProcOk > 0
+
 	EndIf
 
 	//Atualiza Browse
@@ -713,6 +775,200 @@ Static Function GravLog(_cBase, _cItem, _cStBaixa, _cStInclus, _cStProces)
 Return
 
 /*---------------------------------------------------------------------*
+ | Func:  fGravaCT2                                                    |
+ | Desc:  Função para gravar dados para contabilizacao                 |
+ *---------------------------------------------------------------------*/
+Static Function fGravaCT2(_cBase, _cItem, _cTipo)
+
+	If _cTipo	= "1"
+    	DbSelectArea("ZW2")
+    	
+		//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 1 Debito
+		RecLock("ZW2", .T.)	
+		ZW2->ZW2_FILIAL     := cOriFil
+		ZW2->ZW2_GRPATV     := cOriGrp
+		ZW2->ZW2_FILATV     := cOriFil
+		ZW2->ZW2_CBASE     	:= _cBase
+		ZW2->ZW2_ITEM     	:= _cItem     
+		ZW2->ZW2_STATUS     := "2"
+		ZW2->ZW2_DATA     	:= dDataBase 
+		ZW2->ZW2_DC    		:= "1"
+		ZW2->ZW2_ESPECI     := "1"
+		ZW2->ZW2_TIPO    	:= _cTipo
+		ZW2->ZW2_DEBITO     := "" 
+		ZW2->ZW2_CREDIT		:= ""
+		ZW2->ZW2_VALOR     	:= 0 
+		ZW2->ZW2_HIST		:= ""
+		ZW2->ZW2_CCD     	:= "" 
+		ZW2->ZW2_CCC     	:= ""	
+		ZW2->(MsUnLock())
+
+		//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 2 Credito
+		RecLock("ZW2", .T.)	
+		ZW2->ZW2_FILIAL     := cOriFil
+		ZW2->ZW2_GRPATV     := cOriGrp
+		ZW2->ZW2_FILATV     := cOriFil
+		ZW2->ZW2_CBASE     	:= _cBase
+		ZW2->ZW2_ITEM     	:= _cItem     
+		ZW2->ZW2_STATUS     := "2"
+		ZW2->ZW2_DATA     	:= dDataBase 
+		ZW2->ZW2_DC    		:= "2"
+		ZW2->ZW2_ESPECI     := "1"
+		ZW2->ZW2_TIPO    	:= _cTipo
+		ZW2->ZW2_DEBITO     := "" 
+		ZW2->ZW2_CREDIT		:= ""
+		ZW2->ZW2_VALOR     	:= 0 
+		ZW2->ZW2_HIST		:= ""
+		ZW2->ZW2_CCD     	:= "" 
+		ZW2->ZW2_CCC     	:= ""	
+		ZW2->(MsUnLock())
+    	
+		//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 1 Debito
+		RecLock("ZW2", .T.)	
+		ZW2->ZW2_FILIAL     := cOriFil
+		ZW2->ZW2_GRPATV     := cOriGrp
+		ZW2->ZW2_FILATV     := cOriFil
+		ZW2->ZW2_CBASE     	:= _cBase
+		ZW2->ZW2_ITEM     	:= _cItem     
+		ZW2->ZW2_STATUS     := "2"
+		ZW2->ZW2_DATA     	:= dDataBase 
+		ZW2->ZW2_DC    		:= "1"
+		ZW2->ZW2_ESPECI     := "2"
+		ZW2->ZW2_TIPO    	:= _cTipo
+		ZW2->ZW2_DEBITO     := "" 
+		ZW2->ZW2_CREDIT		:= ""
+		ZW2->ZW2_VALOR     	:= 0 
+		ZW2->ZW2_HIST		:= ""
+		ZW2->ZW2_CCD     	:= "" 
+		ZW2->ZW2_CCC     	:= ""	
+		ZW2->(MsUnLock())
+
+		//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 2 Credito
+		RecLock("ZW2", .T.)	
+		ZW2->ZW2_FILIAL     := cOriFil
+		ZW2->ZW2_GRPATV     := cOriGrp
+		ZW2->ZW2_FILATV     := cOriFil
+		ZW2->ZW2_CBASE     	:= _cBase
+		ZW2->ZW2_ITEM     	:= _cItem     
+		ZW2->ZW2_STATUS     := "2"
+		ZW2->ZW2_DATA     	:= dDataBase 
+		ZW2->ZW2_DC    		:= "2"
+		ZW2->ZW2_ESPECI     := "2"
+		ZW2->ZW2_TIPO    	:= _cTipo
+		ZW2->ZW2_DEBITO     := "" 
+		ZW2->ZW2_CREDIT		:= ""
+		ZW2->ZW2_VALOR     	:= 0 
+		ZW2->ZW2_HIST		:= ""
+		ZW2->ZW2_CCD     	:= "" 
+		ZW2->ZW2_CCC     	:= ""	
+		ZW2->(MsUnLock())
+	
+	ElseIf _cTipo	= "2"
+		
+		//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 1 Debito
+		RecLock("ZW2", .T.)	
+		ZW2->ZW2_FILIAL     := cOriFil
+		ZW2->ZW2_GRPATV     := cDesGrp
+		ZW2->ZW2_FILATV     := cDesFil
+		ZW2->ZW2_CBASE     	:= _cBase
+		ZW2->ZW2_ITEM     	:= _cItem     
+		ZW2->ZW2_STATUS     := "2"
+		ZW2->ZW2_DATA     	:= dDataBase 
+		ZW2->ZW2_DC    		:= "1"
+		ZW2->ZW2_ESPECI     := "3"
+		ZW2->ZW2_TIPO    	:= _cTipo
+		ZW2->ZW2_DEBITO     := "" 
+		ZW2->ZW2_CREDIT		:= ""
+		ZW2->ZW2_VALOR     	:= 0 
+		ZW2->ZW2_HIST		:= ""
+		ZW2->ZW2_CCD     	:= "" 
+		ZW2->ZW2_CCC     	:= ""	
+		ZW2->(MsUnLock())
+
+		//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 2 credito
+		RecLock("ZW2", .T.)	
+		ZW2->ZW2_FILIAL     := cOriFil
+		ZW2->ZW2_GRPATV     := cDesGrp
+		ZW2->ZW2_FILATV     := cDesFil
+		ZW2->ZW2_CBASE     	:= _cBase
+		ZW2->ZW2_ITEM     	:= _cItem     
+		ZW2->ZW2_STATUS     := "2"
+		ZW2->ZW2_DATA     	:= dDataBase 
+		ZW2->ZW2_DC    		:= "2"
+		ZW2->ZW2_ESPECI     := "3"
+		ZW2->ZW2_TIPO    	:= _cTipo
+		ZW2->ZW2_DEBITO     := "" 
+		ZW2->ZW2_CREDIT		:= ""
+		ZW2->ZW2_VALOR     	:= 0 
+		ZW2->ZW2_HIST		:= ""
+		ZW2->ZW2_CCD     	:= "" 
+		ZW2->ZW2_CCC     	:= ""	
+		ZW2->(MsUnLock())
+    	
+		//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 1 Debito
+		RecLock("ZW2", .T.)	
+		ZW2->ZW2_FILIAL     := cOriFil
+		ZW2->ZW2_GRPATV     := cDesGrp
+		ZW2->ZW2_FILATV     := cDesFil
+		ZW2->ZW2_CBASE     	:= _cBase
+		ZW2->ZW2_ITEM     	:= _cItem     
+		ZW2->ZW2_STATUS     := "2"
+		ZW2->ZW2_DATA     	:= dDataBase 
+		ZW2->ZW2_DC    		:= "1"
+		ZW2->ZW2_ESPECI     := "4"
+		ZW2->ZW2_TIPO    	:= _cTipo
+		ZW2->ZW2_DEBITO     := "" 
+		ZW2->ZW2_CREDIT		:= ""
+		ZW2->ZW2_VALOR     	:= 0 
+		ZW2->ZW2_HIST		:= ""
+		ZW2->ZW2_CCD     	:= "" 
+		ZW2->ZW2_CCC     	:= ""	
+		ZW2->(MsUnLock())
+
+		//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 2 credito
+		RecLock("ZW2", .T.)	
+		ZW2->ZW2_FILIAL     := cOriFil
+		ZW2->ZW2_GRPATV     := cDesGrp
+		ZW2->ZW2_FILATV     := cDesFil
+		ZW2->ZW2_CBASE     	:= _cBase
+		ZW2->ZW2_ITEM     	:= _cItem     
+		ZW2->ZW2_STATUS     := "2"
+		ZW2->ZW2_DATA     	:= dDataBase 
+		ZW2->ZW2_DC    		:= "2"
+		ZW2->ZW2_ESPECI     := "4"
+		ZW2->ZW2_TIPO    	:= _cTipo
+		ZW2->ZW2_DEBITO     := "" 
+		ZW2->ZW2_CREDIT		:= ""
+		ZW2->ZW2_VALOR     	:= 0 
+		ZW2->ZW2_HIST		:= ""
+		ZW2->ZW2_CCD     	:= "" 
+		ZW2->ZW2_CCC     	:= ""	
+		ZW2->(MsUnLock())
+	EndIf
+
+Return
+
+/*---------------------------------------------------------------------*
+ | Func:  fContaAux                                                     |
+ | Desc:  Função que inicia regua processamento e chama Contabilizacao  |
+ *---------------------------------------------------------------------*/
+Static Function fContaAux() 
+	
+	//Ativa regua de processamento e chama funcao
+    oProcess3 := MsNewProcess():New({|| fContabil() }, "Processando...", "Aguarde...", .T.)
+    oProcess3:Activate()
+
+Return
+
+/*---------------------------------------------------------------------*
+ | Func:  fContabil                                                    |
+ | Desc:  Função para contabilizar                                     |
+ *---------------------------------------------------------------------*/
+Static Function fContabil()
+
+Return
+
+/*---------------------------------------------------------------------*
  | Func:  MostraLog                                                    |
  | Desc:  Função para mostrar log                                      |
  *---------------------------------------------------------------------*/
@@ -723,11 +979,7 @@ Static Function MostraLog()
     Private aRotina   := {}
 
     //Montando o Array aRotina, com funções que serão mostradas no menu
-    aAdd(aRotina,{"Pesquisar",  "AxPesqui", 0, 1})
     aAdd(aRotina,{"Visualizar", "AxVisual", 0, 2})
-    // aAdd(aRotina,{"Incluir",    "AxInclui", 0, 3})
-    // aAdd(aRotina,{"Alterar",    "AxAltera", 0, 4})
-    // aAdd(aRotina,{"Excluir",    "AxDeleta", 0, 5})
 
 	 //Selecionando a tabela e ordenando
     DbSelectArea(cTabela)
@@ -856,5 +1108,84 @@ Static Function zAltFil(cEmpNov, cFilNov, lVolta)
 	//Realiza a troca da empresa e filial
     OpenFile(cNumEmp)
   
+    FWRestArea(aArea)
+Return
+
+Static Function zProcRegua(oProcess, nTotal, nPercent)
+    Local aArea      := FWGetArea()
+    Default nTotal   := 0
+    Default nPercent := 2
+ 
+    If ValType(oProcess) != "U"
+        //Divide o percentual por 100
+        nPercent := nPercent / 100
+ 
+        //Define as variáveis estáticas (que irão existir na memória somente nesse prw)
+        nTotRegua := nTotal
+        nAtuRegua := 0
+ 
+        //Define a quantidade de registros a cada pulo da régua conforme o % (caso não haja, define como 1)
+        nPerRegua := Round(nTotRegua * nPercent, 0)
+        If Empty(nPerRegua)
+            nPerRegua := 1
+        EndIf
+ 
+        //Agora seta o tamanho da régua (a primeira terá 3 pulos a cada 30%, a segunda terá "n" pulos conforme o percentual)
+        aRegua1 := {.F., .F., .F.}
+        oProcess:SetRegua1(Len(aRegua1))
+        oProcess:SetRegua2(nPercent)
+    EndIf
+ 
+    FWRestArea(aArea)
+Return
+
+Static Function zIncProc(oProcess, cMessage, lShow)
+    Local aArea      := FWGetArea()
+    Local nPercAtu   := 0
+    Default cMessage := ""
+    Default lShow    := .T.
+ 
+    If ValType(oProcess) != "U"
+        //Adiciona 1 na régua atual
+        nAtuRegua += 1
+ 
+        //Se o registro atual fizer parte do 2%, ai sim irá incrementar a régua
+        //   (se for a cada  2, será  2%,  4%,  6%, etc)
+        //   (se for a cada  5, será  5%, 10%, 15%, etc)
+        //   (se for a cada 10, será 10%, 20%, 30%, etc)
+        //   e assim por diante
+        If Mod(nAtuRegua, nPerRegua) == 0
+            //Pega o percentual atual
+            nPercAtu := NoRound((nAtuRegua * 100) / nTotRegua, 0)
+ 
+            //Se for exibir a quantidade de registros
+            If lShow
+                cMessage := "[" + cValToChar(nAtuRegua) + " de " + cValToChar(nTotRegua) + "] " + cMessage
+            EndIf
+            cMessage := "[" + cValToChar(nPercAtu) + "%]" + cMessage
+ 
+            //Incrementa a segunda régua, mostrando a mensagem
+            oProcess:IncRegua2(cMessage)
+ 
+            //Se for maior que 30% e ainda não ter incrementado a primeira régua
+            If nPercAtu >= 30 .And. ! aRegua1[1]
+                oProcess:IncRegua1("Processando...")
+                aRegua1[1] := .T.
+            EndIf
+ 
+            //Se for maior que 60% e ainda não ter incrementado a primeira régua
+            If nPercAtu >= 60 .And. ! aRegua1[2]
+                oProcess:IncRegua1("Processando...")
+                aRegua1[2] := .T.
+            EndIf
+ 
+            //Se for maior que 90% e ainda não ter incrementado a primeira régua
+            If nPercAtu >= 90 .And. ! aRegua1[3]
+                oProcess:IncRegua1("Processando...")
+                aRegua1[3] := .T.
+            EndIf
+        EndIf
+    EndIf
+ 
     FWRestArea(aArea)
 Return
