@@ -791,7 +791,7 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo, _cDebito, _cCredito, _nValor, 
 	Local nY
 	Local cTipLanc  := ""
 	Local cEspecie  := ""
-	Local cebito    := ""
+	Local cDebito    := ""
 	Local cCredito  := ""
 	Local cCCD      := ""
 	Local cCCC      := ""

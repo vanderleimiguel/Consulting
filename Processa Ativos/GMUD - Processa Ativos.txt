@@ -1,0 +1,11 @@
+Passo-a-Passo para compilacao de arquivos do Processamento de ativos:
+==============================================================
+
+1. Compilar fontes: 
+    Importa Ativos\Fonte\INPUTM21.prw               - Funcao para processamento de ativos
+    Importa Ativos\compatibilizador\UPDATV1.prw     - Compatibilizador tabelas ZW1 e ZW2    
+
+2. Executar o compatibilizador UPDATV1:
+    Importa Ativos\compatibilizador\UPDATV1.prw     - Compatibilizador tabelas ZW1 e ZW2 
+
+.Fim
