@@ -611,7 +611,7 @@ Static Function ProcAtivo()
 					cStBaixa	:= "Baixado com sucesso"
 
 					//Grava para contabilização
-					fGravaCT2(cBase, cItem, "1")
+					fGravaCT2(cBase, cItem, "1", cContab, cContab, aFieldsATV[nX][11], cHistor, cCusto, cCusto)
 
     				nQtd 		:= 1
     				// cPlaq 		:= AllTrim(aFieldsATV[nX][09])
@@ -696,7 +696,7 @@ Static Function ProcAtivo()
 
 					If cStInclus	= "Incluido com sucesso"
 						//Grava para contabilização
-						fGravaCT2(cBase, cItem, "2")
+						fGravaCT2(cBase, cItem, "2",  cContab, cContab, nValor1, cHistor, cCusto, cCusto)
 					EndIf
 				EndIf
 				End Transaction
@@ -784,13 +784,17 @@ Return
  | Func:  fGravaCT2                                                    |
  | Desc:  Função para gravar dados para contabilizacao                 |
  *---------------------------------------------------------------------*/
-Static Function fGravaCT2(_cBase, _cItem, _cTipo)
+Static Function fGravaCT2(_cBase, _cItem, _cTipo, _cDebito, _cCredito, _nValor, _cHist, _cCCD, _cCCC)
 	Local nQtdTp1	:= 0
 	Local nQtdTp2 	:= 0
 	Local nX
 	Local nY
 	Local cTipLanc  := ""
 	Local cEspecie  := ""
+	Local cebito    := ""
+	Local cCredito  := ""
+	Local cCCD      := ""
+	Local cCCC      := ""
 
 	DbSelectArea("ZW2")
 	If _cTipo	= "1"
@@ -802,18 +806,34 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo)
 					//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 1 Debito
 					cEspecie	:= "1"
 					cTipLanc	:= "1"
+					cDebito		:= _cDebito
+					cDebito		:= ""
+					cCCD        := _cCCD
+					cCCC        := ""
 				Case nQtdTp1    = 2
 					//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 2 Credito
 					cEspecie	:= "1"
 					cTipLanc	:= "2"
+					cDebito		:= ""
+					cDebito		:= _cCredito
+					cCCD        := ""
+					cCCC        := _cCCC
 				Case nQtdTp1    = 3
 					//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 1 Debito
 					cEspecie	:= "2"
 					cTipLanc	:= "1"
+					cDebito		:= _cDebito
+					cDebito		:= ""
+					cCCD        := _cCCD
+					cCCC        := ""
 				Case nQtdTp1    = 4
 					//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 2 Credito
 					cEspecie	:= "2"
 					cTipLanc	:= "2"
+					cDebito		:= ""
+					cDebito		:= _cCredito
+					cCCD        := ""
+					cCCC        := _cCCC
 			End Case
     	
 			RecLock("ZW2", .T.)	
@@ -827,12 +847,12 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo)
 			ZW2->ZW2_DC    		:= cTipLanc
 			ZW2->ZW2_ESPECI     := cEspecie
 			ZW2->ZW2_TIPO    	:= _cTipo
-			ZW2->ZW2_DEBITO     := "" 
-			ZW2->ZW2_CREDIT		:= ""
-			ZW2->ZW2_VALOR     	:= 0 
-			ZW2->ZW2_HIST		:= ""
-			ZW2->ZW2_CCD     	:= "" 
-			ZW2->ZW2_CCC     	:= ""	
+			ZW2->ZW2_DEBITO     := cDebito 
+			ZW2->ZW2_CREDIT		:= cCredito
+			ZW2->ZW2_VALOR     	:= _nValor
+			ZW2->ZW2_HIST		:= _cHist
+			ZW2->ZW2_CCD     	:= cCCD 
+			ZW2->ZW2_CCC     	:= cCCC	
 			ZW2->(MsUnLock())
 		Next
 	
@@ -845,18 +865,34 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo)
 					//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 1 Debito
 					cEspecie	:= "3"
 					cTipLanc	:= "1"
+					cDebito		:= _cDebito
+					cDebito		:= ""
+					cCCD        := _cCCD
+					cCCC        := ""
 				Case nQtdTp2    = 2
 					//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 2 credito
 					cEspecie	:= "3"
 					cTipLanc	:= "2"
+					cDebito		:= ""
+					cDebito		:= _cCredito
+					cCCD        := ""
+					cCCC        := _cCCC
 				Case nQtdTp2    = 3
 					//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 2 credito
 					cEspecie	:= "4"
 					cTipLanc	:= "1"
+					cDebito		:= _cDebito
+					cDebito		:= ""
+					cCCD        := _cCCD
+					cCCC        := ""
 				Case nQtdTp2    = 4
 					//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 2 credito
 					cEspecie	:= "4"
 					cTipLanc	:= "2"
+					cDebito		:= ""
+					cDebito		:= _cCredito
+					cCCD        := ""
+					cCCC        := _cCCC
 			End Case
 
 			RecLock("ZW2", .T.)	
@@ -870,12 +906,12 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo)
 			ZW2->ZW2_DC    		:= cTipLanc
 			ZW2->ZW2_ESPECI     := cEspecie
 			ZW2->ZW2_TIPO    	:= _cTipo
-			ZW2->ZW2_DEBITO     := "" 
-			ZW2->ZW2_CREDIT		:= ""
-			ZW2->ZW2_VALOR     	:= 0 
-			ZW2->ZW2_HIST		:= ""
-			ZW2->ZW2_CCD     	:= "" 
-			ZW2->ZW2_CCC     	:= ""	
+			ZW2->ZW2_DEBITO     := cDebito 
+			ZW2->ZW2_CREDIT		:= cCredito
+			ZW2->ZW2_VALOR     	:= _nValor
+			ZW2->ZW2_HIST		:= _cHist
+			ZW2->ZW2_CCD     	:= cCCD 
+			ZW2->ZW2_CCC     	:= cCCC		
 			ZW2->(MsUnLock())
 
 		Next
