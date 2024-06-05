@@ -525,7 +525,7 @@ Static Function ProcAtivo()
 	Local cBaixaAtu     := ""
 	Local nX
     Local nQtd 			:= 0
-    Local cPlaq 		:= ""//teste
+    Local cPlaq 		:= "00001"//teste
     Local cPatrim 		:= ""
     Local cGrpOri 		:= ""
 	Local cGrpDest		:= ""
@@ -622,7 +622,7 @@ Static Function ProcAtivo()
 					cGrpOri 	:= AllTrim(aFieldsATV[nX][04])
 					cGrpDest	:= fTrocaGrp(cGrpOri)
     				nQtd 		:= 1
-    				cPlaq 		:= AllTrim(aFieldsATV[nX][09])
+    				// cPlaq 		:= AllTrim(aFieldsATV[nX][09])//teste
     				cPatrim 	:= "N"
     				dAquisic	:= aFieldsATV[nX][07] //:= dDataBase //:= CTOD("01/06/20")//dDataBase
     				dIndDepr 	:= aFieldsATV[nX][10]//:= RetDinDepr(dDataBase)
@@ -643,6 +643,9 @@ Static Function ProcAtivo()
 
 					lMsErroAuto := .F.
 					lMsHelpAuto := .T.
+
+					cItem	:= SOMA1(cItem)//teste
+					cPlaq	:= SOMA1(cPlaq)//teste
 
 					AAdd(aCab2,{"N1_FILIAL" 	, cDesFil 	,NIL})
 					AAdd(aCab2,{"N1_CBASE" 		, cBase 	,NIL})
