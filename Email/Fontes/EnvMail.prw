@@ -10,7 +10,7 @@ Funcao para enviar email
 @version 1.0
 @type function
 /*/
-User Function EnvMail(cEmail,cAssunto,cHtml)
+User Function EnvMail(cEmail,cAssunto)
 	Local cMsg := ""
 	Local xRet
 	Local lRet := .T.
@@ -27,7 +27,7 @@ User Function EnvMail(cEmail,cAssunto,cHtml)
 	cHtml   := '<body>'
 	cHtml   += '<table width="100%" border="0"> '
 	cHtml   += '  <tr align="center">'
-	cHtml   += "   <p><img src=' https://1000marcassafetybrasil.com.br/wp-content/uploads/2020/01/logo-rede-social.png ' width='100' height='100' align='middle' /></p> "
+	cHtml   += "   <p><img src=' https://1000marcassafetybrasil.com.br/wp-content/uploads/2020/01/logo-rede-social.png ' width='115' height='115' align='middle' /></p> "
 	cHtml   += '  </tr>'
 	cHtml   += '</table>'
 	cHtml   += ' <br>'
@@ -67,7 +67,7 @@ User Function EnvMail(cEmail,cAssunto,cHtml)
 	cHtml   += '  </tr>'
 	cHtml   += '</table>'
     cHtml   += ' <br>'
-	cHtml   += '	<table width="100%" border="1">'
+	cHtml   += '	<table width="80%" border="1" align="center">'
 	cHtml   += '<tr align="center" bgcolor="#483D8B">'
 	cHtml   += '    <td><font size="2" face="Arial, Helvetica, sans-serif" color="WHITE"><strong>Nº Título</strong></font></td>'
 	cHtml   += '    <td><font size="2" face="Arial, Helvetica, sans-serif" color="WHITE"><strong>Parcela</strong></font></td>'
