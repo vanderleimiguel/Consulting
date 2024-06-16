@@ -11,14 +11,14 @@ Static nAtuRegua := 0
 Static nPerRegua := 0
 Static aRegua1   := {.F., .F., .F.}
 
-/*/{Protheus.doc} INPUTM21
-Funcao para processamneto de ativos
+/*/{Protheus.doc} SPCTRFAF
+Funcao para processamento de transferencia de ativos
 @author Wagner Neves
 @since 06/05/2024
 @version 1.0
 @type function
 /*/
-User Function INPUTM21()
+User Function SPCTRFAF()
 	Private oDlg
 	Private _oOk      := LoadBitmap(GetResources(),"LBOK")
 	Private _oNo      := LoadBitmap(GetResources(),"LBNO")
