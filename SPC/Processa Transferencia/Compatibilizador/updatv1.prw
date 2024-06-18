@@ -21,7 +21,7 @@
 Função de update de dicionários para compatibilização
 
 @author TOTVS Protheus
-@since  21/05/2024
+@since  18/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -144,7 +144,7 @@ Return NIL
 Função de processamento da gravação dos arquivos
 
 @author TOTVS Protheus
-@since  21/05/2024
+@since  18/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -349,7 +349,7 @@ Return lRet
 Função de processamento da gravação do SX2 - Arquivos
 
 @author TOTVS Protheus
-@since  21/05/2024
+@since  18/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -498,7 +498,7 @@ Return NIL
 Função de processamento da gravação do SX3 - Campos
 
 @author TOTVS Protheus
-@since  21/05/2024
+@since  18/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -1062,100 +1062,6 @@ aAdd( aSX3, { ;
 aAdd( aSX3, { ;
 	'ZW1'																	, ; //X3_ARQUIVO
 	'12'																	, ; //X3_ORDEM
-	'ZW1_CONTAB'															, ; //X3_CAMPO
-	'C'																		, ; //X3_TIPO
-	40																		, ; //X3_TAMANHO
-	0																		, ; //X3_DECIMAL
-	'Sts Contabil'															, ; //X3_TITULO
-	'Sts Contabil'															, ; //X3_TITSPA
-	'Sts Contabil'															, ; //X3_TITENG
-	'Status Contabilizacao'													, ; //X3_DESCRIC
-	'Status Contabilizacao'													, ; //X3_DESCSPA
-	'Status Contabilizacao'													, ; //X3_DESCENG
-	''																		, ; //X3_PICTURE
-	''																		, ; //X3_VALID
-	'x       x       x       x       x       x       x       x       x       x       x       x       x       x       x x', ; //X3_USADO
-	''																		, ; //X3_RELACAO
-	''																		, ; //X3_F3
-	0																		, ; //X3_NIVEL
-	'xxxxxx x'																, ; //X3_RESERV
-	''																		, ; //X3_CHECK
-	''																		, ; //X3_TRIGGER
-	'U'																		, ; //X3_PROPRI
-	'S'																		, ; //X3_BROWSE
-	'A'																		, ; //X3_VISUAL
-	'R'																		, ; //X3_CONTEXT
-	''																		, ; //X3_OBRIGAT
-	''																		, ; //X3_VLDUSER
-	''																		, ; //X3_CBOX
-	''																		, ; //X3_CBOXSPA
-	''																		, ; //X3_CBOXENG
-	''																		, ; //X3_PICTVAR
-	''																		, ; //X3_WHEN
-	''																		, ; //X3_INIBRW
-	''																		, ; //X3_GRPSXG
-	''																		, ; //X3_FOLDER
-	''																		, ; //X3_CONDSQL
-	''																		, ; //X3_CHKSQL
-	''																		, ; //X3_IDXSRV
-	'N'																		, ; //X3_ORTOGRA
-	''																		, ; //X3_TELA
-	''																		, ; //X3_POSLGT
-	'N'																		, ; //X3_IDXFLD
-	''																		, ; //X3_AGRUP
-	''																		, ; //X3_MODAL
-	''																		} ) //X3_PYME
-
-aAdd( aSX3, { ;
-	'ZW1'																	, ; //X3_ARQUIVO
-	'13'																	, ; //X3_ORDEM
-	'ZW1_PROCES'															, ; //X3_CAMPO
-	'C'																		, ; //X3_TIPO
-	40																		, ; //X3_TAMANHO
-	0																		, ; //X3_DECIMAL
-	'Sts Processa'															, ; //X3_TITULO
-	'Sts Processa'															, ; //X3_TITSPA
-	'Sts Processa'															, ; //X3_TITENG
-	'Status Processamento'													, ; //X3_DESCRIC
-	'Status Processamento'													, ; //X3_DESCSPA
-	'Status Processamento'													, ; //X3_DESCENG
-	''																		, ; //X3_PICTURE
-	''																		, ; //X3_VALID
-	'x       x       x       x       x       x       x       x       x       x       x       x       x       x       x x', ; //X3_USADO
-	''																		, ; //X3_RELACAO
-	''																		, ; //X3_F3
-	0																		, ; //X3_NIVEL
-	'xxxxxx x'																, ; //X3_RESERV
-	''																		, ; //X3_CHECK
-	''																		, ; //X3_TRIGGER
-	'U'																		, ; //X3_PROPRI
-	'S'																		, ; //X3_BROWSE
-	'A'																		, ; //X3_VISUAL
-	'R'																		, ; //X3_CONTEXT
-	''																		, ; //X3_OBRIGAT
-	''																		, ; //X3_VLDUSER
-	''																		, ; //X3_CBOX
-	''																		, ; //X3_CBOXSPA
-	''																		, ; //X3_CBOXENG
-	''																		, ; //X3_PICTVAR
-	''																		, ; //X3_WHEN
-	''																		, ; //X3_INIBRW
-	''																		, ; //X3_GRPSXG
-	''																		, ; //X3_FOLDER
-	''																		, ; //X3_CONDSQL
-	''																		, ; //X3_CHKSQL
-	''																		, ; //X3_IDXSRV
-	'N'																		, ; //X3_ORTOGRA
-	''																		, ; //X3_TELA
-	''																		, ; //X3_POSLGT
-	'N'																		, ; //X3_IDXFLD
-	''																		, ; //X3_AGRUP
-	''																		, ; //X3_MODAL
-	''																		} ) //X3_PYME
-
-aAdd( aSX3, { ;
-	'ZW1'																	, ; //X3_ARQUIVO
-	'14'																	, ; //X3_ORDEM
 	'ZW1_USER'																, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
 	10																		, ; //X3_TAMANHO
@@ -1202,7 +1108,7 @@ aAdd( aSX3, { ;
 
 aAdd( aSX3, { ;
 	'ZW1'																	, ; //X3_ARQUIVO
-	'15'																	, ; //X3_ORDEM
+	'13'																	, ; //X3_ORDEM
 	'ZW1_NMUSER'															, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
 	20																		, ; //X3_TAMANHO
@@ -1607,9 +1513,9 @@ aAdd( aSX3, { ;
 	'R'																		, ; //X3_CONTEXT
 	''																		, ; //X3_OBRIGAT
 	''																		, ; //X3_VLDUSER
-	'1=Debito;2=Credito'													, ; //X3_CBOX
-	'1=Debito;2=Credito'													, ; //X3_CBOXSPA
-	'1=Debito;2=Credito'													, ; //X3_CBOXENG
+	'1=Debito;2=Credito;3=Partida Dobrada'									, ; //X3_CBOX
+	'1=Debito;2=Credito;3=Partida Dobrada'									, ; //X3_CBOXSPA
+	'1=Debito;2=Credito;3=Partida Dobrada'									, ; //X3_CBOXENG
 	''																		, ; //X3_PICTVAR
 	''																		, ; //X3_WHEN
 	''																		, ; //X3_INIBRW
@@ -1908,6 +1814,53 @@ aAdd( aSX3, { ;
 	''																		, ; //X3_MODAL
 	''																		} ) //X3_PYME
 
+aAdd( aSX3, { ;
+	'ZW2'																	, ; //X3_ARQUIVO
+	'15'																	, ; //X3_ORDEM
+	'ZW2_GRUPO'																, ; //X3_CAMPO
+	'C'																		, ; //X3_TIPO
+	4																		, ; //X3_TAMANHO
+	0																		, ; //X3_DECIMAL
+	'Grupo'																	, ; //X3_TITULO
+	'Grupo'																	, ; //X3_TITSPA
+	'Grupo'																	, ; //X3_TITENG
+	'Grupo'																	, ; //X3_DESCRIC
+	'Grupo'																	, ; //X3_DESCSPA
+	'Grupo'																	, ; //X3_DESCENG
+	''																		, ; //X3_PICTURE
+	''																		, ; //X3_VALID
+	'x       x       x       x       x       x       x       x       x       x       x       x       x       x       x x', ; //X3_USADO
+	''																		, ; //X3_RELACAO
+	''																		, ; //X3_F3
+	0																		, ; //X3_NIVEL
+	'xxxxxx x'																, ; //X3_RESERV
+	''																		, ; //X3_CHECK
+	''																		, ; //X3_TRIGGER
+	'U'																		, ; //X3_PROPRI
+	'S'																		, ; //X3_BROWSE
+	'A'																		, ; //X3_VISUAL
+	'R'																		, ; //X3_CONTEXT
+	''																		, ; //X3_OBRIGAT
+	''																		, ; //X3_VLDUSER
+	''																		, ; //X3_CBOX
+	''																		, ; //X3_CBOXSPA
+	''																		, ; //X3_CBOXENG
+	''																		, ; //X3_PICTVAR
+	''																		, ; //X3_WHEN
+	''																		, ; //X3_INIBRW
+	''																		, ; //X3_GRPSXG
+	''																		, ; //X3_FOLDER
+	''																		, ; //X3_CONDSQL
+	''																		, ; //X3_CHKSQL
+	''																		, ; //X3_IDXSRV
+	'N'																		, ; //X3_ORTOGRA
+	''																		, ; //X3_TELA
+	''																		, ; //X3_POSLGT
+	'N'																		, ; //X3_IDXFLD
+	''																		, ; //X3_AGRUP
+	''																		, ; //X3_MODAL
+	''																		} ) //X3_PYME
+
 
 //
 // Atualizando dicionário
@@ -2006,7 +1959,7 @@ Return NIL
 Função de processamento da gravação do SIX - Indices
 
 @author TOTVS Protheus
-@since  21/05/2024
+@since  18/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -2107,7 +2060,7 @@ Return NIL
 Função de processamento da gravação dos Helps de Campos
 
 @author TOTVS Protheus
-@since  21/05/2024
+@since  18/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -2244,30 +2197,6 @@ aAdd( aHlpSpa, 'Status Inclusao' )
 
 PutSX1Help( "PZW1_INCLUS", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
 AutoGrLog( "Atualizado o Help do campo " + "ZW1_INCLUS" )
-
-aHlpPor := {}
-aAdd( aHlpPor, 'Status Contabilizacao' )
-
-aHlpEng := {}
-aAdd( aHlpEng, 'Status Contabilizacao' )
-
-aHlpSpa := {}
-aAdd( aHlpSpa, 'Status Contabilizacao' )
-
-PutSX1Help( "PZW1_CONTAB", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
-AutoGrLog( "Atualizado o Help do campo " + "ZW1_CONTAB" )
-
-aHlpPor := {}
-aAdd( aHlpPor, 'Status Processamento' )
-
-aHlpEng := {}
-aAdd( aHlpEng, 'Status Processamento' )
-
-aHlpSpa := {}
-aAdd( aHlpSpa, 'Status Processamento' )
-
-PutSX1Help( "PZW1_PROCES", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
-AutoGrLog( "Atualizado o Help do campo " + "ZW1_PROCES" )
 
 aHlpPor := {}
 aAdd( aHlpPor, 'Usuario' )
@@ -2453,28 +2382,16 @@ PutSX1Help( "PZW2_HIST  ", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
 AutoGrLog( "Atualizado o Help do campo " + "ZW2_HIST" )
 
 aHlpPor := {}
-aAdd( aHlpPor, 'Centro de Custo Debito' )
+aAdd( aHlpPor, 'Grupo' )
 
 aHlpEng := {}
-aAdd( aHlpEng, 'Centro de Custo Debito' )
+aAdd( aHlpEng, 'Grupo' )
 
 aHlpSpa := {}
-aAdd( aHlpSpa, 'Centro de Custo Debito' )
+aAdd( aHlpSpa, 'Grupo' )
 
-PutSX1Help( "PZW2_CCD   ", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
-AutoGrLog( "Atualizado o Help do campo " + "ZW2_CCD" )
-
-aHlpPor := {}
-aAdd( aHlpPor, 'Centro de Custo Credito' )
-
-aHlpEng := {}
-aAdd( aHlpEng, 'Centro de Custo Credito' )
-
-aHlpSpa := {}
-aAdd( aHlpSpa, 'Centro de Custo Credito' )
-
-PutSX1Help( "PZW2_CCC   ", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
-AutoGrLog( "Atualizado o Help do campo " + "ZW2_CCC" )
+PutSX1Help( "PZW2_GRUPO ", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
+AutoGrLog( "Atualizado o Help do campo " + "ZW2_GRUPO" )
 
 AutoGrLog( CRLF + "Final da Atualização" + " " + "Helps de Campos" + CRLF + Replicate( "-", 128 ) + CRLF )
 
@@ -2734,7 +2651,7 @@ Return NIL
 Função de processamento abertura do SM0 modo exclusivo
 
 @author TOTVS Protheus
-@since  21/05/2024
+@since  18/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -2777,7 +2694,7 @@ Return lOpen
 Função de leitura do LOG gerado com limitacao de string
 
 @author TOTVS Protheus
-@since  21/05/2024
+@since  18/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/

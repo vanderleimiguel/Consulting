@@ -539,8 +539,6 @@ Static Function ProcAtivo()
     Local aItens 		:= {}	
 	Local cStBaixa		:= ""
 	Local cStInclus		:= ""
-	Local cStProces		:= ""
-	Local cStContab     := ""
 	Local nDprAcum		:= 0
 	Local nDprMes		:= 0
 	Local nDprBal		:= 0
@@ -557,7 +555,6 @@ Static Function ProcAtivo()
 	
 		cStBaixa	:= ""
 		cStInclus	:= ""
-		cStProces	:= ""
 		cContab 	:= ""
 		cBase		:= aFieldsATV[nX][05]
 		cItem		:= aFieldsATV[nX][06]
@@ -611,11 +608,10 @@ Static Function ProcAtivo()
 					Begin Transaction
 					MsExecAuto({|a,b,c,d,e,f|ATFA036(a,b,c,d,e,f)},aCab,aAtivo,3,,.T./*lBaixaTodos*/,aParam)
 					If lMsErroAuto
+					    // MostraErro()
 						nProcErr++
 						cStBaixa	:= "Erro: Falha no execauto de baixa"
 						cStInclus	:= "Erro: Falha na baixa"
-						cStContab   := "Erro: Falha na baixa"
-						cStProces	:= "Erro: Falha na baixa"
 						aFieldsATV[nX][02] := oVermelho
 						DisarmTransaction()
 					Else
@@ -683,17 +679,14 @@ Static Function ProcAtivo()
 						Begin Transaction
 						MSExecAuto({|x,y,z| Atfa012(x,y,z)},aCab2,aItens,3,aParam2)
 						If lMsErroAuto 
+						    // MostraErro()
 							nProcErr++
 							cStInclus	:= "Erro: Falha no execauto de inclusao"
-							cStContab   := "Erro: Falha na inclusao"
-							cStProces	:= "Erro: Falha na inclusao"
 							aFieldsATV[nX][02] := oVermelho
 							DisarmTransaction()
 						Else
 							nProcOk++
 							cStInclus	:= "Incluido com sucesso"
-							cStContab   := "Pendente Contabilizacao"
-							cStProces	:= "Pendente Contabilizacao"
 							aFieldsATV[nX][02] := oVerde
 						Endif
 						End Transaction
@@ -712,29 +705,23 @@ Static Function ProcAtivo()
 					nProcErr++
 					cStBaixa	:= "Erro: Ativo já baixado"
 					cStInclus	:= "Erro: Falha na baixa"
-					cStContab   := "Erro: Falha na baixa"
-					cStProces	:= "Erro: Falha na baixa"
 					aFieldsATV[nX][02] := oVermelho
 				EndIf
 			Else
 				nProcErr++
 				cStBaixa	:= "Erro: Nao encontrou ativo na SN3"
 				cStInclus	:= "Erro: Falha na baixa"
-				cStContab   := "Erro: Falha na baixa"
-				cStProces	:= "Erro: Falha na baixa"
 				aFieldsATV[nX][02] := oVermelho
 			EndIf
 		Else
 		    nProcErr++
 			cStBaixa	:= "Erro: Nao encontrou ativo na SN1"
 			cStInclus	:= "Erro: Falha na baixa"
-			cStContab   := "Erro: Falha na baixa"
-			cStProces	:= "Erro: Falha na baixa"
 			aFieldsATV[nX][02] := oVermelho
         EndIf
 
 		//Grava log de processamento
-		GravLog(cBase, cItem, cStBaixa, cStInclus, cStContab, cStProces)
+		GravLog(cBase, cItem, cStBaixa, cStInclus)
 	Next
 
 	//Mensagem de finalizacao de baixas
@@ -773,7 +760,7 @@ Return
  | Func:  GravLog                                                      |
  | Desc:  Função que grava log de processamento                        |
  *---------------------------------------------------------------------*/
-Static Function GravLog(_cBase, _cItem, _cStBaixa, _cStInclus, _cStContab, _cStProces)
+Static Function GravLog(_cBase, _cItem, _cStBaixa, _cStInclus)
 
     DbSelectArea("ZW1")
     RecLock("ZW1", .T.)	
@@ -789,8 +776,6 @@ Static Function GravLog(_cBase, _cItem, _cStBaixa, _cStInclus, _cStContab, _cStP
 	ZW1->ZW1_FILDES     := cDesFil 
 	ZW1->ZW1_BAIXA     	:= _cStBaixa
 	ZW1->ZW1_INCLUS     := _cStInclus 
-	ZW1->ZW1_CONTAB     := _cStContab
-	ZW1->ZW1_PROCES		:= _cStProces 
 	ZW1->ZW1_USER     	:= cCodUser 
 	ZW1->ZW1_NMUSER     := UsrRetName(cCodUser) 
     
@@ -826,42 +811,42 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo, _nValOri, _nValAcum, _cGrupo)
 			_cCredito	:= SNG->NG_CCONTAB
 		EndIf
 		
-    	For nX := 1 To 4
+    	For nX := 1 To 2
 			nQtdTp1++
 
 			Do Case
 				Case nQtdTp1	= 1
 					//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 1 Debito
 					cEspecie	:= "1"
-					cTipLanc	:= "1"
+					cTipLanc	:= "3"
 					cDebito		:= "121102001"
-					cCredito	:= ""
-					cHist       := "BAIXA BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
-					nValor     	:= _nValOri
-				Case nQtdTp1    = 2
-					//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 2 Credito
-					cEspecie	:= "1"
-					cTipLanc	:= "2"
-					cDebito		:= ""
 					cCredito	:= _cCredito
 					cHist       := "BAIXA BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
 					nValor     	:= _nValOri
-				Case nQtdTp1    = 3
+				// Case nQtdTp1    = 2
+				// 	//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 2 Credito
+				// 	cEspecie	:= "1"
+				// 	cTipLanc	:= "2"
+				// 	cDebito		:= ""
+				// 	cCredito	:= _cCredito
+				// 	cHist       := "BAIXA BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
+				// 	nValor     	:= _nValOri
+				Case nQtdTp1    = 2
 					//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 1 Debito
 					cEspecie	:= "2"
-					cTipLanc	:= "1"
+					cTipLanc	:= "3"
 					cDebito		:= _cDebito
-					cCredito	:= ""
-					cHist       := "BAIXA ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
-					nValor     	:= _nValAcum
-				Case nQtdTp1    = 4
-					//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 2 Credito
-					cEspecie	:= "2"
-					cTipLanc	:= "2"
-					cDebito		:= ""
 					cCredito	:= "121102001"
 					cHist       := "BAIXA ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
 					nValor     	:= _nValAcum
+				// Case nQtdTp1    = 4
+				// 	//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 2 Credito
+				// 	cEspecie	:= "2"
+				// 	cTipLanc	:= "2"
+				// 	cDebito		:= ""
+				// 	cCredito	:= "121102001"
+				// 	cHist       := "BAIXA ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
+				// 	nValor     	:= _nValAcum
 			End Case
     	
 			RecLock("ZW2", .T.)	
@@ -879,6 +864,7 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo, _nValOri, _nValAcum, _cGrupo)
 			ZW2->ZW2_CREDIT		:= cCredito
 			ZW2->ZW2_VALOR     	:= nValor
 			ZW2->ZW2_HIST		:= cHist
+			ZW2->ZW2_GRUPO      := _cGrupo
 			ZW2->(MsUnLock())
 		Next
 	
@@ -889,42 +875,42 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo, _nValOri, _nValAcum, _cGrupo)
 			_cDebito	:= SNG->NG_CCONTAB
 			_cCredito	:= SNG->NG_CCDEPR
 		EndIf
-		For nY := 1 To 4
+		For nY := 1 To 2
 			nQtdTp2++
 
 			Do Case
 				Case nQtdTp2	= 1
 					//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 1 Debito
 					cEspecie	:= "3"
-					cTipLanc	:= "1"
+					cTipLanc	:= "3"
 					cDebito		:= _cDebito
-					cCredito	:= ""
-					cHist       := "INCLUSAO BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
-					nValor     	:= _nValOri
-				Case nQtdTp2    = 2
-					//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 2 credito
-					cEspecie	:= "3"
-					cTipLanc	:= "2"
-					cDebito		:= ""
 					cCredito	:= "111104998"
 					cHist       := "INCLUSAO BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
 					nValor     	:= _nValOri
-				Case nQtdTp2    = 3
+				// Case nQtdTp2    = 2
+				// 	//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 2 credito
+				// 	cEspecie	:= "3"
+				// 	cTipLanc	:= "2"
+				// 	cDebito		:= ""
+				// 	cCredito	:= "111104998"
+				// 	cHist       := "INCLUSAO BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
+				// 	nValor     	:= _nValOri
+				Case nQtdTp2    = 2
 					//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 1 Debito
 					cEspecie	:= "4"
-					cTipLanc	:= "1"
+					cTipLanc	:= "3"
 					cDebito		:= "111104998"
-					cCredito	:= ""
-					cHist       := "INCLUSAO ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
-					nValor     	:= _nValAcum
-				Case nQtdTp2    = 4
-					//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 2 credito
-					cEspecie	:= "4"
-					cTipLanc	:= "2"
-					cDebito		:= ""
 					cCredito	:= _cCredito
 					cHist       := "INCLUSAO ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
 					nValor     	:= _nValAcum
+				// Case nQtdTp2    = 4
+				// 	//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 2 credito
+				// 	cEspecie	:= "4"
+				// 	cTipLanc	:= "2"
+				// 	cDebito		:= ""
+				// 	cCredito	:= _cCredito
+				// 	cHist       := "INCLUSAO ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
+				// 	nValor     	:= _nValAcum
 			End Case
 
 			RecLock("ZW2", .T.)	
@@ -942,6 +928,7 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo, _nValOri, _nValAcum, _cGrupo)
 			ZW2->ZW2_CREDIT		:= cCredito
 			ZW2->ZW2_VALOR     	:= nValor
 			ZW2->ZW2_HIST		:= cHist	
+			ZW2->ZW2_GRUPO      := _cGrupo
 			ZW2->(MsUnLock())
 
 		Next
@@ -978,27 +965,32 @@ Return
 Static Function fContabil(_nTotZW2)
 	Local aItens 		:= {}
 	Local aCab 			:= {}
+	Local aGrupos       := {}
 	Local cQryBx        := ""
 	Local cAliasBx 		:= GetNextAlias()
 	Local cQryInc       := ""
 	Local cAliasInc		:= GetNextAlias()
 	Local cLinha        := ""
-	Local cAliasCon     := ""
 	Local cLote			:= ""
 	Local cSbLote 		:= ""
 	Local cDoc    		:= ""
-	Local cStContab		:= ""
-	Local cStProces		:= ""
 	Local nContErr      := 0
 	Local nContOK       := 0
 	Local nSeq          := 1
+	Local cOrigem       := ""
+	Local cCT2Fil		:= ""
+	Local cCT2Debi		:= ""
+	Local cCT2Cred		:= ""
+	Local nCT2Val		:= 0
+	Local cCT2Hist		:= ""
+	Local nI
 	Private lMsErroAuto := .F.
 
 	//Define a régua		
 	zProcRegua(oProcess3, _nTotZW2, 5)
 
 	//Busca dados da Baixa
-	cQryBx := "SELECT ZW2_GRPATV, ZW2_FILATV, ZW2_TIPO, ZW2_CBASE, ZW2_ITEM, ZW2_STATUS, ZW2_DC, ZW2_DEBITO, ZW2_CREDIT, ZW2_VALOR, ZW2_HIST "
+	cQryBx := "SELECT ZW2_GRPATV, ZW2_FILATV, ZW2_TIPO, ZW2_CBASE, ZW2_ITEM, ZW2_STATUS, ZW2_DC, ZW2_DEBITO, ZW2_CREDIT, ZW2_VALOR, ZW2_HIST, ZW2_GRUPO "
 	cQryBx += "FROM "+RetSqlName("ZW2")+" ZW2 "
 	cQryBx += "WHERE ZW2_STATUS='2' AND ZW2_TIPO = '1' "
 	cQryBx += "AND ZW2.D_E_L_E_T_ = '' "
@@ -1006,7 +998,7 @@ Static Function fContabil(_nTotZW2)
 	(cAliasBx)->(DbGoTop())
 
 	//Busca dados da Inclusao
-	cQryInc := "SELECT ZW2_GRPATV, ZW2_FILATV, ZW2_TIPO, ZW2_CBASE, ZW2_ITEM, ZW2_STATUS, ZW2_DC, ZW2_DEBITO, ZW2_CREDIT, ZW2_VALOR, ZW2_HIST "
+	cQryInc := "SELECT ZW2_GRPATV, ZW2_FILATV, ZW2_TIPO, ZW2_CBASE, ZW2_ITEM, ZW2_STATUS, ZW2_DC, ZW2_DEBITO, ZW2_CREDIT, ZW2_VALOR, ZW2_HIST, ZW2_GRUPO "
 	cQryInc += "FROM "+RetSqlName("ZW2")+" ZW2 "
 	cQryInc += "WHERE ZW2_STATUS='2' AND ZW2_TIPO = '2' "
 	cQryInc += "AND ZW2.D_E_L_E_T_ = '' "
@@ -1015,31 +1007,23 @@ Static Function fContabil(_nTotZW2)
 
 	//Verifica se esta no processo de baixa ou inclusao
 	While nSeq <= 2
+		
+		//CONTABILIZA BAIXA
 		If nSeq = 1
 			If cEmpAnt <> (cAliasBx)->ZW2_GRPATV .OR. cFilAnt <> (cAliasBx)->ZW2_FILATV
 					MsgStop("Grupo Origem e Filial Origem devem ser os mesmos do Processamento: Grupo: "+(cAliasBx)->ZW2_GRPATV+" e Filial: "+(cAliasBx)->ZW2_FILATV, "Bloqueio")
 				Return
 			EndIf
-			cAliasCon		:= cAliasBx
+			aGrupos         := fGrupos("1")
 			cLote			:= "008860"
 			cSbLote 		:= "001"
 			cDoc    		:= fDocNum((cAliasBx)->ZW2_FILATV, cLote, cSbLote)
-		ElseIf nSeq = 2
-			zAltFil((cAliasInc)->ZW2_GRPATV , (cAliasInc)->ZW2_FILATV)
-			cAliasCon		:= cAliasInc
-			cLote			:= "008860"
-			cSbLote 		:= "001"
-			cDoc    		:= fDocNum((cAliasInc)->ZW2_FILATV, cLote, cSbLote)	
-		EndIf	
+			cOrigem         := "SPCTRFAF - " + DTOC(dDataBase) + " - " + Time() + " - " + UsrRetName(cCodUser) 
+			aItens 			:= {}
+			aCab 			:= {}
+			cLinha     		:= "001"
 
-		If !(cAliasCon)->(EOF())
-			aItens 		:= {}
-			aCab 		:= {}
-			cLinha     	:= "001"
-
-			//Incrementa a régua
-			zIncProc(oProcess3, (cAliasCon)->ZW2_CBASE + (cAliasCon)->ZW2_ITEM )
-
+			//Cabeçalho
 			aCab	:= {{'DDATALANC'	,dDataBase 	,NIL},;
 						{'CLOTE' 		,cLote 		,NIL},;
 						{'CSUBLOTE' 	,cSbLote 	,NIL},;
@@ -1047,64 +1031,223 @@ Static Function fContabil(_nTotZW2)
 						{'CPADRAO' 		,'' 		,NIL},;
 						{'NTOTINF' 		,0 			,NIL},;
 						{'NTOTINFLOT' 	,0 			,NIL} }
-			While !(cAliasCon)->(EOF())
+
+			//Percorre grupos encontrados 
+			For nI := 1 To Len(aGrupos)
+				cQryBx	:= ""
+				IF SELECT(cAliasBx) > 0
+					(cAliasBx)->(dbClosearea())
+				EndIF
+				
+				//Incrementa a régua
+				zIncProc(oProcess3, aGrupos[nI][1] )
+
+				//Busca dados da Baixa
+				cQryBx := "SELECT ZW2_GRPATV, ZW2_FILATV, ZW2_TIPO, ZW2_STATUS, ZW2_DEBITO, ZW2_CREDIT, ZW2_VALOR, ZW2_GRUPO, ZW2_ESPECI "
+				cQryBx += "FROM "+RetSqlName("ZW2")+" ZW2 "
+				cQryBx += "WHERE ZW2_STATUS='2' AND ZW2_TIPO = '1' "
+				cQryBx += "AND ZW2_GRUPO='"+aGrupos[nI][1]+"' "
+				cQryBx += "AND ZW2.D_E_L_E_T_ = '' "
+				DbUseArea(.T.,'TOPCONN',TcGenQry(,,cQryBx),cAliasBx,.F.,.T.)
+				(cAliasBx)->(DbGoTop())
+
+				cCT2Fil		:= ""
+				cCT2Debi	:= ""
+				cCT2Cred	:= ""
+				nCT2Val		:= 0
+				cCT2Hist	:= ""
+				While !(cAliasBx)->(EOF())
+					If (cAliasBx)->ZW2_ESPECI = "1"
+						cCT2Fil     := (cAliasBx)->ZW2_FILATV
+						cCT2Debi	:= (cAliasBx)->ZW2_DEBITO 
+						cCT2Cred	:= (cAliasBx)->ZW2_CREDIT
+						nCT2Val     += (cAliasBx)->ZW2_VALOR
+						cCT2Hist    :=  "INVEST " + aGrupos[nI][2]
+					EndIf
+					(cAliasBx)->(DbSkip())
+				EndDo
+
 				aAdd(aItens,{;
-							{'CT2_FILIAL'	,(cAliasCon)->ZW2_FILATV 	, NIL},;
+							{'CT2_FILIAL'	,cCT2Fil				 	, NIL},;
 							{'CT2_LINHA' 	,cLinha				 		, NIL},;
 							{'CT2_MOEDLC' 	,"1" 						, NIL},;
-							{'CT2_DC' 		,(cAliasCon)->ZW2_DC		, NIL},;
-							{'CT2_DEBITO' 	,(cAliasCon)->ZW2_DEBITO 	, NIL},;
-							{'CT2_CREDIT' 	,(cAliasCon)->ZW2_CREDIT 	, NIL},;
-							{'CT2_VALOR' 	,(cAliasCon)->ZW2_VALOR  	, NIL},;
-							{'CT2_ORIGEM' 	,'MSEXECAUT - Contabilizacao'		, NIL},;
-							{'CT2_HIST' 	,(cAliasCon)->ZW2_HIST		, NIL}})
+							{'CT2_DC' 		,"3"						, NIL},;
+							{'CT2_DEBITO' 	,cCT2Debi					, NIL},;
+							{'CT2_CREDIT' 	,cCT2Cred 					, NIL},;
+							{'CT2_VALOR' 	,nCT2Val				 	, NIL},;
+							{'CT2_ORIGEM' 	,cOrigem					, NIL},;
+							{'CT2_HIST' 	,cCT2Hist           		, NIL}})
 				cLinha	:= Soma1(cLinha)
-				(cAliasCon)->( DbSkip() )
-			EndDo
 
-			//Execauto
-			lMsErroAuto	:= .F.
-			Begin Transaction
-			MSExecAuto( {|X,Y,Z| CTBA102(X,Y,Z)} ,aCab ,aItens, 3)
-			If lMsErroAuto 
-				MostraErro()
-				cStContab	:= "Erro: Falha no execauto de Contabilizacao"
-				cStProces	:= "Erro: Falha na contabilizacao"
-				DisarmTransaction()
-				nContErr++
-			Else
-				cStContab	:= "Incluido com sucesso"
-				cStProces	:= "Processado com sucesso"
-			Endif
-			End Transaction
+				cCT2Fil		:= ""
+				cCT2Debi	:= ""
+				cCT2Cred	:= ""
+				nCT2Val		:= 0
+				cCT2Hist	:= ""
+				(cAliasBx)->(DbGoTop())
+				While !(cAliasBx)->(EOF())
+					If (cAliasBx)->ZW2_ESPECI = "2"
+						cCT2Fil     := (cAliasBx)->ZW2_FILATV
+						cCT2Debi	:= (cAliasBx)->ZW2_DEBITO 
+						cCT2Cred	:= (cAliasBx)->ZW2_CREDIT
+						nCT2Val     += (cAliasBx)->ZW2_VALOR
+						cCT2Hist    := "INVEST ACUM " + aGrupos[nI][2]
+					EndIf
+					(cAliasBx)->(DbSkip())
+				EndDo
 
-			If nSeq = 2
-				//Voltando o backup da empresa e filial
-				zAltFil( , , .T.)
-			EndIf
+				aAdd(aItens,{;
+							{'CT2_FILIAL'	,cCT2Fil				 	, NIL},;
+							{'CT2_LINHA' 	,cLinha				 		, NIL},;
+							{'CT2_MOEDLC' 	,"1" 						, NIL},;
+							{'CT2_DC' 		,"3"						, NIL},;
+							{'CT2_DEBITO' 	,cCT2Debi					, NIL},;
+							{'CT2_CREDIT' 	,cCT2Cred 					, NIL},;
+							{'CT2_VALOR' 	,nCT2Val				 	, NIL},;
+							{'CT2_ORIGEM' 	,cOrigem					, NIL},;
+							{'CT2_HIST' 	,cCT2Hist           		, NIL}})
+				cLinha	:= Soma1(cLinha)
+			Next
 
-			If cStContab = "Incluido com sucesso"
-				(cAliasCon)->(DbGoTop())
+		//CONTABILIZA INCLUSÃO	
+		ElseIf nSeq = 2
+			aGrupos         := fGrupos("2")
+			cLote			:= "008860"
+			cSbLote 		:= "001"
+			cDoc    		:= fDocNum((cAliasInc)->ZW2_FILATV, cLote, cSbLote)	
+			cOrigem         := "SPCTRFAF - " + DTOC(dDataBase) + " - " + Time() + " - " + UsrRetName(cCodUser) 
+			aItens 			:= {}
+			aCab 			:= {}
+			cLinha     		:= "001"
+
+			//Cabeçalho
+			aCab	:= {{'DDATALANC'	,dDataBase 	,NIL},;
+						{'CLOTE' 		,cLote 		,NIL},;
+						{'CSUBLOTE' 	,cSbLote 	,NIL},;
+						{'CDOC' 		,cDoc 		,NIL},;
+						{'CPADRAO' 		,'' 		,NIL},;
+						{'NTOTINF' 		,0 			,NIL},;
+						{'NTOTINFLOT' 	,0 			,NIL} }
+
+			//Percorre grupos encontrados 
+			For nI := 1 To Len(aGrupos)
+				cQryInc	:= ""
+				IF SELECT(cAliasInc) > 0
+					(cAliasInc)->(dbClosearea())
+				EndIF
+				
+				//Incrementa a régua
+				zIncProc(oProcess3, aGrupos[nI][1] )
+
+				//Busca dados da Inclusão
+				cQryInc := "SELECT ZW2_GRPATV, ZW2_FILATV, ZW2_TIPO, ZW2_STATUS, ZW2_DEBITO, ZW2_CREDIT, ZW2_VALOR, ZW2_GRUPO, ZW2_ESPECI "
+				cQryInc += "FROM "+RetSqlName("ZW2")+" ZW2 "
+				cQryInc += "WHERE ZW2_STATUS='2' AND ZW2_TIPO = '2' "
+				cQryInc += "AND ZW2_GRUPO='"+aGrupos[nI][1]+"' "
+				cQryInc += "AND ZW2.D_E_L_E_T_ = '' "
+				DbUseArea(.T.,'TOPCONN',TcGenQry(,,cQryInc),cAliasInc,.F.,.T.)
+				(cAliasInc)->(DbGoTop())
+
+				cCT2Fil		:= ""
+				cCT2Debi	:= ""
+				cCT2Cred	:= ""
+				nCT2Val		:= 0
+				cCT2Hist	:= ""
+				While !(cAliasInc)->(EOF())
+					If (cAliasInc)->ZW2_ESPECI = "3"
+						cCT2Fil     := (cAliasInc)->ZW2_FILATV
+						cCT2Debi	:= (cAliasInc)->ZW2_DEBITO 
+						cCT2Cred	:= (cAliasInc)->ZW2_CREDIT
+						nCT2Val     += (cAliasInc)->ZW2_VALOR
+						cCT2Hist    :=  "INVEST " + aGrupos[nI][2]
+					EndIf
+					(cAliasInc)->(DbSkip())
+				EndDo
+
+				aAdd(aItens,{;
+							{'CT2_FILIAL'	,cCT2Fil				 	, NIL},;
+							{'CT2_LINHA' 	,cLinha				 		, NIL},;
+							{'CT2_MOEDLC' 	,"1" 						, NIL},;
+							{'CT2_DC' 		,"3"						, NIL},;
+							{'CT2_DEBITO' 	,cCT2Debi					, NIL},;
+							{'CT2_CREDIT' 	,cCT2Cred 					, NIL},;
+							{'CT2_VALOR' 	,nCT2Val				 	, NIL},;
+							{'CT2_ORIGEM' 	,cOrigem					, NIL},;
+							{'CT2_HIST' 	,cCT2Hist           		, NIL}})
+				cLinha	:= Soma1(cLinha)
+
+				cCT2Fil		:= ""
+				cCT2Debi	:= ""
+				cCT2Cred	:= ""
+				nCT2Val		:= 0
+				cCT2Hist	:= ""
+				(cAliasInc)->(DbGoTop())
+				While !(cAliasInc)->(EOF())
+					If (cAliasInc)->ZW2_ESPECI = "4"
+						cCT2Fil     := (cAliasInc)->ZW2_FILATV
+						cCT2Debi	:= (cAliasInc)->ZW2_DEBITO 
+						cCT2Cred	:= (cAliasInc)->ZW2_CREDIT
+						nCT2Val     += (cAliasInc)->ZW2_VALOR
+						cCT2Hist    := "INVEST ACUM " + aGrupos[nI][2]
+					EndIf
+					(cAliasInc)->(DbSkip())
+				EndDo
+
+				aAdd(aItens,{;
+							{'CT2_FILIAL'	,cCT2Fil				 	, NIL},;
+							{'CT2_LINHA' 	,cLinha				 		, NIL},;
+							{'CT2_MOEDLC' 	,"1" 						, NIL},;
+							{'CT2_DC' 		,"3"						, NIL},;
+							{'CT2_DEBITO' 	,cCT2Debi					, NIL},;
+							{'CT2_CREDIT' 	,cCT2Cred 					, NIL},;
+							{'CT2_VALOR' 	,nCT2Val				 	, NIL},;
+							{'CT2_ORIGEM' 	,cOrigem					, NIL},;
+							{'CT2_HIST' 	,cCT2Hist           		, NIL}})
+				cLinha	:= Soma1(cLinha)
+			Next
+			zAltFil((cAliasInc)->ZW2_GRPATV , (cAliasInc)->ZW2_FILATV)
+		EndIf
+
+		//Execauto
+		lMsErroAuto	:= .F.
+		Begin Transaction
+		MSExecAuto( {|X,Y,Z| CTBA102(X,Y,Z)} ,aCab ,aItens, 3)
+		If lMsErroAuto 
+			// MostraErro()
+			DisarmTransaction()
+			nContErr++
+		Else
+			If nSeq = 1
 				ZW2->(DbSetOrder(1))
 				ZW2->(DbGoTop())
-				If ZW2->(DBSeek(xFilial("ZW2") + (cAliasCon)->ZW2_CBASE + (cAliasCon)->ZW2_ITEM))
-					While (cAliasCon)->ZW2_CBASE + (cAliasCon)->ZW2_ITEM = ZW2->ZW2_CBASE + ZW2->ZW2_ITEM .AND. (cAliasCon)->ZW2_TIPO = ZW2->ZW2_TIPO
+				While !ZW2->(EOF())
+					If ZW2->ZW2_TIPO = "1"
 						RecLock("ZW2", .F.)	
 						ZW2->ZW2_STATUS     := "1"
 						ZW2->(MsUnLock())
 						nContOK++
-						ZW2->(DbSkip())
-					EndDo
-				EndIf
+					EndIf
+					ZW2->(DbSkip())
+				EndDo
+			ElseIf nSeq = 2
+				ZW2->(DbSetOrder(1))
+				ZW2->(DbGoTop())
+				While !ZW2->(EOF())
+					If ZW2->ZW2_TIPO = "2"
+						RecLock("ZW2", .F.)	
+						ZW2->ZW2_STATUS     := "1"
+						ZW2->(MsUnLock())
+						nContOK++
+					EndIf
+					ZW2->(DbSkip())
+				EndDo
 			EndIf
+		Endif
+		End Transaction
 
-			ZW1->(DbSetOrder(1))
-			If ZW1->(DBSeek(xFilial("ZW1") + (cAliasCon)->ZW2_CBASE + (cAliasCon)->ZW2_ITEM))
-				RecLock("ZW1", .F.)	
-				ZW1->ZW1_CONTAB     := cStContab
-				ZW1->ZW1_PROCES		:= cStProces
-				ZW1->(MsUnLock())
-			EndIf
+		If nSeq = 2
+			//Voltando o backup da empresa e filial
+			zAltFil( , , .T.)
 		EndIf
 		nSeq++
 	EndDo
@@ -1214,6 +1357,37 @@ Static Function fContaZW2()
 	ZW2->(DbCloseArea())
 
 Return nTotZW2
+
+/*---------------------------------------------------------------------*
+ | Func:  fGrupos                                                      |
+ | Desc:  Função para buscar grupos                                    |
+ *---------------------------------------------------------------------*/
+Static Function fGrupos(_cTipo)
+
+	Local cQuery	:= ""
+	Local cAlias    := GetNextAlias()
+	Local aGrupos	:= {}
+
+	//Verifica grupos na baixa
+	cQuery := "SELECT DISTINCT ZW2_GRUPO "
+	cQuery += "FROM "+RetSqlName("ZW2")+" ZW2 "
+	cQuery += "WHERE ZW2_STATUS='2' AND ZW2_TIPO = '"+_cTipo+"' "
+	cQuery += "AND ZW2.D_E_L_E_T_ = '' "
+	DbUseArea(.T.,'TOPCONN',TcGenQry(,,cQuery),cAlias,.F.,.T.)
+	(cAlias)->(DbGoTop())
+	
+	While !(cAlias)->(EOF())
+		SNG->(DbSetOrder(1))
+		If SNG->(DBSeek(FWXFilial('SNG') + (cAlias)->ZW2_GRUPO))
+			cDescGrp	:= AllTrim(SNG->NG_DESCRIC)
+		EndIf
+		aAdd(aGrupos,{(cAlias)->ZW2_GRUPO, cDescGrp})
+		(cAlias)->(DbSkip())
+	EndDo
+
+	(cAlias)->(DbCloseArea())
+
+Return aGrupos
 
 /*---------------------------------------------------------------------*
  | Func:  fMostrMov                                                    |
