@@ -18,7 +18,7 @@ Funcao para processamento de transferencia de ativos
 @version 1.0
 @type function
 /*/
-User Function SPCTRFAF()
+User Function SPC_Execauto()
 	Private oDlg
 	Private _oOk      := LoadBitmap(GetResources(),"LBOK")
 	Private _oNo      := LoadBitmap(GetResources(),"LBNO")
@@ -691,13 +691,13 @@ Static Function ProcAtivo()
 						Endif
 						End Transaction
 
+						//Voltando o backup da empresa e filial
+						zAltFil( , , .T.)
+
 						If cStInclus	= "Incluido com sucesso"
 							//Grava para contabilização
 							fGravaCT2(cBase, cItem, "2", nValOri, nDprAcum, cGrpDest)
 						EndIf
-
-						//Voltando o backup da empresa e filial
-						zAltFil( , , .T.)
 
 					EndIf
 					End Transaction
@@ -816,37 +816,21 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo, _nValOri, _nValAcum, _cGrupo)
 
 			Do Case
 				Case nQtdTp1	= 1
-					//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 1 Debito
+					//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 3 partida dobrada
 					cEspecie	:= "1"
 					cTipLanc	:= "3"
 					cDebito		:= "121102001"
 					cCredito	:= _cCredito
 					cHist       := "BAIXA BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
 					nValor     	:= _nValOri
-				// Case nQtdTp1    = 2
-				// 	//Tipo: 1 Baixa - Especie: 1 Baixa do Item - Lancamento: 2 Credito
-				// 	cEspecie	:= "1"
-				// 	cTipLanc	:= "2"
-				// 	cDebito		:= ""
-				// 	cCredito	:= _cCredito
-				// 	cHist       := "BAIXA BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
-				// 	nValor     	:= _nValOri
 				Case nQtdTp1    = 2
-					//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 1 Debito
+					//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 3 partida dobrada
 					cEspecie	:= "2"
 					cTipLanc	:= "3"
 					cDebito		:= _cDebito
 					cCredito	:= "121102001"
 					cHist       := "BAIXA ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
 					nValor     	:= _nValAcum
-				// Case nQtdTp1    = 4
-				// 	//Tipo: 1 Baixa - Especie: 2 Baixa Acumulado - Lancamento: 2 Credito
-				// 	cEspecie	:= "2"
-				// 	cTipLanc	:= "2"
-				// 	cDebito		:= ""
-				// 	cCredito	:= "121102001"
-				// 	cHist       := "BAIXA ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
-				// 	nValor     	:= _nValAcum
 			End Case
     	
 			RecLock("ZW2", .T.)	
@@ -880,37 +864,21 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo, _nValOri, _nValAcum, _cGrupo)
 
 			Do Case
 				Case nQtdTp2	= 1
-					//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 1 Debito
+					//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 3 partida dobrada
 					cEspecie	:= "3"
 					cTipLanc	:= "3"
 					cDebito		:= _cDebito
 					cCredito	:= "111104998"
 					cHist       := "INCLUSAO BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
 					nValor     	:= _nValOri
-				// Case nQtdTp2    = 2
-				// 	//Tipo: 2 Inclusao - Especie: 3 Inclusao de Ativo - Lancamento: 2 credito
-				// 	cEspecie	:= "3"
-				// 	cTipLanc	:= "2"
-				// 	cDebito		:= ""
-				// 	cCredito	:= "111104998"
-				// 	cHist       := "INCLUSAO BEM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
-				// 	nValor     	:= _nValOri
 				Case nQtdTp2    = 2
-					//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 1 Debito
+					//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 3 partida dobrada
 					cEspecie	:= "4"
 					cTipLanc	:= "3"
 					cDebito		:= "111104998"
 					cCredito	:= _cCredito
 					cHist       := "INCLUSAO ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
 					nValor     	:= _nValAcum
-				// Case nQtdTp2    = 4
-				// 	//Tipo: 2 Inclusao - Especie: 4 Inclusao de Acumulado - Lancamento: 2 credito
-				// 	cEspecie	:= "4"
-				// 	cTipLanc	:= "2"
-				// 	cDebito		:= ""
-				// 	cCredito	:= _cCredito
-				// 	cHist       := "INCLUSAO ACUM: " + AllTrim(_cBase) + " ITEM: " + AllTrim(_cItem)
-				// 	nValor     	:= _nValAcum
 			End Case
 
 			RecLock("ZW2", .T.)	
@@ -1230,6 +1198,8 @@ Static Function fContabil(_nTotZW2)
 					ZW2->(DbSkip())
 				EndDo
 			ElseIf nSeq = 2
+				//Voltando o backup da empresa e filial
+				zAltFil( , , .T.)
 				ZW2->(DbSetOrder(1))
 				ZW2->(DbGoTop())
 				While !ZW2->(EOF())

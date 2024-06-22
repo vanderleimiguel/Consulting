@@ -2,13 +2,17 @@ Passo-a-Passo para compilacao de arquivos do Processa Transferencia:
 ==============================================================
 
 1. Compilar fontes: 
-    Processa Transferencia\Fonte\SPCTRFAF.prw               - Funcao para processamento de transferencia de ativos
+    Processa Transferencia\Fontes\SPCATFBX.prw               - Funcao para processamento de baixa e contabilizacao de ativos
+    Processa Transferencia\Fontes\SPCATFIN.prw               - Funcao para processamento de inclusão e contabilizacao de ativos
     Processa Transferencia\compatibilizador\UPDATV1.prw     - Compatibilizador tabelas ZW1 e ZW2    
 
 2. Executar o compatibilizador UPDATV1:
     Processa Transferencia\compatibilizador\UPDATV1.prw     - Compatibilizador tabelas ZW1 e ZW2 
 
-3. Criar opções no menu:
-	Ativo Fixo > Miscelanea > Especifico SPC > Processa Transferencia ( Rotina: SPCTRFAF )
+3. Criar opções no menu da empresa e filial da baixa:
+	Ativo Fixo > Miscelanea > Especifico SPC > Proc Baixa Transfer ( Rotina: SPCATFBX )
+
+4. Criar opções no menu da empresa e filial da inclusão:
+	Ativo Fixo > Miscelanea > Especifico SPC > Proc Inclusao Transfer ( Rotina: SPCATFIN )
 
 .Fim
