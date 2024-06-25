@@ -761,7 +761,7 @@ Static Function fContabil(_nTotZW2)
 	cQryBx := "SELECT ZW2_FILIAL, ZW2_TIPO, ZW2_CBASE, ZW2_ITEM, ZW2_STATUS, ZW2_DC, ZW2_DEBITO, ZW2_CREDIT, ZW2_VALOR, ZW2_HIST, ZW2_GRUPO "
 	cQryBx += "FROM "+RetSqlName("ZW2")+" ZW2 "
 	cQryBx += "WHERE ZW2_STATUS='2' AND ZW2_TIPO = '1' AND ZW2_FILIAL = '"+xFilial("ZW2")+"' "
-	cQryBx += "AND ZW2.D_E_L_E_T_ = '' "
+	cQryBx += "AND ZW2.D_E_L_E_T_ = ' ' "
 	DbUseArea(.T.,'TOPCONN',TcGenQry(,,cQryBx),cAliasBx,.F.,.T.)
 	(cAliasBx)->(DbGoTop())
 
@@ -799,7 +799,7 @@ Static Function fContabil(_nTotZW2)
 			cQryBx += "FROM "+RetSqlName("ZW2")+" ZW2 "
 			cQryBx += "WHERE ZW2_STATUS='2' AND ZW2_TIPO = '1' AND ZW2_FILIAL = '"+xFilial("ZW2")+"' "
 			cQryBx += "AND ZW2_GRUPO='"+aGrupos[nI][1]+"' "
-			cQryBx += "AND ZW2.D_E_L_E_T_ = '' "
+			cQryBx += "AND ZW2.D_E_L_E_T_ = ' ' "
 			DbUseArea(.T.,'TOPCONN',TcGenQry(,,cQryBx),cAliasBx,.F.,.T.)
 			(cAliasBx)->(DbGoTop())
 
@@ -946,7 +946,7 @@ Static Function fContaZW2()
 	cQuery := "SELECT ZW2_CBASE, ZW2_ITEM, ZW2_STATUS "
 	cQuery += "FROM "+RetSqlName("ZW2")+" ZW2 "
 	cQuery += "WHERE ZW2_STATUS='2' "
-	cQuery += "AND ZW2.D_E_L_E_T_ = '' "
+	cQuery += "AND ZW2.D_E_L_E_T_ = ' ' "
 	DbUseArea(.T.,'TOPCONN',TcGenQry(,,cQuery),cAliasZW2,.F.,.T.)
 	(cAliasZW2)->(DbGoTop())
 	Count To nTotZW2
@@ -969,7 +969,7 @@ Static Function fGrupos(_cTipo)
 	cQuery := "SELECT DISTINCT ZW2_GRUPO "
 	cQuery += "FROM "+RetSqlName("ZW2")+" ZW2 "
 	cQuery += "WHERE ZW2_STATUS='2' AND ZW2_TIPO = '"+_cTipo+"' AND ZW2_FILIAL = '"+xFilial("ZW2")+"' "
-	cQuery += "AND ZW2.D_E_L_E_T_ = '' "
+	cQuery += "AND ZW2.D_E_L_E_T_ = ' ' "
 	DbUseArea(.T.,'TOPCONN',TcGenQry(,,cQuery),cAlias,.F.,.T.)
 	(cAlias)->(DbGoTop())
 	

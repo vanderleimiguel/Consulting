@@ -6,25 +6,22 @@
 
 /*/{Protheus.doc} MARDOC01
 MARDOC01 - Geracao de Documentos
-@author Wagner Neves / Vanderlei Miguel
+@author Wagner Neves
 @since 17/06/2024
 @version 1.0
 @type function
 /*/
-User Function MARDOC01()
+User Function MARDOC01(cFil, cDoc, cSerie)
 	Local aArea     := GetArea()
 	Local cQuery    := ""
 	Local cAliasSE1 := GetNextAlias()
 	Local cBcoAtual := ""
-	// Local cCodBanco := PadR("341"		, TamSX3('EE_CODIGO')[1])//237
-	// Local cCodAgenc := PadR("0002"		, TamSX3('EE_AGENCIA')[1])//3393
-	// Local cCodConta := PadR("67154"		, TamSX3('EE_CONTA')[1])//3510
-	Local cCodBanco := PadR("237"		, TamSX3('EE_CODIGO')[1])//237
-	Local cCodAgenc := PadR("3393"		, TamSX3('EE_AGENCIA')[1])//3393
-	Local cCodConta := PadR("3510"		, TamSX3('EE_CONTA')[1])//3510
-	Local cDoc      := PadR("000295241"	, TamSX3('F2_DOC')[1])
-	Local cSerie    := PadR("001"		, TamSX3('F2_SERIE')[1])
-	Local cFil      := "01"
+	Local cCodBanco := PadR("341"		, TamSX3('EE_CODIGO')[1])//Itau Banco
+	Local cCodAgenc := PadR("0002"		, TamSX3('EE_AGENCIA')[1])//Itau Agencia
+	Local cCodConta := PadR("67154"		, TamSX3('EE_CONTA')[1])//Itau Conta
+	// Local cCodBanco := PadR("237"		, TamSX3('EE_CODIGO')[1])//Bradesco Banco
+	// Local cCodAgenc := PadR("3393"		, TamSX3('EE_AGENCIA')[1])//Bradesco Agencia
+	// Local cCodConta := PadR("3510"		, TamSX3('EE_CONTA')[1])//Bradesco conta
 	Local cFileXML  := ""
 	Local cFileBOL  := ""
 	Local cFileNFE  := ""
@@ -33,6 +30,9 @@ User Function MARDOC01()
 	Local nTotSE1   := 0
 	Private cPath   := ""
 	Private lPosFat := .T.
+	Default cFil    := "01"
+	Default cDoc	:= PadR("000295242"	, TamSX3('F2_DOC')[1])
+	Default cSerie  := PadR("001"		, TamSX3('F2_SERIE')[1])
 
 	//Gera banco atual (Codigo + agencia + conta)
 	cBcoAtual := cCodBanco + cCodAgenc + cCodConta
@@ -65,11 +65,11 @@ User Function MARDOC01()
 				MAKEDIR(cPath)
 			Endif
 
-			//Gera XML
+			// //Gera XML
 			cFileXML   	:= "XML" + AllTrim(cDoc) + AllTrim(cParc)
 			fGeraXML(cDoc, cSerie, cFileXML)
 
-			//Gera Danfe
+			// //Gera Danfe
 			cFileNFE   	:= "NFE" + AllTrim(cDoc) + AllTrim(cParc)
 			fGerDanfe(cDoc, cSerie, cFileNFE)
 
@@ -345,7 +345,7 @@ Static Function fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFile)
 	M->Serie    := cSerie
 	M->Banco    := cBanco
 	M->Ag       := cAgencia
-	M->CC       := cConta
+	M->CC       := PadL(AllTrim(cConta), 7, "0")
 	M->Parc     := cParc
 
 	// ----------------------------------------------------------------+
@@ -562,7 +562,7 @@ Static Function fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFile)
 		oPrint:Say(0600,1850,"Recibo do Pagador"	,oFont7,100)
 
 		oPrint:Line(0610,0100,0610,2200)//Linha 1
-		oPrint:Box (0530,1600,1730,1601)// Box
+		oPrint:Box (0530,1600,1650,1601)// Box
 		oPrint:say(0632,0120,"Local de Pagamento "		   ,oFont1,100)
 		oPrint:say(0642,0410,"BANCO ITAU S.A. "		   ,oFont7,100)
 		oPrint:say(0677,0410,"PAGAR PREFERENCIALMENTE EM QUALQUER AGENCIA ITAU. " ,oFont7,100)
@@ -618,32 +618,33 @@ Static Function fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFile)
 
 		EndIF
 
-		oPrint:Line(1010,1600,1010,2200)//Linha 1 Box
-		oPrint:Line(1090,1600,1090,2200)//Linha 2 Box
-		oPrint:Line(1170,1600,1170,2200)//Linha 3 Box
-		oPrint:Line(1250,1600,1250,2200)//Linha 4 Box
-		oPrint:Line(1330,1600,1330,2200)//Linha 5 Box
-		oPrint:Line(1410,1600,1410,2200)//Linha 6 Box
-		oPrint:Line(1490,1600,1490,2200)//Linha 6 Box
-		oPrint:Line(1570,1600,1570,2200)//Linha 6 Box
-		oPrint:Line(1650,1600,1650,2200)//Linha 6 Box
-		oPrint:say(1035,1620,"Vencimento"						,oFont1,100)
-		oPrint:say(1085,2030,StrZero(Day(SE1->E1_VENCREA),2)+"/"+StrZero(Month(SE1->E1_VENCREA),2)+"/"+AllTrim(Str(Year(SE1->E1_VENCREA))),oFont7,100)
-		oPrint:say(1115,1620,"Agência/Codigo Beneficiário"			,oFont1,100)
-		oPrint:say(1168,1917,Subs(M->Ag_Conta,1,Len(Alltrim(M->Ag_Conta))-1)+"-"+AllTrim(Str(Modulo10(Subs(M->Ag_Conta,1,4)+Subs(M->Ag_Conta,6,5)))),oFont7,100)
-		oPrint:say(1195,1620,"Cart./nosso número"				,oFont1,100)
+		nAltLin	:= 80
+		oPrint:Line(1010-nAltLin,1600,1010-nAltLin,2200)//Linha 1 Box
+		oPrint:Line(1090-nAltLin,1600,1090-nAltLin,2200)//Linha 2 Box
+		oPrint:Line(1170-nAltLin,1600,1170-nAltLin,2200)//Linha 3 Box
+		oPrint:Line(1250-nAltLin,1600,1250-nAltLin,2200)//Linha 4 Box
+		oPrint:Line(1330-nAltLin,1600,1330-nAltLin,2200)//Linha 5 Box
+		oPrint:Line(1410-nAltLin,1600,1410-nAltLin,2200)//Linha 6 Box
+		oPrint:Line(1490-nAltLin,1600,1490-nAltLin,2200)//Linha 6 Box
+		oPrint:Line(1570-nAltLin,1600,1570-nAltLin,2200)//Linha 6 Box
+		oPrint:Line(1650-nAltLin,1600,1650-nAltLin,2200)//Linha 6 Box
+		oPrint:say(1035-nAltLin,1620,"Vencimento"						,oFont1,100)
+		oPrint:say(1085-nAltLin,2030,StrZero(Day(SE1->E1_VENCREA),2)+"/"+StrZero(Month(SE1->E1_VENCREA),2)+"/"+AllTrim(Str(Year(SE1->E1_VENCREA))),oFont7,100)
+		oPrint:say(1115-nAltLin,1620,"Agência/Codigo Beneficiário"			,oFont1,100)
+		oPrint:say(1168-nAltLin,1917,Subs(M->Ag_Conta,1,Len(Alltrim(M->Ag_Conta))-1)+"-"+AllTrim(Str(Modulo10(Subs(M->Ag_Conta,1,4)+Subs(M->Ag_Conta,6,5)))),oFont7,100)
+		oPrint:say(1195-nAltLin,1620,"Cart./nosso número"				,oFont1,100)
 
 		Do Case
 
 			Case M->Banco == "341" // Itau
-			oPrint:say(1245,1910,"109/"+M->NumBoleta+"-"+M->DV_NNUM,oFont7,100)
+			oPrint:say(1245-nAltLin,1910,"109/"+M->NumBoleta+"-"+M->DV_NNUM,oFont7,100)
 
 		EndCase
 
-		oPrint:say(1275,1620,"(=) Valor do Documento"	,oFont1,100)
-		oPrint:say(1329,2000,Transform(SE1->E1_VALOR-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
-		oPrint:say(1355,1620,"(-) Desconto/Abatimento"	,oFont1,100)
-		IIf(SE1->E1_DECRESC > 0,oPrint:say(1370,2000,Transform(SE1->E1_DECRESC,"@E 999,999,999.99"),oFont7,100),)
+		oPrint:say(1275-nAltLin,1620,"(=) Valor do Documento"	,oFont1,100)
+		oPrint:say(1329-nAltLin,2000,Transform(SE1->E1_VALOR-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
+		oPrint:say(1355-nAltLin,1620,"(-) Desconto/Abatimento"	,oFont1,100)
+		IIf(SE1->E1_DECRESC > 0,oPrint:say(1370-nAltLin,2000,Transform(SE1->E1_DECRESC,"@E 999,999,999.99"),oFont7,100),)
 
 		IF SE1->E1_DESCFIN > 0
 
@@ -655,24 +656,24 @@ Static Function fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFile)
 
 		EndIF
 
-		IIf(nVlrDescAbat > 0,oPrint:say(1370,2000,Transform(nVlrDescAbat,"@E 999,999,999.99"),oFont7,100),)
+		IIf(nVlrDescAbat > 0,oPrint:say(1370-nAltLin,2000,Transform(nVlrDescAbat,"@E 999,999,999.99"),oFont7,100),)
 
 		IF nVlrDescAbat > 0 //exibe mensagem de desconto, caso possua
-			oPrint:say(1215,0120,"Considerar Desconto/Abatimento de R$ "+transform(nVlrDescAbat,"@E 999999.99"),oFont1,100)
+			oPrint:say(1215-nAltLin,0120,"Considerar Desconto/Abatimento de R$ "+transform(nVlrDescAbat,"@E 999999.99"),oFont1,100)
 		EndIF
 
-		oPrint:say(1435,1620,"(-) Outras Deduções"		,oFont1,100)
+		oPrint:say(1435-nAltLin,1620,"(-) Outras Deduções"		,oFont1,100)
 
 		//TESTE DESCONTO DO VALOR DE ABATIMENTO NCC(DEVOLUCAO)
 		IF SE1->E1_VALLIQ > 0
-			oPrint:say(1450,2000,Transform(SE1->E1_VALOR - SE1->E1_SALDO - nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
+			oPrint:say(1450-nAltLin,2000,Transform(SE1->E1_VALOR - SE1->E1_SALDO - nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
 		EndIF
 
-		oPrint:say(1515,1620,"(+) Mora/Multa"			,oFont1,100)
-		oPrint:say(1595,1620,"(+) Outros Acréscimos"		,oFont1,100)
+		oPrint:say(1515-nAltLin,1620,"(+) Mora/Multa"			,oFont1,100)
+		oPrint:say(1595-nAltLin,1620,"(+) Outros Acréscimos"		,oFont1,100)
 		Iif(SE1->E1_ACRESC > 0, oPrint:Say  (1610,2000,AllTrim(Transform(SE1->E1_ACRESC,"@E 999,999,999.99")),oFont7,100), )
 
-		oPrint:say(1675,1620,"(=) Valor Cobrado"			,oFont1,100)
+		oPrint:say(1675-nAltLin,1620,"(=) Valor Cobrado"			,oFont1,100)
 
 		IF SE1->E1_VALLIQ > 0
 			nVlrCobrado := SE1->E1_SALDO - nVlrDescAbat - SE1->E1_DECRESC + SE1->E1_ACRESC - nVlrImpRet
@@ -680,26 +681,26 @@ Static Function fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFile)
 			nVlrCobrado := SE1->E1_VALOR - nVlrDescAbat - SE1->E1_DECRESC + SE1->E1_ACRESC - nVlrImpRet
 		EndIF
 
-		oPrint:Line(1732,0100,1732,2200)//Linha 6
-		oPrint:say(1765,0120,"Pagador"						,oFont2,100)
-		oPrint:say(1765,0270,SubStr(SA1->A1_NOME,1,50)	,oFont2,100)
+		oPrint:Line(1732-nAltLin,0100,1732-nAltLin,2200)//Linha 6
+		oPrint:say(1765-nAltLin,0120,"Pagador"						,oFont2,100)
+		oPrint:say(1765-nAltLin,0270,SubStr(SA1->A1_NOME,1,50)	,oFont2,100)
 
 		IF SA1->A1_PESSOA = "F"
-			oPrint:say(1765,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 999.999.999-99"),oFont2,100)
+			oPrint:say(1765-nAltLin,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 999.999.999-99"),oFont2,100)
 		Else
-			oPrint:say(1765,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 99.999.999/9999-99"),oFont2,100)
+			oPrint:say(1765-nAltLin,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 99.999.999/9999-99"),oFont2,100)
 		EndIF
 
-		oPrint:say(1800,0270,IIF(EMPTY(SA1->A1_ENDCOB),AllTrim(SA1->A1_END )+" - "+AllTrim(SA1->A1_BAIRRO),SA1->A1_ENDCOB+" - "+SA1->A1_BAIRROC)			,oFont2,100)
-		oPrint:say(1835,0270,IIF(EMPTY(SA1->A1_ENDCOB),SA1->A1_CEP+"   "+SA1->A1_MUN+" - "+SA1->A1_EST,SA1->A1_CEPC+"   "+SA1->A1_MUNC+" - "+SA1->A1_ESTC),oFont2,100)
-		oPrint:say(1880,0120,"Pagador/Avalista"			,oFont2,100)
+		oPrint:say(1800-nAltLin,0270,IIF(EMPTY(SA1->A1_ENDCOB),AllTrim(SA1->A1_END )+" - "+AllTrim(SA1->A1_BAIRRO),SA1->A1_ENDCOB+" - "+SA1->A1_BAIRROC)			,oFont2,100)
+		oPrint:say(1835-nAltLin,0270,IIF(EMPTY(SA1->A1_ENDCOB),SA1->A1_CEP+"   "+SA1->A1_MUN+" - "+SA1->A1_EST,SA1->A1_CEPC+"   "+SA1->A1_MUNC+" - "+SA1->A1_ESTC),oFont2,100)
+		oPrint:say(1880-nAltLin,0120,"Pagador/Avalista"			,oFont2,100)
 
 		IF "3391" $ M->Ag
-			oPrint:say(1860,0320,SUBSTR(SM0->M0_NOMECOM,1,40)  + SPACE(10) + "CNPJ "+transform(SM0->M0_CGC,"@R 99.999.999/9999-99")  ,oFont8,100)
+			oPrint:say(1860-nAltLin,0320,SUBSTR(SM0->M0_NOMECOM,1,40)  + SPACE(10) + "CNPJ "+transform(SM0->M0_CGC,"@R 99.999.999/9999-99")  ,oFont8,100)
 		EndIF
 
-		oPrint:Line(1890,0100,1890,2200)//Linha 7
-		oPrint:say(1915,1730,"Autenticação Mecânica"		,oFont1,100)
+		oPrint:Line(1890-nAltLin,0100,1890-nAltLin,2200)//Linha 7
+		oPrint:say(1915-nAltLin,1730,"Autenticação Mecânica"		,oFont1,100)
 
 		/////////////////////////////
 		//Terceira parte da Boleta	/
@@ -729,7 +730,7 @@ Static Function fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFile)
 			M->CodBarras += StrZero(nVlrCobrado*100,10)
 			M->CodBarras += "109"
 			M->CodBarras += M->Numboleta+M->DV_NNUM
-			M->CodBarras += M->Ag
+			M->CodBarras += Subs(M->Ag,1,4)
 			M->CodBarras += Subs(M->CC,1,5)
 			M->CodBarras += AllTrim(Str(Modulo10(M->Ag+SUBS(M->CC,1,5))))
 			M->CodBarras += "000"
@@ -740,130 +741,130 @@ Static Function fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFile)
 		MontaLinha()
 
 		//Terceira Parte da Boleta
-		oPrint:SayBitmap( 002020,0100,aBitMap[1],080,080) // Logo Itau
+		oPrint:SayBitmap( 002020-nAltLin,0100,aBitMap[1],080,080) // Logo Itau
 		//	oPrint:SayBitmap( 002920,1900,aBitMap[3],300,090) // Logo ISO da Boleta
-		oPrint:say(002090,0450,M->Cod_Comp,oFont5,100)
+		oPrint:say(002090-nAltLin,0450,M->Cod_Comp,oFont5,100)
 
 		//Impressão da Linha Digitavel
-		oPrint:Say(002090,0700,M->LineDig,oFont4,100)
-		oPrint:Box (002100,1600,2825,1601)// Box Principal
+		oPrint:Say(002090-nAltLin,0700,M->LineDig,oFont4,100)
+		oPrint:Box (002100-nAltLin,1600,2825-nAltLin,1601)// Box Principal
 
-		oPrint:Line(002100,0100,002100,2200)// Linha 1
-		oPrint:say(002125,0120,"Local de Pagamento",oFont1,100)
-		oPrint:say(002135,0410,"BANCO ITAU S.A "		   ,oFont7,100)
-		oPrint:say(002175,0410,"PAGAR PREFERENCIALMENTE EM QUALQUER AGENCIA ITAU. " ,oFont7,100)
-		oPrint:say(002125,1620,"Vencimento",oFont1,100)
-		oPrint:say(002175,2030,StrZero(Day(SE1->E1_VENCREA),2)+"/"+StrZero(Month(SE1->E1_VENCREA),2)+"/"+AllTrim(Str(Year(SE1->E1_VENCREA))),oFont7,100)
+		oPrint:Line(002100-nAltLin,0100,002100-nAltLin,2200)// Linha 1
+		oPrint:say(002125-nAltLin,0120,"Local de Pagamento",oFont1,100)
+		oPrint:say(002135-nAltLin,0410,"BANCO ITAU S.A "		   ,oFont7,100)
+		oPrint:say(002175-nAltLin,0410,"PAGAR PREFERENCIALMENTE EM QUALQUER AGENCIA ITAU. " ,oFont7,100)
+		oPrint:say(002125-nAltLin,1620,"Vencimento",oFont1,100)
+		oPrint:say(002175-nAltLin,2030,StrZero(Day(SE1->E1_VENCREA),2)+"/"+StrZero(Month(SE1->E1_VENCREA),2)+"/"+AllTrim(Str(Year(SE1->E1_VENCREA))),oFont7,100)
 
-		oPrint:Line(002185,0100,002185,2200)// Linha 2
-		oPrint:say(002210,0120,"Beneficiário",oFont1,100)
-		oPrint:say(002255,0120,SUBSTR(SM0->M0_NOMECOM,1,40) + SPACE(10) + "CNPJ "+transform(SM0->M0_CGC,"@R 99.999.999/9999-99")   ,oFont2,100)//SA1->A1_NOME
-		oPrint:say(002210,1620,"Agência/Código Beneficiário",oFont1,100)
-		oPrint:say(002255,1920,Subs(M->Ag_Conta,1,Len(Alltrim(M->Ag_Conta))-1)+"-"+AllTrim(Str(Modulo10(Subs(M->Ag_Conta,1,4)+Subs(M->Ag_Conta,6,5)))),oFont7,100)
+		oPrint:Line(002185-nAltLin,0100,002185-nAltLin,2200)// Linha 2
+		oPrint:say(002210-nAltLin,0120,"Beneficiário",oFont1,100)
+		oPrint:say(002255-nAltLin,0120,SUBSTR(SM0->M0_NOMECOM,1,40) + SPACE(10) + "CNPJ "+transform(SM0->M0_CGC,"@R 99.999.999/9999-99")   ,oFont2,100)//SA1->A1_NOME
+		oPrint:say(002210-nAltLin,1620,"Agência/Código Beneficiário",oFont1,100)
+		oPrint:say(002255-nAltLin,1920,Subs(M->Ag_Conta,1,Len(Alltrim(M->Ag_Conta))-1)+"-"+AllTrim(Str(Modulo10(Subs(M->Ag_Conta,1,4)+Subs(M->Ag_Conta,6,5)))),oFont7,100)
 
-		oPrint:Line(002265,0100,002265,2200)// Linha 3
-		oPrint:Line(002265,0100,002265,1600)// Linha 4
-		oPrint:Box (002265,0370,002345,0710)// Box 1
-		oPrint:Box (002265,0890,002345,1070)// Box 2
+		oPrint:Line(002265-nAltLin,0100,002265-nAltLin,2200)// Linha 3
+		oPrint:Line(002265-nAltLin,0100,002265-nAltLin,1600)// Linha 4
+		oPrint:Box (002265-nAltLin,0370,002345-nAltLin,0710)// Box 1
+		oPrint:Box (002265-nAltLin,0890,002345-nAltLin,1070)// Box 2
 
-		oPrint:say(002290,0120,"Data do Documento",oFont1,100)
-		oPrint:say(002290,0380,"N° do Documento",oFont1,100)
-		oPrint:say(002290,0720,"Espécie Doc.",oFont1,100)
-		oPrint:say(002290,0900,"Aceite",oFont1,100)
-		oPrint:say(002290,1080,"Data Processamento",oFont1,100)
-		oPrint:say(002290,1620,"Cart./Nosso Número",oFont1,100)
-		oPrint:say(002335,0140,StrZero(Day(SE1->E1_EMISSAO),2)+"/"+StrZero(Month(SE1->E1_EMISSAO),2)+"/"+AllTrim(Str(Year(SE1->E1_EMISSAO))),oFont2,100)
-		oPrint:say(002335,0390,AllTrim(SE1->E1_PEDIDO),oFont2,100)
-		oPrint:say(002335,0720,"DM",oFont2,100)
-		oPrint:say(002335,0930,M->Aceite,oFont2,100)
-		oPrint:say(002335,1400,StrZero(Day(SE1->E1_EMISSAO),2)+"/"+StrZero(Month(SE1->E1_EMISSAO),2)+"/"+AllTrim(Str(Year(SE1->E1_EMISSAO))),oFont2,100)
+		oPrint:say(002290-nAltLin,0120,"Data do Documento",oFont1,100)
+		oPrint:say(002290-nAltLin,0380,"N° do Documento",oFont1,100)
+		oPrint:say(002290-nAltLin,0720,"Espécie Doc.",oFont1,100)
+		oPrint:say(002290-nAltLin,0900,"Aceite",oFont1,100)
+		oPrint:say(002290-nAltLin,1080,"Data Processamento",oFont1,100)
+		oPrint:say(002290-nAltLin,1620,"Cart./Nosso Número",oFont1,100)
+		oPrint:say(002335-nAltLin,0140,StrZero(Day(SE1->E1_EMISSAO),2)+"/"+StrZero(Month(SE1->E1_EMISSAO),2)+"/"+AllTrim(Str(Year(SE1->E1_EMISSAO))),oFont2,100)
+		oPrint:say(002335-nAltLin,0390,AllTrim(SE1->E1_PEDIDO),oFont2,100)
+		oPrint:say(002335-nAltLin,0720,"DM",oFont2,100)
+		oPrint:say(002335-nAltLin,0930,M->Aceite,oFont2,100)
+		oPrint:say(002335-nAltLin,1400,StrZero(Day(SE1->E1_EMISSAO),2)+"/"+StrZero(Month(SE1->E1_EMISSAO),2)+"/"+AllTrim(Str(Year(SE1->E1_EMISSAO))),oFont2,100)
 
-		oPrint:say(002335,1920,"109/"+M->NumBoleta + "-" + DV_NNUM,oFont7,100)
+		oPrint:say(002335-nAltLin,1920,"109/"+M->NumBoleta + "-" + DV_NNUM,oFont7,100)
 
-		oPrint:Line(002345,0100,002345,2200)// Linha 3
-		oPrint:Line(002345,0100,002345,1600)// Linha 4
-		oPrint:Box (002345,0370,002425,0710)// Box 1
-		oPrint:Box (002345,0510,002425,0710)// Box 1
-		oPrint:Box (002345,0710,002425,1070)// Box 2
+		oPrint:Line(002345-nAltLin,0100,002345-nAltLin,2200)// Linha 3
+		oPrint:Line(002345-nAltLin,0100,002345-nAltLin,1600)// Linha 4
+		oPrint:Box (002345-nAltLin,0370,002425-nAltLin,0710)// Box 1
+		oPrint:Box (002345-nAltLin,0510,002425-nAltLin,0710)// Box 1
+		oPrint:Box (002345-nAltLin,0710,002425-nAltLin,1070)// Box 2
 
-		oPrint:say(002370,0120,"Uso do Banco"	,oFont1,100)
+		oPrint:say(002370-nAltLin,0120,"Uso do Banco"	,oFont1,100)
 		//	oPrint:say(002370,0320,"Cip"			,oFont1,100)
 		//	oPrint:say(002415,0320,"000"          ,oFont2,100)
-		oPrint:say(002370,0380,"Carteira"		,oFont1,100)
-		oPrint:say(002370,0520,"Espécie Moeda"	,oFont1,100)
-		oPrint:say(002370,0720,"Quantidade"	,oFont1,100)
-		oPrint:say(002370,1100,"Valor"		,oFont1,100)
+		oPrint:say(002370-nAltLin,0380,"Carteira"		,oFont1,100)
+		oPrint:say(002370-nAltLin,0520,"Espécie Moeda"	,oFont1,100)
+		oPrint:say(002370-nAltLin,0720,"Quantidade"	,oFont1,100)
+		oPrint:say(002370-nAltLin,1100,"Valor"		,oFont1,100)
 		//	oPrint:say(002400,1080,"x"			,oFont1,100)
-		oPrint:say(002370,1620,"(=) Valor do Documento",oFont1,100)
-		oPrint:say(002415,2000,transform(SE1->E1_VALOR-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
-		oPrint:say(002415,0400,M->Carteira,oFont2,100)
-		oPrint:say(002415,0520,"R$",oFont2,100)
+		oPrint:say(002370-nAltLin,1620,"(=) Valor do Documento",oFont1,100)
+		oPrint:say(002415-nAltLin,2000,transform(SE1->E1_VALOR-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
+		oPrint:say(002415-nAltLin,0400,M->Carteira,oFont2,100)
+		oPrint:say(002415-nAltLin,0520,"R$",oFont2,100)
 
-		oPrint:Line(002420,0100,002420,2200)// Linha 5
-		oPrint:Line(002505,1600,002505,2200)//Linha Box 6
-		oPrint:Line(002585,1600,002585,2200)//Linha Box 7
-		oPrint:Line(002665,1600,002665,2200)//Linha Box 8
-		oPrint:Line(002745,1600,002745,2200)//Linha Box 9
+		oPrint:Line(002420-nAltLin,0100,002420-nAltLin,2200)// Linha 5
+		oPrint:Line(002505-nAltLin,1600,002505-nAltLin,2200)//Linha Box 6
+		oPrint:Line(002585-nAltLin,1600,002585-nAltLin,2200)//Linha Box 7
+		oPrint:Line(002665-nAltLin,1600,002665-nAltLin,2200)//Linha Box 8
+		oPrint:Line(002745-nAltLin,1600,002745-nAltLin,2200)//Linha Box 9
 
-		oPrint:say(002450,0120,"Instruções de Responsabilidade do Beneficiário      ***Valores expressos em R$ ***",oFont1,100)
-		oPrint:say(002450,1620,"(-) Desconto/Abatimento",oFont1,100)
-		Iif(nVlrDescAbat > 0,oPrint:say(002520,2000,Transform(nVlrDescAbat,"@E 999,999,999.99"),oFont7,100),)
+		oPrint:say(002450-nAltLin,0120,"Instruções de Responsabilidade do Beneficiário      ***Valores expressos em R$ ***",oFont1,100)
+		oPrint:say(002450-nAltLin,1620,"(-) Desconto/Abatimento",oFont1,100)
+		Iif(nVlrDescAbat > 0,oPrint:say(002520-nAltLin,2000,Transform(nVlrDescAbat,"@E 999,999,999.99"),oFont7,100),)
 
 		IF nVlrDescAbat > 0 //exibe mensagem de desconto, caso possua
-			oPrint:say(02780,0120,"Considerar Desconto/Abatimento de R$ "+transform(nVlrDescAbat,"@E 999999.99"),oFont1,100)
+			oPrint:say(02780-nAltLin,0120,"Considerar Desconto/Abatimento de R$ "+transform(nVlrDescAbat,"@E 999999.99"),oFont1,100)
 		EndIF
 
 		nVlrDescAbat := 0
 
-		oPrint:say(002560,1620,"(-) Outras Deduções",oFont1,100)
+		oPrint:say(002560-nAltLin,1620,"(-) Outras Deduções",oFont1,100)
 
 		//TESTE DESCONTO DO VALOR DE ABATIMENTO NCC(DEVOLUCAO)
 		IF SE1->E1_VALLIQ > 0
-			oPrint:say(2600,2000,Transform(SE1->E1_VALOR - SE1->E1_SALDO-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
+			oPrint:say(2600-nAltLin,2000,Transform(SE1->E1_VALOR - SE1->E1_SALDO-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
 		EndIF
 
-		oPrint:say(002640,1620,"(+) Mora/Multa",oFont1,100)
-		oPrint:say(002720,1620,"(+) Outros Acréscimos",oFont1,100)
-		Iif(SE1->E1_ACRESC > 0, oPrint:Say  (002760,2000,AllTrim(Transform(SE1->E1_ACRESC,"@E 999,999,999.99")),oFont7,100), )
+		oPrint:say(002640-nAltLin,1620,"(+) Mora/Multa",oFont1,100)
+		oPrint:say(002720-nAltLin,1620,"(+) Outros Acréscimos",oFont1,100)
+		Iif(SE1->E1_ACRESC > 0, oPrint:Say  (002760-nAltLin,2000,AllTrim(Transform(SE1->E1_ACRESC,"@E 999,999,999.99")),oFont7,100), )
 
-		oPrint:say(002800,1620,"(=) Valor Cobrado",oFont1,100)
+		oPrint:say(002800-nAltLin,1620,"(=) Valor Cobrado",oFont1,100)
 		nVlrCobrado := 0
 
-		oPrint:Line(002825,0100,002825,2200)// Linha 10
-		oPrint:Line(003050,0100,003050,2200)// Linha 11
+		oPrint:Line(002825-nAltLin,0100,002825-nAltLin,2200)// Linha 10
+		oPrint:Line(003030,0100,003030,2200)// Linha 11
 
 		Do Case
 			Case M->Banco == "341"
 
 			IF lRet == .T.
-				oPrint:say(02500,0120,"Após o Vencimento acesse WWW.ITAU.COM.BR/BOLETOS para atualizar seu boleto.",oFont1,100)
-				oPrint:say(002550,0120,"Após o Vencimento mora dia R$ "+AllTrim(Transform(SE1->E1_VALJUR, "@E 999999.99")),oFont1,100)
-				oPrint:say(002600,0120,"Valor que corresponde a juros de mora de 1% ao mês acrescido de variação do IGPM",oFont1,100)
+				oPrint:say(02500-nAltLin,0120,"Após o Vencimento acesse WWW.ITAU.COM.BR/BOLETOS para atualizar seu boleto.",oFont1,100)
+				oPrint:say(002550-nAltLin,0120,"Após o Vencimento mora dia R$ "+AllTrim(Transform(SE1->E1_VALJUR, "@E 999999.99")),oFont1,100)
+				oPrint:say(002600-nAltLin,0120,"Valor que corresponde a juros de mora de 1% ao mês acrescido de variação do IGPM",oFont1,100)
 
 				IF !EMPTY(SE1->E1_PARCELA)
-					oPrint:say(002650,0120,"Parcela Nr: "+SE1->E1_PARCELA,oFont1,100) //05/12/16
+					oPrint:say(002650-nAltLin,0120,"Parcela Nr: "+SE1->E1_PARCELA,oFont1,100) //05/12/16
 				EndIF
 
 			EndIF
 
 		EndCase
 
-		oPrint:say(002850,0120,"Pagador",oFont1,100)
-		oPrint:say(002850,0250,SubStr(SA1->A1_NOME,1,50),oFont8,100)
+		oPrint:say(002850-nAltLin,0120,"Pagador",oFont1,100)
+		oPrint:say(002850-nAltLin,0250,SubStr(SA1->A1_NOME,1,50),oFont8,100)
 
 		IF SA1->A1_PESSOA = "F"
-			oPrint:say(002850,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 999.999.999-99"),oFont8,100)
+			oPrint:say(002850-nAltLin,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 999.999.999-99"),oFont8,100)
 		Else
-			oPrint:say(002850,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 99.999.999/9999-99"),oFont8,100)
+			oPrint:say(002850-nAltLin,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 99.999.999/9999-99"),oFont8,100)
 		EndIF
 
-		oPrint:say(002875,0250,IIF(EMPTY(SA1->A1_ENDCOB),AllTrim(SA1->A1_END )+" - "+AllTrim(SA1->A1_BAIRRO),SA1->A1_ENDCOB+" - "+SA1->A1_BAIRROC)		  ,oFont8,100)
-		oPrint:say(002899,0250,IIF(EMPTY(SA1->A1_ENDCOB),SA1->A1_CEP+"   "+SA1->A1_MUN+" - "+SA1->A1_EST,SA1->A1_CEPC+"   "+SA1->A1_MUNC+" - "+SA1->A1_ESTC),oFont8,100)
-		oPrint:say(002899,1340,"Autenticação Mecânica",oFont1,100)
-		oPrint:say(002899,1760,"Ficha de Compensação",oFont1,100)
+		oPrint:say(002875-nAltLin,0250,IIF(EMPTY(SA1->A1_ENDCOB),AllTrim(SA1->A1_END )+" - "+AllTrim(SA1->A1_BAIRRO),SA1->A1_ENDCOB+" - "+SA1->A1_BAIRROC)		  ,oFont8,100)
+		oPrint:say(002899-nAltLin,0250,IIF(EMPTY(SA1->A1_ENDCOB),SA1->A1_CEP+"   "+SA1->A1_MUN+" - "+SA1->A1_EST,SA1->A1_CEPC+"   "+SA1->A1_MUNC+" - "+SA1->A1_ESTC),oFont8,100)
+		oPrint:say(002899-nAltLin,1340,"Autenticação Mecânica",oFont1,100)
+		oPrint:say(002899-nAltLin,1760,"Ficha de Compensação",oFont1,100)
 
 		// Impressão do código de barras.
-		oPrint:FWMsBar("INT25",68,2,M->CodBarras,oPrint,.F.,,.T.,0.025,1.5,NIL,NIL,NIL,.F.)
+		oPrint:FWMsBar("INT25",66,2,M->CodBarras,oPrint,.F.,,.T.,0.025,1.4,NIL,NIL,NIL,.F.)
 		Eject
 
 		oPrint:Endpage()
@@ -917,7 +918,7 @@ Static Function fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFile) //Boleto Brade
 	M->Serie    := cSerie
 	M->Banco    := cBanco
 	M->Ag       := cAgencia
-	M->CC       := cConta
+	M->CC       := PadL(AllTrim(cConta), 7, "0")
 	M->Parc     := cParc
 
 	// ----------------------------------------------------------------+
@@ -1141,7 +1142,7 @@ Static Function fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFile) //Boleto Brade
 		oPrint:Say(0600,1850,"Recibo do Pagador"	,oFont7,100)
 
 		oPrint:Line(0610,0100,0610,2200)//Linha 1
-		oPrint:Box (0530,1600,1730,1601)// Box
+		oPrint:Box (0530,1600,1650,1601)// Box teste
 		oPrint:say(0632,0120,"Local de Pagamento "		   ,oFont1,100)
 		oPrint:say(0642,0410,"BANCO BRADESCO S.A "		   ,oFont7,100)
 		oPrint:say(0677,0410,"PAGAR PREFERENCIALMENTE EM QUALQUER AGENCIA BRADESCO. " ,oFont7,100)
@@ -1194,32 +1195,33 @@ Static Function fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFile) //Boleto Brade
 
 		EndIF
 
-		oPrint:Line(1010,1600,1010,2200)//Linha 1 Box
-		oPrint:Line(1090,1600,1090,2200)//Linha 2 Box
-		oPrint:Line(1170,1600,1170,2200)//Linha 3 Box
-		oPrint:Line(1250,1600,1250,2200)//Linha 4 Box
-		oPrint:Line(1330,1600,1330,2200)//Linha 5 Box
-		oPrint:Line(1410,1600,1410,2200)//Linha 6 Box
-		oPrint:Line(1490,1600,1490,2200)//Linha 6 Box
-		oPrint:Line(1570,1600,1570,2200)//Linha 6 Box
-		oPrint:Line(1650,1600,1650,2200)//Linha 6 Box
-		oPrint:say(1035,1620,"Vencimento"						,oFont1,100)
-		oPrint:say(1085,2030,StrZero(Day(SE1->E1_VENCREA),2)+"/"+StrZero(Month(SE1->E1_VENCREA),2)+"/"+AllTrim(Str(Year(SE1->E1_VENCREA))),oFont7,100)
-		oPrint:say(1115,1620,"Agência/Codigo Beneficiário"			,oFont1,100)
-		oPrint:say(1168,1917,SUBSTR(M->Ag_Conta,1,4)+"-"+SUBSTR(M->Ag_Conta,5,1)+"/"+SUBSTR(M->Ag_Conta,7,7)+"-"+SUBSTR(M->Ag_Conta,14,1),oFont7,100)
-		oPrint:say(1195,1620,"Cart./nosso número"				,oFont1,100)
+		nAltLin	:= 80
+		oPrint:Line(1010-nAltLin,1600,1010-nAltLin,2200)//Linha 1 Box
+		oPrint:Line(1090-nAltLin,1600,1090-nAltLin,2200)//Linha 2 Box
+		oPrint:Line(1170-nAltLin,1600,1170-nAltLin,2200)//Linha 3 Box
+		oPrint:Line(1250-nAltLin,1600,1250-nAltLin,2200)//Linha 4 Box
+		oPrint:Line(1330-nAltLin,1600,1330-nAltLin,2200)//Linha 5 Box
+		oPrint:Line(1410-nAltLin,1600,1410-nAltLin,2200)//Linha 6 Box
+		oPrint:Line(1490-nAltLin,1600,1490-nAltLin,2200)//Linha 6 Box
+		oPrint:Line(1570-nAltLin,1600,1570-nAltLin,2200)//Linha 6 Box
+		oPrint:Line(1650-nAltLin,1600,1650-nAltLin,2200)//Linha 6 Box
+		oPrint:say(1035-nAltLin,1620,"Vencimento"						,oFont1,100)
+		oPrint:say(1085-nAltLin,2030,StrZero(Day(SE1->E1_VENCREA),2)+"/"+StrZero(Month(SE1->E1_VENCREA),2)+"/"+AllTrim(Str(Year(SE1->E1_VENCREA))),oFont7,100)
+		oPrint:say(1115-nAltLin,1620,"Agência/Codigo Beneficiário"			,oFont1,100)
+		oPrint:say(1168-nAltLin,1917,SUBSTR(M->Ag_Conta,1,4)+"-"+SUBSTR(M->Ag_Conta,5,1)+"/"+SUBSTR(M->Ag_Conta,7,7)+"-"+SUBSTR(M->Ag_Conta,14,1),oFont7,100)
+		oPrint:say(1195-nAltLin,1620,"Cart./nosso número"				,oFont1,100)
 
 		Do Case
 
 			Case M->Banco == "237" //Bradesco
-			oPrint:say(1245,1910,"09/"+M->NumBoleta+"-"+M->DV_NNUM,oFont7,100)
+			oPrint:say(1245-nAltLin,1910,"09/"+M->NumBoleta+"-"+M->DV_NNUM,oFont7,100)
 
 		EndCase
 
-		oPrint:say(1275,1620,"1(=) Valor do Documento"	,oFont1,100)
-		oPrint:say(1329,2000,Transform(SE1->E1_VALOR-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
-		oPrint:say(1355,1620,"2(-) Desconto/Abatimento"	,oFont1,100)
-		IIf(SE1->E1_DECRESC > 0,oPrint:say(1370,2000,Transform(SE1->E1_DECRESC,"@E 999,999,999.99"),oFont7,100),)
+		oPrint:say(1275-nAltLin,1620,"1(=) Valor do Documento"	,oFont1,100)
+		oPrint:say(1329-nAltLin,2000,Transform(SE1->E1_VALOR-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
+		oPrint:say(1355-nAltLin,1620,"2(-) Desconto/Abatimento"	,oFont1,100)
+		IIf(SE1->E1_DECRESC > 0,oPrint:say(1370-nAltLin,2000,Transform(SE1->E1_DECRESC,"@E 999,999,999.99"),oFont7,100),)
 
 		IF SE1->E1_DESCFIN > 0
 
@@ -1231,24 +1233,24 @@ Static Function fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFile) //Boleto Brade
 
 		EndIF
 
-		IIf(nVlrDescAbat > 0,oPrint:say(1370,2000,Transform(nVlrDescAbat,"@E 999,999,999.99"),oFont7,100),)
+		IIf(nVlrDescAbat > 0,oPrint:say(1370-nAltLin,2000,Transform(nVlrDescAbat,"@E 999,999,999.99"),oFont7,100),)
 
 		IF nVlrDescAbat > 0 //exibe mensagem de desconto, caso possua
-			oPrint:say(1215,0120,"Considerar Desconto/Abatimento de R$ "+transform(nVlrDescAbat,"@E 999999.99"),oFont1,100)
+			oPrint:say(1215-nAltLin,0120,"Considerar Desconto/Abatimento de R$ "+transform(nVlrDescAbat,"@E 999999.99"),oFont1,100)
 		EndIF
 
-		oPrint:say(1435,1620,"3(-) Outras Deduções"		,oFont1,100)
+		oPrint:say(1435-nAltLin,1620,"3(-) Outras Deduções"		,oFont1,100)
 
 		//TESTE DESCONTO DO VALOR DE ABATIMENTO NCC(DEVOLUCAO)
 		IF SE1->E1_VALLIQ > 0
-			oPrint:say(1450,2000,Transform(SE1->E1_VALOR - SE1->E1_SALDO - nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
+			oPrint:say(1450-nAltLin,2000,Transform(SE1->E1_VALOR - SE1->E1_SALDO - nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
 		EndIF
 
-		oPrint:say(1515,1620,"4(+) Mora/Multa"			,oFont1,100)
-		oPrint:say(1595,1620,"5(+) Outros Acréscimos"		,oFont1,100)
-		Iif(SE1->E1_ACRESC > 0, oPrint:Say  (1610,2000,AllTrim(Transform(SE1->E1_ACRESC,"@E 999,999,999.99")),oFont7,100), )
+		oPrint:say(1515-nAltLin,1620,"4(+) Mora/Multa"			,oFont1,100)
+		oPrint:say(1595-nAltLin,1620,"5(+) Outros Acréscimos"		,oFont1,100)
+		Iif(SE1->E1_ACRESC > 0, oPrint:Say  (1610-nAltLin,2000,AllTrim(Transform(SE1->E1_ACRESC,"@E 999,999,999.99")),oFont7,100), )
 
-		oPrint:say(1675,1620,"6(=) Valor Cobrado"			,oFont1,100)
+		oPrint:say(1675-nAltLin,1620,"6(=) Valor Cobrado"			,oFont1,100)
 
 		IF SE1->E1_VALLIQ > 0
 			nVlrCobrado := SE1->E1_SALDO - nVlrDescAbat - SE1->E1_DECRESC + SE1->E1_ACRESC - nVlrImpRet
@@ -1256,26 +1258,26 @@ Static Function fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFile) //Boleto Brade
 			nVlrCobrado := SE1->E1_VALOR - nVlrDescAbat - SE1->E1_DECRESC + SE1->E1_ACRESC - nVlrImpRet
 		EndIF
 
-		oPrint:Line(1732,0100,1732,2200)//Linha 6
-		oPrint:say(1765,0120,"Pagador"						,oFont2,100)
-		oPrint:say(1765,0270,SubStr(SA1->A1_NOME,1,50)	,oFont2,100)
+		oPrint:Line(1732-nAltLin,0100,1732-nAltLin,2200)//Linha 6
+		oPrint:say(1765-nAltLin,0120,"Pagador"						,oFont2,100)
+		oPrint:say(1765-nAltLin,0270,SubStr(SA1->A1_NOME,1,50)	,oFont2,100)
 
 		IF SA1->A1_PESSOA = "F"
-			oPrint:say(1765,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 999.999.999-99"),oFont2,100)
+			oPrint:say(1765-nAltLin,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 999.999.999-99"),oFont2,100)
 		Else
-			oPrint:say(1765,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 99.999.999/9999-99"),oFont2,100)
+			oPrint:say(1765-nAltLin,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 99.999.999/9999-99"),oFont2,100)
 		EndIF
 
-		oPrint:say(1800,0270,IIF(EMPTY(SA1->A1_ENDCOB),AllTrim(SA1->A1_END )+" - "+AllTrim(SA1->A1_BAIRRO),SA1->A1_ENDCOB+" - "+SA1->A1_BAIRROC)			,oFont2,100)
-		oPrint:say(1835,0270,IIF(EMPTY(SA1->A1_ENDCOB),SA1->A1_CEP+"   "+SA1->A1_MUN+" - "+SA1->A1_EST,SA1->A1_CEPC+"   "+SA1->A1_MUNC+" - "+SA1->A1_ESTC),oFont2,100)
-		oPrint:say(1880,0120,"Pagador/Avalista"			,oFont2,100)
+		oPrint:say(1800-nAltLin,0270,IIF(EMPTY(SA1->A1_ENDCOB),AllTrim(SA1->A1_END )+" - "+AllTrim(SA1->A1_BAIRRO),SA1->A1_ENDCOB+" - "+SA1->A1_BAIRROC)			,oFont2,100)
+		oPrint:say(1835-nAltLin,0270,IIF(EMPTY(SA1->A1_ENDCOB),SA1->A1_CEP+"   "+SA1->A1_MUN+" - "+SA1->A1_EST,SA1->A1_CEPC+"   "+SA1->A1_MUNC+" - "+SA1->A1_ESTC),oFont2,100)
+		oPrint:say(1880-nAltLin,0120,"Pagador/Avalista"			,oFont2,100)
 
 		IF "3391" $ M->Ag
-			oPrint:say(1860,0320,SUBSTR(SM0->M0_NOMECOM,1,40)  + SPACE(10) + "CNPJ "+transform(SM0->M0_CGC,"@R 99.999.999/9999-99")  ,oFont8,100)
+			oPrint:say(1860-nAltLin,0320,SUBSTR(SM0->M0_NOMECOM,1,40)  + SPACE(10) + "CNPJ "+transform(SM0->M0_CGC,"@R 99.999.999/9999-99")  ,oFont8,100)
 		EndIF
 
-		oPrint:Line(1890,0100,1890,2200)//Linha 7
-		oPrint:say(1915,1730,"Autenticação Mecânica"		,oFont1,100)
+		oPrint:Line(1890-nAltLin,0100,1890-nAltLin,2200)//Linha 7
+		oPrint:say(1915-nAltLin,1730,"Autenticação Mecânica"		,oFont1,100)
 
 		/////////////////////////////
 		//Terceira parte da Boleta	/
@@ -1305,123 +1307,123 @@ Static Function fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFile) //Boleto Brade
 		MontaLinha()
 
 		//Terceira Parte da Boleta
-		oPrint:SayBitmap( 002020,0100,aBitMap[1],320,080) // Logo Bradesco
-		oPrint:SayBitmap( 002920,1900,aBitMap[3],300,090) // Logo ISO da Boleta
-		oPrint:say(002090,0450,M->Cod_Comp,oFont5,100)
+		oPrint:SayBitmap( 002020-nAltLin,0100,aBitMap[1],320,080) // Logo Bradesco
+		oPrint:SayBitmap( 002920-nAltLin,1900,aBitMap[3],300,090) // Logo ISO da Boleta
+		oPrint:say(002090-nAltLin,0450,M->Cod_Comp,oFont5,100)
 
 		//Impressão da Linha Digitavel
-		oPrint:Say(002090,0700,M->LineDig,oFont4,100)
-		oPrint:Box (002100,1600,2825,1601)// Box Principal
+		oPrint:Say(002090-nAltLin,0700,M->LineDig,oFont4,100)
+		oPrint:Box (002100-nAltLin,1600,2825-nAltLin,1601)// Box Principal
 
-		oPrint:Line(002100,0100,002100,2200)// Linha 1
-		oPrint:say(002125,0120,"Local de Pagamento",oFont1,100)
-		oPrint:say(002135,0410,"BANCO BRADESCO S.A "		   ,oFont7,100)
-		oPrint:say(002175,0410,"PAGAR PREFERENCIALMENTE EM QUALQUER AGENCIA BRADESCO. " ,oFont7,100)
-		oPrint:say(002125,1620,"Vencimento",oFont1,100)
-		oPrint:say(002175,2030,StrZero(Day(SE1->E1_VENCREA),2)+"/"+StrZero(Month(SE1->E1_VENCREA),2)+"/"+AllTrim(Str(Year(SE1->E1_VENCREA))),oFont7,100)
+		oPrint:Line(002100-nAltLin,0100,002100-nAltLin,2200)// Linha 1
+		oPrint:say(002125-nAltLin,0120,"Local de Pagamento",oFont1,100)
+		oPrint:say(002135-nAltLin,0410,"BANCO BRADESCO S.A "		   ,oFont7,100)
+		oPrint:say(002175-nAltLin,0410,"PAGAR PREFERENCIALMENTE EM QUALQUER AGENCIA BRADESCO. " ,oFont7,100)
+		oPrint:say(002125-nAltLin,1620,"Vencimento",oFont1,100)
+		oPrint:say(002175-nAltLin,2030,StrZero(Day(SE1->E1_VENCREA),2)+"/"+StrZero(Month(SE1->E1_VENCREA),2)+"/"+AllTrim(Str(Year(SE1->E1_VENCREA))),oFont7,100)
 
-		oPrint:Line(002185,0100,002185,2200)// Linha 2
-		oPrint:say(002210,0120,"Beneficiário",oFont1,100)
-		oPrint:say(002255,0120,SUBSTR(SM0->M0_NOMECOM,1,40) + SPACE(10) + "CNPJ "+transform(SM0->M0_CGC,"@R 99.999.999/9999-99")   ,oFont2,100)//SA1->A1_NOME
-		oPrint:say(002210,1620,"Agência/Código Beneficiário",oFont1,100)
-		oPrint:say(002255,1920,SUBSTR(M->Ag_Conta,1,4)+"-"+SUBSTR(M->Ag_Conta,5,1)+"/"+SUBSTR(M->Ag_Conta,7,7)+"-"+SUBSTR(M->Ag_Conta,14,1),oFont7,100)
+		oPrint:Line(002185-nAltLin,0100,002185-nAltLin,2200)// Linha 2
+		oPrint:say(002210-nAltLin,0120,"Beneficiário",oFont1,100)
+		oPrint:say(002255-nAltLin,0120,SUBSTR(SM0->M0_NOMECOM,1,40) + SPACE(10) + "CNPJ "+transform(SM0->M0_CGC,"@R 99.999.999/9999-99")   ,oFont2,100)//SA1->A1_NOME
+		oPrint:say(002210-nAltLin,1620,"Agência/Código Beneficiário",oFont1,100)
+		oPrint:say(002255-nAltLin,1920,SUBSTR(M->Ag_Conta,1,4)+"-"+SUBSTR(M->Ag_Conta,5,1)+"/"+SUBSTR(M->Ag_Conta,7,7)+"-"+SUBSTR(M->Ag_Conta,14,1),oFont7,100)
 
-		oPrint:Line(002265,0100,002265,2200)// Linha 3
-		oPrint:say(002290,0120,"Data do Documento",oFont1,100)
-		oPrint:say(002290,0380,"N° do Documento",oFont1,100)
-		oPrint:say(002290,0720,"Espécie Doc.",oFont1,100)
-		oPrint:say(002290,0900,"Aceite",oFont1,100)
-		oPrint:say(002290,1080,"Data Processamento",oFont1,100)
-		oPrint:say(002290,1620,"Cart./Nosso Número",oFont1,100)
-		oPrint:say(002335,0140,StrZero(Day(SE1->E1_EMISSAO),2)+"/"+StrZero(Month(SE1->E1_EMISSAO),2)+"/"+AllTrim(Str(Year(SE1->E1_EMISSAO))),oFont2,100)
-		oPrint:say(002335,0390,AllTrim(SE1->E1_PEDIDO),oFont2,100)
-		oPrint:say(002335,0720,"DM",oFont2,100)
-		oPrint:say(002335,0930,M->Aceite,oFont2,100)
-		oPrint:say(002335,1400,StrZero(Day(SE1->E1_EMISSAO),2)+"/"+StrZero(Month(SE1->E1_EMISSAO),2)+"/"+AllTrim(Str(Year(SE1->E1_EMISSAO))),oFont2,100)
+		oPrint:Line(002265-nAltLin,0100,002265-nAltLin,2200)// Linha 3
+		oPrint:say(002290-nAltLin,0120,"Data do Documento",oFont1,100)
+		oPrint:say(002290-nAltLin,0380,"N° do Documento",oFont1,100)
+		oPrint:say(002290-nAltLin,0720,"Espécie Doc.",oFont1,100)
+		oPrint:say(002290-nAltLin,0900,"Aceite",oFont1,100)
+		oPrint:say(002290-nAltLin,1080,"Data Processamento",oFont1,100)
+		oPrint:say(002290-nAltLin,1620,"Cart./Nosso Número",oFont1,100)
+		oPrint:say(002335-nAltLin,0140,StrZero(Day(SE1->E1_EMISSAO),2)+"/"+StrZero(Month(SE1->E1_EMISSAO),2)+"/"+AllTrim(Str(Year(SE1->E1_EMISSAO))),oFont2,100)
+		oPrint:say(002335-nAltLin,0390,AllTrim(SE1->E1_PEDIDO),oFont2,100)
+		oPrint:say(002335-nAltLin,0720,"DM",oFont2,100)
+		oPrint:say(002335-nAltLin,0930,M->Aceite,oFont2,100)
+		oPrint:say(002335-nAltLin,1400,StrZero(Day(SE1->E1_EMISSAO),2)+"/"+StrZero(Month(SE1->E1_EMISSAO),2)+"/"+AllTrim(Str(Year(SE1->E1_EMISSAO))),oFont2,100)
 
 		Do Case
 			Case M->Banco == "237" //Bradesco
-			oPrint:say(002335,1920,"09/"+M->NumBoleta + "-" + DV_NNUM,oFont7,100)
+			oPrint:say(002335-nAltLin,1920,"09/"+M->NumBoleta + "-" + DV_NNUM,oFont7,100)
 		EndCase
 
-		oPrint:Line(002345,0100,002345,2200)// Linha 4
-		oPrint:say(002370,0120,"Uso do Banco"	,oFont1,100)
-		oPrint:say(002370,0320,"Cip"			,oFont1,100)
-		oPrint:say(002415,0320,"000"          ,oFont2,100)
-		oPrint:say(002370,0380,"Carteira"		,oFont1,100)
-		oPrint:say(002370,0720,"Quantidade"	,oFont1,100)
-		oPrint:say(002370,1100,"Valor"		,oFont1,100)
-		oPrint:say(002400,1080,"x"			,oFont1,100)
-		oPrint:say(002370,1620,"1(=) Valor do Documento",oFont1,100)
-		oPrint:say(002415,2000,transform(SE1->E1_VALOR-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
-		oPrint:say(002415,0400,M->Carteira,oFont2,100)
-		oPrint:say(002415,0520,"R$",oFont2,100)
+		oPrint:Line(002345-nAltLin,0100,002345-nAltLin,2200)// Linha 4
+		oPrint:say(002370-nAltLin,0120,"Uso do Banco"	,oFont1,100)
+		oPrint:say(002370-nAltLin,0320,"Cip"			,oFont1,100)
+		oPrint:say(002415-nAltLin,0320,"000"          ,oFont2,100)
+		oPrint:say(002370-nAltLin,0380,"Carteira"		,oFont1,100)
+		oPrint:say(002370-nAltLin,0720,"Quantidade"	,oFont1,100)
+		oPrint:say(002370-nAltLin,1100,"Valor"		,oFont1,100)
+		oPrint:say(002400-nAltLin,1080,"x"			,oFont1,100)
+		oPrint:say(002370-nAltLin,1620,"1(=) Valor do Documento",oFont1,100)
+		oPrint:say(002415-nAltLin,2000,transform(SE1->E1_VALOR-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
+		oPrint:say(002415-nAltLin,0400,M->Carteira,oFont2,100)
+		oPrint:say(002415-nAltLin,0520,"R$",oFont2,100)
 
-		oPrint:Line(002425,0100,002425,2200)// Linha 5
-		oPrint:Line(002505,1600,002505,2200)//Linha Box 6
-		oPrint:Line(002585,1600,002585,2200)//Linha Box 7
-		oPrint:Line(002665,1600,002665,2200)//Linha Box 8
-		oPrint:Line(002745,1600,002745,2200)//Linha Box 9
+		oPrint:Line(002425-nAltLin,0100,002425-nAltLin,2200)// Linha 5
+		oPrint:Line(002505-nAltLin,1600,002505-nAltLin,2200)//Linha Box 6
+		oPrint:Line(002585-nAltLin,1600,002585-nAltLin,2200)//Linha Box 7
+		oPrint:Line(002665-nAltLin,1600,002665-nAltLin,2200)//Linha Box 8
+		oPrint:Line(002745-nAltLin,1600,002745-nAltLin,2200)//Linha Box 9
 
-		oPrint:say(002450,0120,"Instruções de Responsabilidade do Beneficiário      ***Valores expressos em R$ ***",oFont1,100)
-		oPrint:say(002450,1620,"2(-) Desconto/Abatimento",oFont1,100)
-		Iif(nVlrDescAbat > 0,oPrint:say(002520,2000,Transform(nVlrDescAbat,"@E 999,999,999.99"),oFont7,100),)
+		oPrint:say(002450-nAltLin,0120,"Instruções de Responsabilidade do Beneficiário      ***Valores expressos em R$ ***",oFont1,100)
+		oPrint:say(002450-nAltLin,1620,"2(-) Desconto/Abatimento",oFont1,100)
+		Iif(nVlrDescAbat > 0,oPrint:say(002520-nAltLin,2000,Transform(nVlrDescAbat,"@E 999,999,999.99"),oFont7,100),)
 
 		IF nVlrDescAbat > 0 //exibe mensagem de desconto, caso possua
-			oPrint:say(02780,0120,"Considerar Desconto/Abatimento de R$ "+transform(nVlrDescAbat,"@E 999999.99"),oFont1,100)
+			oPrint:say(02780-nAltLin,0120,"Considerar Desconto/Abatimento de R$ "+transform(nVlrDescAbat,"@E 999999.99"),oFont1,100)
 		EndIF
 
 		nVlrDescAbat := 0
 
-		oPrint:say(002560,1620,"3(-) Outras Deduções",oFont1,100)
+		oPrint:say(002560-nAltLin,1620,"3(-) Outras Deduções",oFont1,100)
 
 		//TESTE DESCONTO DO VALOR DE ABATIMENTO NCC(DEVOLUCAO)
 		IF SE1->E1_VALLIQ > 0
-			oPrint:say(2600,2000,Transform(SE1->E1_VALOR - SE1->E1_SALDO-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
+			oPrint:say(2600-nAltLin,2000,Transform(SE1->E1_VALOR - SE1->E1_SALDO-nVlrImpRet,"@E 999,999,999.99"),oFont7,100)
 		EndIF
 
-		oPrint:say(002640,1620,"4(+) Mora/Multa",oFont1,100)
-		oPrint:say(002720,1620,"5(+) Outros Acréscimos",oFont1,100)
+		oPrint:say(002640-nAltLin,1620,"4(+) Mora/Multa",oFont1,100)
+		oPrint:say(002720-nAltLin,1620,"5(+) Outros Acréscimos",oFont1,100)
 		Iif(SE1->E1_ACRESC > 0, oPrint:Say  (002760,2000,AllTrim(Transform(SE1->E1_ACRESC,"@E 999,999,999.99")),oFont7,100), )
 
-		oPrint:say(002800,1620,"6(=) Valor Cobrado",oFont1,100)
+		oPrint:say(002800-nAltLin,1620,"6(=) Valor Cobrado",oFont1,100)
 		nVlrCobrado := 0
 
-		oPrint:Line(002825,0100,002825,2200)// Linha 10
-		oPrint:Line(003050,0100,003050,2200)// Linha 11
+		oPrint:Line(002825-nAltLin,0100,002825-nAltLin,2200)// Linha 10
+		oPrint:Line(003030,0100,003030,2200)// Linha 11
 
 		Do Case
 			Case M->Banco == "237"
 
 			IF lRet == .T.
-				oPrint:say(02500,0120,"Após o Vencimento só pode ser pago no Banco Bradesco.",oFont1,100)
-				oPrint:say(002550,0120,"Após o Vencimento mora dia R$ "+AllTrim(Transform(SE1->E1_VALJUR, "@E 999999.99")),oFont1,100)
-				oPrint:say(002600,0120,"Valor que corresponde a juros de mora de 1% ao mês acrescido de variação do IGPM",oFont1,100)
+				oPrint:say(02500-nAltLin,0120,"Após o Vencimento só pode ser pago no Banco Bradesco.",oFont1,100)
+				oPrint:say(002550-nAltLin,0120,"Após o Vencimento mora dia R$ "+AllTrim(Transform(SE1->E1_VALJUR, "@E 999999.99")),oFont1,100)
+				oPrint:say(002600-nAltLin,0120,"Valor que corrpara vesponde a juros de mora de 1% ao mês acrescido de variação do IGPM",oFont1,100)
 
 				IF !EMPTY(SE1->E1_PARCELA)
-					oPrint:say(002650,0120,"Parcela Nr: "+SE1->E1_PARCELA,oFont1,100) //05/12/16
+					oPrint:say(002650-nAltLin,0120,"Parcela Nr: "+SE1->E1_PARCELA,oFont1,100) //05/12/16
 				EndIF
 
 			EndIF
 
 		EndCase
 
-		oPrint:say(002850,0120,"Pagador",oFont1,100)
-		oPrint:say(002850,0250,SubStr(SA1->A1_NOME,1,50),oFont8,100)
+		oPrint:say(002850-nAltLin,0120,"Pagador",oFont1,100)
+		oPrint:say(002850-nAltLin,0250,SubStr(SA1->A1_NOME,1,50),oFont8,100)
 
 		IF SA1->A1_PESSOA = "F"
-			oPrint:say(002850,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 999.999.999-99"),oFont8,100)
+			oPrint:say(002850-nAltLin,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 999.999.999-99"),oFont8,100)
 		Else
-			oPrint:say(002850,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 99.999.999/9999-99"),oFont8,100)
+			oPrint:say(002850-nAltLin,1450,"CNPJ "+transform(SA1->A1_CGC,"@R 99.999.999/9999-99"),oFont8,100)
 		EndIF
 
-		oPrint:say(002875,0250,IIF(EMPTY(SA1->A1_ENDCOB),AllTrim(SA1->A1_END )+" - "+AllTrim(SA1->A1_BAIRRO),SA1->A1_ENDCOB+" - "+SA1->A1_BAIRROC)		  ,oFont8,100)
-		oPrint:say(002899,0250,IIF(EMPTY(SA1->A1_ENDCOB),SA1->A1_CEP+"   "+SA1->A1_MUN+" - "+SA1->A1_EST,SA1->A1_CEPC+"   "+SA1->A1_MUNC+" - "+SA1->A1_ESTC),oFont8,100)
-		oPrint:say(002899,1340,"Autenticação Mecânica",oFont1,100)
-		oPrint:say(002899,1760,"Ficha de Compensação",oFont1,100)
+		oPrint:say(002875-nAltLin,0250,IIF(EMPTY(SA1->A1_ENDCOB),AllTrim(SA1->A1_END )+" - "+AllTrim(SA1->A1_BAIRRO),SA1->A1_ENDCOB+" - "+SA1->A1_BAIRROC)		  ,oFont8,100)
+		oPrint:say(002899-nAltLin,0250,IIF(EMPTY(SA1->A1_ENDCOB),SA1->A1_CEP+"   "+SA1->A1_MUN+" - "+SA1->A1_EST,SA1->A1_CEPC+"   "+SA1->A1_MUNC+" - "+SA1->A1_ESTC),oFont8,100)
+		oPrint:say(002899-nAltLin,1340,"Autenticação Mecânica",oFont1,100)
+		oPrint:say(002899-nAltLin,1760,"Ficha de Compensação",oFont1,100)
 
 		// Impressão do código de barras.
-		oPrint:FWMsBar("INT25",69,2,M->CodBarras,oPrint,.F.,,.T.,0.025,1.5,NIL,NIL,NIL,.F.)
+		oPrint:FWMsBar("INT25",66,2,M->CodBarras,oPrint,.F.,,.T.,0.025,1.4,NIL,NIL,NIL,.F.)
 		Eject
 		oPrint:Endpage()
 		oPrint:Print()
