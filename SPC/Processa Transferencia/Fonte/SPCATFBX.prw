@@ -489,8 +489,11 @@ Static Function ProcAtivo()
 	Local cStBaixa		:= ""
 	Local cStInclus		:= ""
 	Local nDprAcum		:= 0
-	Private lMsErroAuto := .F.
-	Private lMsHelpAuto := .T.
+	Local aErro         := {}
+	Local nJ
+	Private lMsErroAuto     := .F.
+	Private lMsHelpAuto     := .T.
+    Private lAutoErrNoFile  := .T.
 
 	//Define a régua		
 	zProcRegua(oProcess2, Len(aFieldsATV), 5)
@@ -524,6 +527,10 @@ Static Function ProcAtivo()
 				cBaixaAtu	:= SN3->N3_BAIXA
 				cHistor 	:= SN3->N3_HISTOR
 				
+				lMsErroAuto     := .F.
+				lMsHelpAuto     := .T.
+            	lAutoErrNoFile  := .T.
+
 				If cBaixaAtu = "0"
 					aCab := { {"FN6_FILIAL" ,XFilial("FN6") ,NIL},;
 					{"FN6_CBASE" 	,cBase 		,NIL},;
@@ -554,7 +561,16 @@ Static Function ProcAtivo()
 					If lMsErroAuto
 					    // MostraErro()
 						nProcErr++
-						cStBaixa	:= "Erro: Falha no execauto de baixa"
+						cStBaixa	:= "Erro: "
+						aErro := GetAutoGrLog()
+						For nJ := 1 To Len(aErro)
+							if ( aErro[nJ] != nil )
+								If !Empty(cStBaixa)
+									cStBaixa += CRLF
+								EndIf
+								cStBaixa += aErro[nJ]
+							endif
+						Next
 						aFieldsATV[nX][02] := oVermelho
 						DisarmTransaction()
 					Else
@@ -700,6 +716,7 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo, _nValOri, _nValAcum, _cGrupo)
 			ZW2->ZW2_CREDIT		:= cCredito
 			ZW2->ZW2_VALOR     	:= nValor
 			ZW2->ZW2_HIST		:= cHist
+			ZW2->ZW2_ERRDES	    := "Contabilizacao nao iniciada"
 			ZW2->ZW2_GRUPO      := _cGrupo
 			ZW2->(MsUnLock())
 		Next
@@ -752,7 +769,12 @@ Static Function fContabil(_nTotZW2)
 	Local nCT2Val		:= 0
 	Local cCT2Hist		:= ""
 	Local nI
-	Private lMsErroAuto := .F.
+    Local cDescErro     := ""
+	Local aErro         := {}
+	Local nJ
+	Private lMsErroAuto     := .F.
+	Private lMsHelpAuto     := .T.
+    Private lAutoErrNoFile  := .T.
 
 	//Define a régua		
 	zProcRegua(oProcess3, _nTotZW2, 5)
@@ -862,11 +884,32 @@ Static Function fContabil(_nTotZW2)
 		Next
 
 		//Execauto
-		lMsErroAuto	:= .F.
+		lMsErroAuto		:= .F.
+		lAutoErrNoFile  := .T.
 		Begin Transaction
 		MSExecAuto( {|X,Y,Z| CTBA102(X,Y,Z)} ,aCab ,aItens, 3)
 		If lMsErroAuto 
 			// MostraErro()
+            cDescErro	:= "Erro: "
+            aErro := GetAutoGrLog()
+            For nJ := 1 To Len(aErro)
+                if ( aErro[nJ] != nil )
+                    If !Empty(cDescErro)
+                        cDescErro += CRLF
+                    EndIf
+                    cDescErro += aErro[nJ]
+                endif
+            Next
+            ZW2->(DbSetOrder(1))
+			ZW2->(DbGoTop())
+			While !ZW2->(EOF())
+				If ZW2->ZW2_TIPO = "1" .AND. ZW2->ZW2_STATUS = "2"
+					RecLock("ZW2", .F.)	
+					ZW2->ZW2_ERRDES     := cDescErro
+					ZW2->(MsUnLock())
+				EndIf
+				ZW2->(DbSkip())
+			EndDo
 			DisarmTransaction()
 			nContErr++
 		Else
@@ -876,6 +919,7 @@ Static Function fContabil(_nTotZW2)
 				If ZW2->ZW2_TIPO = "1"
 					RecLock("ZW2", .F.)	
 					ZW2->ZW2_STATUS     := "1"
+					ZW2->ZW2_ERRDES     := "Sem Erro"
 					ZW2->(MsUnLock())
 					nContOK++
 				EndIf

@@ -21,7 +21,7 @@
 Função de update de dicionários para compatibilização
 
 @author TOTVS Protheus
-@since  21/06/2024
+@since  26/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -144,7 +144,7 @@ Return NIL
 Função de processamento da gravação dos arquivos
 
 @author TOTVS Protheus
-@since  21/06/2024
+@since  26/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -349,7 +349,7 @@ Return lRet
 Função de processamento da gravação do SX2 - Arquivos
 
 @author TOTVS Protheus
-@since  21/06/2024
+@since  26/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -498,7 +498,7 @@ Return NIL
 Função de processamento da gravação do SX3 - Campos
 
 @author TOTVS Protheus
-@since  21/06/2024
+@since  26/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -782,7 +782,7 @@ aAdd( aSX3, { ;
 	'06'																	, ; //X3_ORDEM
 	'ZW1_BAIXA'																, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
-	40																		, ; //X3_TAMANHO
+	80																		, ; //X3_TAMANHO
 	0																		, ; //X3_DECIMAL
 	'Status Baixa'															, ; //X3_TITULO
 	'Status Baixa'															, ; //X3_TITSPA
@@ -829,7 +829,7 @@ aAdd( aSX3, { ;
 	'07'																	, ; //X3_ORDEM
 	'ZW1_INCLUS'															, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
-	40																		, ; //X3_TAMANHO
+	80																		, ; //X3_TAMANHO
 	0																		, ; //X3_DECIMAL
 	'Sts Inclusao'															, ; //X3_TITULO
 	'Sts Inclusao'															, ; //X3_TITSPA
@@ -1159,6 +1159,53 @@ aAdd( aSX3, { ;
 aAdd( aSX3, { ;
 	'ZW2'																	, ; //X3_ARQUIVO
 	'05'																	, ; //X3_ORDEM
+	'ZW2_ERRDES'															, ; //X3_CAMPO
+	'C'																		, ; //X3_TIPO
+	80																		, ; //X3_TAMANHO
+	0																		, ; //X3_DECIMAL
+	'Desc Erro'																, ; //X3_TITULO
+	'Desc Erro'																, ; //X3_TITSPA
+	'Desc Erro'																, ; //X3_TITENG
+	'Descricao do erro'														, ; //X3_DESCRIC
+	'Descricao do erro'														, ; //X3_DESCSPA
+	'Descricao do erro'														, ; //X3_DESCENG
+	''																		, ; //X3_PICTURE
+	''																		, ; //X3_VALID
+	'x       x       x       x       x       x       x       x       x       x       x       x       x       x       x x', ; //X3_USADO
+	''																		, ; //X3_RELACAO
+	''																		, ; //X3_F3
+	0																		, ; //X3_NIVEL
+	'xxxxxx x'																, ; //X3_RESERV
+	''																		, ; //X3_CHECK
+	''																		, ; //X3_TRIGGER
+	'U'																		, ; //X3_PROPRI
+	'S'																		, ; //X3_BROWSE
+	'A'																		, ; //X3_VISUAL
+	'R'																		, ; //X3_CONTEXT
+	''																		, ; //X3_OBRIGAT
+	''																		, ; //X3_VLDUSER
+	''																		, ; //X3_CBOX
+	''																		, ; //X3_CBOXSPA
+	''																		, ; //X3_CBOXENG
+	''																		, ; //X3_PICTVAR
+	''																		, ; //X3_WHEN
+	''																		, ; //X3_INIBRW
+	''																		, ; //X3_GRPSXG
+	''																		, ; //X3_FOLDER
+	''																		, ; //X3_CONDSQL
+	''																		, ; //X3_CHKSQL
+	''																		, ; //X3_IDXSRV
+	'N'																		, ; //X3_ORTOGRA
+	''																		, ; //X3_TELA
+	''																		, ; //X3_POSLGT
+	'N'																		, ; //X3_IDXFLD
+	''																		, ; //X3_AGRUP
+	''																		, ; //X3_MODAL
+	''																		} ) //X3_PYME
+
+aAdd( aSX3, { ;
+	'ZW2'																	, ; //X3_ARQUIVO
+	'06'																	, ; //X3_ORDEM
 	'ZW2_DATA'																, ; //X3_CAMPO
 	'D'																		, ; //X3_TIPO
 	8																		, ; //X3_TAMANHO
@@ -1205,7 +1252,7 @@ aAdd( aSX3, { ;
 
 aAdd( aSX3, { ;
 	'ZW2'																	, ; //X3_ARQUIVO
-	'06'																	, ; //X3_ORDEM
+	'07'																	, ; //X3_ORDEM
 	'ZW2_DC'																, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
 	1																		, ; //X3_TAMANHO
@@ -1252,7 +1299,7 @@ aAdd( aSX3, { ;
 
 aAdd( aSX3, { ;
 	'ZW2'																	, ; //X3_ARQUIVO
-	'07'																	, ; //X3_ORDEM
+	'08'																	, ; //X3_ORDEM
 	'ZW2_ESPECI'															, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
 	1																		, ; //X3_TAMANHO
@@ -1299,7 +1346,7 @@ aAdd( aSX3, { ;
 
 aAdd( aSX3, { ;
 	'ZW2'																	, ; //X3_ARQUIVO
-	'08'																	, ; //X3_ORDEM
+	'09'																	, ; //X3_ORDEM
 	'ZW2_TIPO'																, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
 	1																		, ; //X3_TAMANHO
@@ -1346,7 +1393,7 @@ aAdd( aSX3, { ;
 
 aAdd( aSX3, { ;
 	'ZW2'																	, ; //X3_ARQUIVO
-	'09'																	, ; //X3_ORDEM
+	'10'																	, ; //X3_ORDEM
 	'ZW2_DEBITO'															, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
 	20																		, ; //X3_TAMANHO
@@ -1393,7 +1440,7 @@ aAdd( aSX3, { ;
 
 aAdd( aSX3, { ;
 	'ZW2'																	, ; //X3_ARQUIVO
-	'10'																	, ; //X3_ORDEM
+	'11'																	, ; //X3_ORDEM
 	'ZW2_CREDIT'															, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
 	20																		, ; //X3_TAMANHO
@@ -1440,7 +1487,7 @@ aAdd( aSX3, { ;
 
 aAdd( aSX3, { ;
 	'ZW2'																	, ; //X3_ARQUIVO
-	'11'																	, ; //X3_ORDEM
+	'12'																	, ; //X3_ORDEM
 	'ZW2_VALOR'																, ; //X3_CAMPO
 	'N'																		, ; //X3_TIPO
 	16																		, ; //X3_TAMANHO
@@ -1487,7 +1534,7 @@ aAdd( aSX3, { ;
 
 aAdd( aSX3, { ;
 	'ZW2'																	, ; //X3_ARQUIVO
-	'12'																	, ; //X3_ORDEM
+	'13'																	, ; //X3_ORDEM
 	'ZW2_HIST'																, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
 	40																		, ; //X3_TAMANHO
@@ -1534,7 +1581,7 @@ aAdd( aSX3, { ;
 
 aAdd( aSX3, { ;
 	'ZW2'																	, ; //X3_ARQUIVO
-	'13'																	, ; //X3_ORDEM
+	'14'																	, ; //X3_ORDEM
 	'ZW2_GRUPO'																, ; //X3_CAMPO
 	'C'																		, ; //X3_TIPO
 	4																		, ; //X3_TAMANHO
@@ -1677,7 +1724,7 @@ Return NIL
 Função de processamento da gravação do SIX - Indices
 
 @author TOTVS Protheus
-@since  21/06/2024
+@since  26/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -1778,7 +1825,7 @@ Return NIL
 Função de processamento da gravação dos Helps de Campos
 
 @author TOTVS Protheus
-@since  21/06/2024
+@since  26/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -1930,6 +1977,18 @@ aAdd( aHlpSpa, 'Status Contabilizacao' )
 
 PutSX1Help( "PZW2_STATUS", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
 AutoGrLog( "Atualizado o Help do campo " + "ZW2_STATUS" )
+
+aHlpPor := {}
+aAdd( aHlpPor, 'Descricao do erro' )
+
+aHlpEng := {}
+aAdd( aHlpEng, 'Descricao do erro' )
+
+aHlpSpa := {}
+aAdd( aHlpSpa, 'Descricao do erro' )
+
+PutSX1Help( "PZW2_ERRDES", aHlpPor, aHlpEng, aHlpSpa, .T.,,.T. )
+AutoGrLog( "Atualizado o Help do campo " + "ZW2_ERRDES" )
 
 aHlpPor := {}
 aAdd( aHlpPor, 'Data Inserido' )
@@ -2297,7 +2356,7 @@ Return NIL
 Função de processamento abertura do SM0 modo exclusivo
 
 @author TOTVS Protheus
-@since  21/06/2024
+@since  26/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/
@@ -2340,7 +2399,7 @@ Return lOpen
 Função de leitura do LOG gerado com limitacao de string
 
 @author TOTVS Protheus
-@since  21/06/2024
+@since  26/06/2024
 @obs    Gerado por EXPORDIC - V.7.3.1.1 EFS / Upd. V.5.2.1 EFS
 @version 1.0
 /*/

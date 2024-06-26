@@ -497,10 +497,13 @@ Static Function ProcAtivo()
 	Local nDprAcum		:= 0
 	Local nDprMes		:= 0
 	Local nDprBal		:= 0
-	Private lMsErroAuto := .F.
-	Private lMsHelpAuto := .T.
+	Local aErro         := {}
+	Local nJ
+	Private lMsErroAuto     := .F.
+	Private lMsHelpAuto     := .T.
+    Private lAutoErrNoFile  := .T.
 
-	cPlaq 		:= "000001"//teste
+	// cPlaq 		:= "000001"//teste
 	
 	//Define a régua		
 	zProcRegua(oProcess2, Len(aFieldsATV), 5)
@@ -538,10 +541,10 @@ Static Function ProcAtivo()
 			nTaxa1 		:= aFieldsATV[nX][12]
 			nDprMes		:= aFieldsATV[nX][14]
 			nDprBal		:= aFieldsATV[nX][13]
-			// cPlaq 		:= AllTrim(aFieldsATV[nX][09])//teste
+			cPlaq 		:= AllTrim(aFieldsATV[nX][09])//teste
 			
-			cItem	:= SOMA1(cItem)//teste
-			cPlaq	:= SOMA1(cPlaq)//teste
+			// cItem	:= SOMA1(cItem)//teste
+			// cPlaq	:= SOMA1(cPlaq)//teste
 			
 			SNG->(DbSetOrder(1))
 			If SNG->(DBSeek(FWXFilial('SNG') + cGrpDest))
@@ -551,8 +554,9 @@ Static Function ProcAtivo()
 			aCab2 		:= {}
 			aItens 		:= {}
 
-			lMsErroAuto := .F.
-			lMsHelpAuto := .T.
+			lMsErroAuto     := .F.
+			lMsHelpAuto     := .T.
+            lAutoErrNoFile  := .T.
 
 			AAdd(aCab2,{"N1_FILIAL" 	, XFilial("SN1") 	,NIL})
 			AAdd(aCab2,{"N1_CBASE" 		, cBase 	,NIL})
@@ -560,7 +564,7 @@ Static Function ProcAtivo()
 			AAdd(aCab2,{"N1_AQUISIC"	, dAquisic 	,NIL})
 			AAdd(aCab2,{"N1_DESCRIC"	, cDescric 	,NIL})
 			AAdd(aCab2,{"N1_QUANTD" 	, nQtd 		,NIL})
-			AAdd(aCab2,{"N1_CHAPA" 		, cPlaq 	,NIL})
+			AAdd(aCab2,{"N1_CHAPA" 		, cPlaq+cItem,NIL})
 			AAdd(aCab2,{"N1_PATRIM" 	, cPatrim 	,NIL})
 			AAdd(aCab2,{"N1_GRUPO" 		, cGrpDest 	,NIL})
 
@@ -587,7 +591,16 @@ Static Function ProcAtivo()
 			If lMsErroAuto 
 				// MostraErro()
 				nProcErr++
-				cStInclus	:= "Erro: Falha no execauto de inclusao"
+				cStInclus	:= "Erro: "
+				aErro := GetAutoGrLog()
+				For nJ := 1 To Len(aErro)
+					if ( aErro[nJ] != nil )
+						If !Empty(cStInclus)
+							cStInclus += CRLF
+						EndIf
+						cStInclus += aErro[nJ]
+					endif
+				Next
 				aFieldsATV[nX][02] := oVermelho
 				DisarmTransaction()
 			Else
@@ -722,7 +735,8 @@ Static Function fGravaCT2(_cBase, _cItem, _cTipo, _nValOri, _nValAcum, _cGrupo)
 			ZW2->ZW2_DEBITO     := cDebito 
 			ZW2->ZW2_CREDIT		:= cCredito
 			ZW2->ZW2_VALOR     	:= nValor
-			ZW2->ZW2_HIST		:= cHist	
+			ZW2->ZW2_HIST		:= cHist
+            ZW2->ZW2_ERRDES	    := "Contabilizacao nao iniciada"
 			ZW2->ZW2_GRUPO      := _cGrupo
 			ZW2->(MsUnLock())
 
@@ -776,7 +790,12 @@ Static Function fContabil(_nTotZW2)
 	Local nCT2Val		:= 0
 	Local cCT2Hist		:= ""
 	Local nI
-	Private lMsErroAuto := .F.
+    Local cDescErro     := ""
+	Local aErro         := {}
+	Local nJ
+	Private lMsErroAuto     := .F.
+	Private lMsHelpAuto     := .T.
+    Private lAutoErrNoFile  := .T.
 
 	//Define a régua		
 	zProcRegua(oProcess3, _nTotZW2, 5)
@@ -885,12 +904,34 @@ Static Function fContabil(_nTotZW2)
 						{'CT2_HIST' 	,cCT2Hist           		, NIL}})
 			cLinha	:= Soma1(cLinha)
 		Next
-		//Execauto
-		lMsErroAuto	:= .F.
+		
+        //Execauto
+		lMsErroAuto	    := .F.
+        lAutoErrNoFile  := .T.
 		Begin Transaction
 		MSExecAuto( {|X,Y,Z| CTBA102(X,Y,Z)} ,aCab ,aItens, 3)
 		If lMsErroAuto 
 			// MostraErro()
+            cDescErro	:= "Erro: "
+            aErro := GetAutoGrLog()
+            For nJ := 1 To Len(aErro)
+                if ( aErro[nJ] != nil )
+                    If !Empty(cDescErro)
+                        cDescErro += CRLF
+                    EndIf
+                    cDescErro += aErro[nJ]
+                endif
+            Next
+            ZW2->(DbSetOrder(1))
+			ZW2->(DbGoTop())
+			While !ZW2->(EOF())
+				If ZW2->ZW2_TIPO = "2"  .AND. ZW2->ZW2_STATUS = "2"
+					RecLock("ZW2", .F.)	
+					ZW2->ZW2_ERRDES     := cDescErro
+					ZW2->(MsUnLock())
+				EndIf
+				ZW2->(DbSkip())
+			EndDo
 			DisarmTransaction()
 			nContErr++
 		Else
@@ -900,6 +941,7 @@ Static Function fContabil(_nTotZW2)
 				If ZW2->ZW2_TIPO = "2"
 					RecLock("ZW2", .F.)	
 					ZW2->ZW2_STATUS     := "1"
+                    ZW2->ZW2_ERRDES     := "Sem Erro"
 					ZW2->(MsUnLock())
 					nContOK++
 				EndIf
