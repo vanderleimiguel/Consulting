@@ -4,7 +4,7 @@ Passo-a-Passo para compilacao de arquivos do Processa Transferencia:
 1. Compilar fontes: 
     Processa Transferencia\Fontes\SPCATFBX.prw               - Funcao para processamento de baixa e contabilizacao de ativos
     Processa Transferencia\Fontes\SPCATFIN.prw               - Funcao para processamento de inclusão e contabilizacao de ativos
-    Processa Transferencia\compatibilizador\UPDATV1.prw     - Compatibilizador tabelas ZW1 e ZW2    
+    Processa Transferencia\compatibilizador\UPDATV1.prw      - Compatibilizador tabelas ZW1 e ZW2    
 
 2. Executar o compatibilizador UPDATV1:
     Processa Transferencia\compatibilizador\UPDATV1.prw     - Compatibilizador tabelas ZW1 e ZW2 
