@@ -11,7 +11,7 @@ Static aRegua1   := {.F., .F., .F.}
 
 /*/{Protheus.doc} SPCATFIN
 Funcao para processamento de inclusão e contabilizacao de ativos
-@author Wagner Neves / Vanderlei Miguel
+@author Wagner Neves
 @since 21/06/2024
 @version 1.0
 @type function
