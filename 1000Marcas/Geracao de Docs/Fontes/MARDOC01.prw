@@ -11,7 +11,7 @@ MARDOC01 - Geracao de Documentos
 @version 1.0
 @type function
 /*/
-User Function MARDOC01(cFil, cDoc, cSerie)
+User Function MARDOC01(cFil, cDoc, cSerie, nOpc)
 	Local aArea     := GetArea()
 	Local cQuery    := ""
 	Local cAliasSE1 := GetNextAlias()
@@ -33,6 +33,7 @@ User Function MARDOC01(cFil, cDoc, cSerie)
 	Default cFil    := "01"
 	Default cDoc	:= PadR("000295242"	, TamSX3('F2_DOC')[1])
 	Default cSerie  := PadR("001"		, TamSX3('F2_SERIE')[1])
+	Default nOpc    := 4
 
 	//Gera banco atual (Codigo + agencia + conta)
 	cBcoAtual := cCodBanco + cCodAgenc + cCodConta
@@ -65,26 +66,31 @@ User Function MARDOC01(cFil, cDoc, cSerie)
 				MAKEDIR(cPath)
 			Endif
 
-			// //Gera XML
-			cFileXML   	:= "XML" + AllTrim(cDoc) + AllTrim(cParc)
-			fGeraXML(cDoc, cSerie, cFileXML)
-
-			// //Gera Danfe
-			cFileNFE   	:= "NFE" + AllTrim(cDoc) + AllTrim(cParc)
-			fGerDanfe(cDoc, cSerie, cFileNFE)
-
-			//Percorre Parcelas Gerando o Boleto  
-			While !(cAliasSE1)->(EOF())
-				cParc		:= (cAliasSE1)->E1_PARCELA
-				cFileBOL   	:= "BOL" + AllTrim(cDoc) + AllTrim(cParc)
-				//Gera Boleto
-				If cCodBanco = "341"//Banco Itau
-					fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFileBOL)
-				ElseIf cCodBanco = "237"//Banco Bradesco
-					fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFileBOL)
-				EndIf
-				(cAliasSE1)->(DbSkip())
-			EndDo
+			//Gera arquivos conforme opcao recebida
+			If nOpc = 1 .OR. nOpc = 4
+				//Gera XML
+				cFileXML   	:= "XML" + AllTrim(cDoc) + AllTrim(cParc)
+				fGeraXML(cDoc, cSerie, cFileXML)
+			
+			ElseIf nOpc = 2 .OR. nOpc = 4
+				//Gera Danfe
+				cFileNFE   	:= "NFE" + AllTrim(cDoc) + AllTrim(cParc)
+				fGerDanfe(cDoc, cSerie, cFileNFE)
+			
+			ElseIf nOpc = 3 .OR. nOpc = 4
+				//Percorre Parcelas Gerando o Boleto  
+				While !(cAliasSE1)->(EOF())
+					cParc		:= (cAliasSE1)->E1_PARCELA
+					cFileBOL   	:= "BOL" + AllTrim(cDoc) + AllTrim(cParc)
+					//Gera Boleto
+					If cCodBanco = "341"//Banco Itau
+						fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFileBOL)
+					ElseIf cCodBanco = "237"//Banco Bradesco
+						fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFileBOL)
+					EndIf
+					(cAliasSE1)->(DbSkip())
+				EndDo
+			EndIf
 		EndIf
 	EndIf
 	(cAliasSE1)->(DbCloseArea())
@@ -263,7 +269,7 @@ Static Function fGerDanfe(_cNota, _cSerie, cFile)
 			oDanfe:SetMargin(60, 60, 60, 60)
 
 			//Força a impressão em PDF
-//			oDanfe:nDevice  := 6
+			//oDanfe:nDevice  := 6
 			oDanfe:cPathPDF := cPath
 			oDanfe:lServer  := .F.
 			oDanfe:lViewPDF := .F. //.T.
