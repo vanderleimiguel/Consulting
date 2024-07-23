@@ -11,17 +11,12 @@ MARDOC01 - Geracao de Documentos
 @version 1.0
 @type function
 /*/
-User Function MARDOC01(cFil, cDoc, cSerie, nOpc)
+User Function MARDOC01(cFil, cDoc, cSerie)
 	Local aArea     := GetArea()
 	Local cQuery    := ""
 	Local cAliasSE1 := GetNextAlias()
-	Local cBcoAtual := ""
-	Local cCodBanco := PadR("341"		, TamSX3('EE_CODIGO')[1])//Itau Banco
-	Local cCodAgenc := PadR("0002"		, TamSX3('EE_AGENCIA')[1])//Itau Agencia
-	Local cCodConta := PadR("67154"		, TamSX3('EE_CONTA')[1])//Itau Conta
-	// Local cCodBanco := PadR("237"		, TamSX3('EE_CODIGO')[1])//Bradesco Banco
-	// Local cCodAgenc := PadR("3393"		, TamSX3('EE_AGENCIA')[1])//Bradesco Agencia
-	// Local cCodConta := PadR("3510"		, TamSX3('EE_CONTA')[1])//Bradesco conta
+	Local cBcoAtual := SuperGetMV("MV_XBANCO",.F.,"3410002 67154")//Testes: Itau 3410002 67154 / Bradesco 2373393 3510
+	Local cCodBanco := ""
 	Local cFileXML  := ""
 	Local cFileBOL  := ""
 	Local cFileNFE  := ""
@@ -33,10 +28,8 @@ User Function MARDOC01(cFil, cDoc, cSerie, nOpc)
 	Default cFil    := "01"
 	Default cDoc	:= PadR("000295242"	, TamSX3('F2_DOC')[1])
 	Default cSerie  := PadR("001"		, TamSX3('F2_SERIE')[1])
-	Default nOpc    := 4
 
-	//Gera banco atual (Codigo + agencia + conta)
-	cBcoAtual := cCodBanco + cCodAgenc + cCodConta
+	cCodBanco		:= SubStr(cBcoAtual,1,TamSx3("EE_CODIGO")[1])
 
     //Query busca documentos
     cQuery := "SELECT E1_FILIAL, E1_PREFIXO, E1_NUM, E1_CLIENTE, E1_LOJA, E1_EMISSAO, E1_PARCELA "
@@ -66,31 +59,26 @@ User Function MARDOC01(cFil, cDoc, cSerie, nOpc)
 				MAKEDIR(cPath)
 			Endif
 
-			//Gera arquivos conforme opcao recebida
-			If nOpc = 1 .OR. nOpc = 4
-				//Gera XML
-				cFileXML   	:= "XML" + AllTrim(cDoc) + AllTrim(cParc)
-				fGeraXML(cDoc, cSerie, cFileXML)
-			
-			ElseIf nOpc = 2 .OR. nOpc = 4
-				//Gera Danfe
-				cFileNFE   	:= "NFE" + AllTrim(cDoc) + AllTrim(cParc)
-				fGerDanfe(cDoc, cSerie, cFileNFE)
-			
-			ElseIf nOpc = 3 .OR. nOpc = 4
-				//Percorre Parcelas Gerando o Boleto  
-				While !(cAliasSE1)->(EOF())
-					cParc		:= (cAliasSE1)->E1_PARCELA
-					cFileBOL   	:= "BOL" + AllTrim(cDoc) + AllTrim(cParc)
-					//Gera Boleto
-					If cCodBanco = "341"//Banco Itau
-						fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFileBOL)
-					ElseIf cCodBanco = "237"//Banco Bradesco
-						fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFileBOL)
-					EndIf
-					(cAliasSE1)->(DbSkip())
-				EndDo
-			EndIf
+			//Gera XML
+			cFileXML   	:= "XML" + AllTrim(cDoc) + AllTrim(cParc)
+			fGeraXML(cDoc, cSerie, cFileXML)
+
+			//Gera Danfe
+			cFileNFE   	:= "NFE" + AllTrim(cDoc) + AllTrim(cParc)
+			fGerDanfe(cDoc, cSerie, cFileNFE)
+
+			//Percorre Parcelas Gerando o Boleto  
+			While !(cAliasSE1)->(EOF())
+				cParc		:= (cAliasSE1)->E1_PARCELA
+				cFileBOL   	:= "BOL" + AllTrim(cDoc) + AllTrim(cParc)
+				//Gera Boleto
+				If cCodBanco = "341"//Banco Itau
+					fGrBolItau(cDoc, cSerie, cParc, cBcoAtual, cFileBOL)
+				ElseIf cCodBanco = "237"//Banco Bradesco
+					fGrBolBrad(cDoc, cSerie, cParc, cBcoAtual, cFileBOL)
+				EndIf
+				(cAliasSE1)->(DbSkip())
+			EndDo
 		EndIf
 	EndIf
 	(cAliasSE1)->(DbCloseArea())
