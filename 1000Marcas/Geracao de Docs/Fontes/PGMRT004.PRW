@@ -4,18 +4,18 @@
 #DEFINE IMP_SPOOL 2
 #DEFINE IMP_PDF   6
 
-/*/{Protheus.doc} MARDOC01
-MARDOC01 - Geracao de Documentos
+/*/{Protheus.doc} PGMRT004
+Função de Geracao de Documentos
 @author Wagner Neves
 @since 17/06/2024
 @version 1.0
 @type function
 /*/
-User Function MARDOC01(cFil, cDoc, cSerie)
+User Function PGMRT004(cFil, cDoc, cSerie)
 	Local aArea     := GetArea()
 	Local cQuery    := ""
 	Local cAliasSE1 := GetNextAlias()
-	Local cBcoAtual := SuperGetMV("MV_XBANCO",.F.,"3410002 67154")//Testes: Itau 3410002 67154 / Bradesco 2373393 3510
+	Local cBcoAtual := SuperGetMV("MV_ZBANCO",.F.,"")//Testes: Itau 3410002 67154 / Bradesco 2373393 3510
 	Local cCodBanco := ""
 	Local cFileXML  := ""
 	Local cFileBOL  := ""
@@ -23,22 +23,24 @@ User Function MARDOC01(cFil, cDoc, cSerie)
 	Local cParc     := ""
 	Local cData     := ""
 	Local nTotSE1   := 0
+
+	Private cPasta  := SuperGetMv("MV_ZWFCOB1",.F.,"\AnexosCb\")
 	Private cPath   := ""
 	Private lPosFat := .T.
-	Default cFil    := "01"
-	Default cDoc	:= PadR("000295242"	, TamSX3('F2_DOC')[1])
-	Default cSerie  := PadR("001"		, TamSX3('F2_SERIE')[1])
+	// Default cFil    := "01"
+	// Default cDoc	:= PadR("000295242"	, TamSX3('F2_DOC')[1])
+	// Default cSerie  := PadR("001"		, TamSX3('F2_SERIE')[1])
 
 	cCodBanco		:= SubStr(cBcoAtual,1,TamSx3("EE_CODIGO")[1])
 
-    //Query busca documentos
-    cQuery := "SELECT E1_FILIAL, E1_PREFIXO, E1_NUM, E1_CLIENTE, E1_LOJA, E1_EMISSAO, E1_PARCELA "
-    cQuery += "FROM "+RetSqlName("SE1") + " SE1 "
-    cQuery += "WHERE E1_PREFIXO= '"+cSerie+"' "
-    cQuery += "AND E1_NUM= '"+cDoc+"' "
+	//Query busca documentos
+	cQuery := "SELECT E1_FILIAL, E1_PREFIXO, E1_NUM, E1_CLIENTE, E1_LOJA, E1_EMISSAO, E1_PARCELA "
+	cQuery += "FROM "+RetSqlName("SE1") + " SE1 "
+	cQuery += "WHERE E1_PREFIXO= '"+cSerie+"' "
+	cQuery += "AND E1_NUM= '"+cDoc+"' "
 	cQuery += "AND E1_FILIAL= '"+cFil+"' "
-    cQuery += "AND SE1.D_E_L_E_T_=' ' "
-    cQuery := ChangeQuery(cQuery)
+	cQuery += "AND SE1.D_E_L_E_T_=' ' "
+	cQuery := ChangeQuery(cQuery)
 	dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSE1,.F.,.T.)
 	Count To nTotSE1
 	(cAliasSE1)->(DbGoTop())
@@ -51,8 +53,7 @@ User Function MARDOC01(cFil, cDoc, cSerie)
 			cData   := StrTran(DTOC(STOD((cAliasSE1)->E1_EMISSAO)), "/", "")
 
 			//Define path para guardar arquivos
-			// cPath	:= "\Anexos\" + cCGC + "\" + xFilial('SE1') + "\" + cData + "\NF" +  cDoc + cSerie + "\"
-			cPath   := GetTempPath()
+			cPath	:= cPasta + cCGC + "\" + xFilial('SE1') + "\" + cData + "\NF" +  AllTrim(cDoc) + AllTrim(cSerie) + "\"
 
 			//Verifica se caminho existe
 			If !file(Substr(cPath,1,len(cPath)-1))
@@ -67,7 +68,7 @@ User Function MARDOC01(cFil, cDoc, cSerie)
 			cFileNFE   	:= "NFE" + AllTrim(cDoc) + AllTrim(cParc)
 			fGerDanfe(cDoc, cSerie, cFileNFE)
 
-			//Percorre Parcelas Gerando o Boleto  
+			//Percorre Parcelas Gerando o Boleto
 			While !(cAliasSE1)->(EOF())
 				cParc		:= (cAliasSE1)->E1_PARCELA
 				cFileBOL   	:= "BOL" + AllTrim(cDoc) + AllTrim(cParc)
@@ -282,12 +283,6 @@ Static Function fGerDanfe(_cNota, _cSerie, cFile)
 			//Chamando a impressão da danfe no RDMAKE
 			If RptStatus( {|lEnd| U_DANFEProc(@oDanfe, @lEnd, cIDEnt, Nil, Nil, .F., nil, nil)}, "Imprimindo DANFE..." )
 				_lRet := .t.
-				SF2->(dbsetorder(1))
-				If SF2->(dbSeek(xFilial('SF2') + _cNota + _cSerie))
-					Reclock("SF2",.f.)
-					SF2->F2_ZIMP := 'S'
-					MsUnlock("SF2")
-				EndIf
 			EndIf
 			oDanfe:Print()
 		Next

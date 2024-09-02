@@ -1,0 +1,15 @@
+Passo-a-Passo para instalação da Geracao de Docs:
+==============================================================
+
+1. Compilar fontes: 
+	Geracao de Docs\Fontes\PGMRT001.prw				- Função de geração de tela de Envio Manual de WorkFlows
+	Geracao de Docs\Fontes\PGMRT002.prw				- Função de envio de email
+	Geracao de Docs\Fontes\PGMRT003.prw				- Função de Notificação Eletrônica de Título
+	Geracao de Docs\Fontes\PGMRT004.prw				- Função de Geracao de Documentos
+	Geracao de Docs\Fontes\PGMRT005.prw				- Função de envio de documentos via Job
+	Geracao de Docs\Compatibilizador\UPD1000.prw	- Compatibilizador
+
+2. Executar Compatibilizador
+	Geracao de Docs\Compatibilizador\UPD1000.prw	- Compatibilizador
+	
+.Fim
