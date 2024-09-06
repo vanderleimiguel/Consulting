@@ -19,8 +19,8 @@ User Function PGMRT005()
     Local cAIEmail  := ""
     Local cPath     := ""
     Local cHtml     := ""
-    // Local cDoc      := ""
-    // Local cSerie    := ""
+    Local cDoc      := ""
+    Local cSerie    := ""
     Local lEnvio    := .F.
     Local cEmail    := ""
     Local cAssunto  := ""
@@ -32,8 +32,8 @@ User Function PGMRT005()
     Local cDataIni  := SuperGetMv("MV_ZWFCOB4",.F.,"20240501")
     Local cPasta    := SuperGetMv("MV_ZWFCOB1",.F.,"\AnexosCb\")
     Private lJob	:= ( GetRemoteType() == -1 )	// Identifica que não foi iniciado por SMARTCLIENT
-	Default cDoc	:= PadR("000295242"	, TamSX3('F2_DOC')[1])
-	Default cSerie  := PadR("001"		, TamSX3('F2_SERIE')[1])
+	// Default cDoc	:= PadR("000295242"	, TamSX3('F2_DOC')[1]) //VM Teste
+	// Default cSerie  := PadR("001"		, TamSX3('F2_SERIE')[1]) //VM Teste
 
 	IF lJob
 		cEmpInt := "01"
@@ -53,8 +53,8 @@ User Function PGMRT005()
     cQuery += " WHERE F2_CHVNFE <> '' "
     cQuery += " AND F2_HAUTNFE <> '' "
 	cQuery += " AND F2_XENMAIL <> '1' "
-    cQuery += " AND F2_SERIE= '"+cSerie+"' "
-    cQuery += " AND F2_DOC= '"+cDoc+"' "
+    // cQuery += " AND F2_SERIE= '"+cSerie+"' " //VM Teste
+    // cQuery += " AND F2_DOC= '"+cDoc+"' " //VM Teste
     cQuery += " AND E1_EMISSAO>= '"+cDataIni+"' "
     cQuery += " AND SF2.D_E_L_E_T_=' ' "
     cQuery := ChangeQuery(cQuery)
