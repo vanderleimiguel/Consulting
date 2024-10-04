@@ -1,0 +1,27 @@
+#Include 'Protheus.ch'
+
+
+//------------------------------------------------------------------------------------------------
+/*/	{Protheus.doc} MATA410x()
+
+	Este fonte existe apenas para contole do GCAD referente ao processo de 
+compilação dos releases. Este fonte foi fracionado na branch V12.1.4.
+	Para facilitar sua busca, confira o que mudou e onde está cada função na especificação do 
+Requisito (PDR_SER_CRM001 - PCREQ-2198) disponível no TFS no seguinte caminho: 
+C:\FONTES_TFS\Protheus_Padrao\Docs_Proj\Inovação\Roadmap 2014_2015
+\Serviços\CRM\PDR_SER_CRM001\Analise\PDR_SER_CRM001_PCREQ-2198 - Fracionamento do Fontes.docx 
+
+
+@return	Nulo
+
+@author	Thamara Villa Jacomo
+@since		30/01/2015
+@version	12
+/*/
+//-------------------------------------------------------------------------------------------------
+Function MATA410X()
+
+Return( Nil )
+
+ 
+

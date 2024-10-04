@@ -85,6 +85,12 @@ User Function XML_PDF(cArquiv, cTipoArq, nTipoXML, cCodMun)
 
 	Local oXmlCaminh := NIL
 
+	If IsBlind()
+		lJob := .T.
+	Else
+		lJob := .F.
+	Endif
+
 	IF !file('C:\TEMP')
 		MAKEDIR( 'C:\TEMP' )
 	ENDIF
@@ -106,7 +112,11 @@ User Function XML_PDF(cArquiv, cTipoArq, nTipoXML, cCodMun)
 	ENDIF
 
 	if !file(cArquiv)
-		MsgStop('Arquivo não encontrado')
+	    If lJob
+            ConOut('Arquivo não encontrado')
+        Else
+            MsgStop('Arquivo não encontrado') 
+        EndIf
 		Return
 	ENDIF
 
@@ -126,7 +136,11 @@ User Function XML_PDF(cArquiv, cTipoArq, nTipoXML, cCodMun)
 	if UPPER( cTipoArq ) == 'XML'
 		oXML := XmlParser(cTextArq,"_", @cError, @cWarning) // Validar XML
 		If (oXml == NIL )
-			MsgStop("Falha ao gerar Objeto XML arquivo: "+cError+" / "+cWarning)
+			If lJob
+				ConOut("Falha ao gerar Objeto XML arquivo: "+cError+" / "+cWarning)
+			Else
+				MsgStop("Falha ao gerar Objeto XML arquivo: "+cError+" / "+cWarning) 
+			EndIf
 			Return
 		Endif
 	ELSEIF UPPER( cTipoArq ) == 'JSON'
@@ -295,6 +309,21 @@ User Function XML_PDF(cArquiv, cTipoArq, nTipoXML, cCodMun)
 				cCpfCnpj    := WSAdvValue( oXml, "_TIPOS_INFRPS:_TIPOS_PRESTADOR:_TIPOS_CNPJ:TEXT","string" )
 				cInscMunic  := WSAdvValue( oXml, "_TIPOS_INFRPS:_TIPOS_PRESTADOR:_TIPOS_INSCRICAOMUNICIPAL:TEXT","string" )
 				cRazaoSoci  := SM0->M0_NOMECOM
+				cBairro     := SM0->M0_BAIRCOB
+				cEndereco   := SM0->M0_ENDCOB
+				cUF         := SM0->M0_ESTCOB
+			Case cCodMun = "1501402" //Belem
+				cDataEmiss  := WSAdvValue( oXml, "_RPS:_DATAEMISSAORPS:TEXT","string" )
+				if !EMPTY(cDataEmiss)
+					cHoraEmiss := SUBSTR( cDataEmiss, at('T', cDataEmiss) + 1, 5)
+					cDataEmiss := SUBSTR( cDataEmiss, 1, at('T', cDataEmiss) -1 )
+					cDataEmiss := DTOC(STOD(REPLACE(cDataEmiss, '-', '')))
+				ENDIF
+				cNumFNSe    := AllTrim(SF2->F2_NFELETR)
+				cCodVerf    := AllTrim(SF2->F2_CODNFE)
+				cCpfCnpj    := SM0->M0_CGC
+				cInscMunic  := WSAdvValue( oXml, "_RPS:_INSCRICAOMUNICIPALPRESTADOR:TEXT","string" )
+				cRazaoSoci  := WSAdvValue( oXml, "_RPS:_RAZAOSOCIALPRESTADOR:TEXT","string" )
 				cBairro     := SM0->M0_BAIRCOB
 				cEndereco   := SM0->M0_ENDCOB
 				cUF         := SM0->M0_ESTCOB
@@ -551,7 +580,15 @@ User Function XML_PDF(cArquiv, cTipoArq, nTipoXML, cCodMun)
 					cBairro     := WSAdvValue( oXml, "_TIPOS_INFRPS:_TIPOS_TOMADOR:_TIPOS_ENDERECO:_TIPOS_BAIRRO:TEXT","string" )
 					cEndereco   := WSAdvValue( oXml, "_TIPOS_INFRPS:_TIPOS_TOMADOR:_TIPOS_ENDERECO:_TIPOS_ENDERECO:TEXT","string" )
 					cUF         := WSAdvValue( oXml, "_TIPOS_INFRPS:_TIPOS_TOMADOR:_TIPOS_ENDERECO:_TIPOS_UF:TEXT","string" )
-            EndCase
+                Case cCodMun = "1501402" //Belem
+					cCpfCnpj    := WSAdvValue( oXml, "_RPS:_CPFCNPJTOMADOR:TEXT","string" )
+					cCpfCnpj    := Alltrim(Transform(cCpfCnpj, "@R 99.999.999/9999-99"))
+					cInscMunic  := WSAdvValue( oXml, "_RPS:_INSCRICAOMUNICIPALTOMADOR:TEXT","string" )
+					cRazaoSoci  := WSAdvValue( oXml, "_RPS:_RAZAOSOCIALTOMADOR:TEXT","string" )
+					cBairro     := WSAdvValue( oXml, "_RPS:_BAIRROTOMADOR:TEXT","string" )
+					cEndereco   := WSAdvValue( oXml, "_RPS:_LOGRADOUROTOMADOR:TEXT","string" )
+					cUF         := WSAdvValue( oXml, "_RPS:_INSCRICAOMUNICIPALTOMADOR:TEXT","string" )           
+			EndCase
 		EndIf
 	ELSEIF UPPER( cTipoArq ) == 'JSON'
 		If nTipoXML = 2
@@ -649,6 +686,8 @@ User Function XML_PDF(cArquiv, cTipoArq, nTipoXML, cCodMun)
 					cDescServi	:= WSAdvValue( oXml, "_INFRPS:_SERVICO:_DISCRIMINACAO:TEXT","string" )
                 Case cCodMun = "1302603" //Manaus
 					cDescServi	:= WSAdvValue( oXml, "_TIPOS_INFRPS:_TIPOS_SERVICO:_TIPOS_DISCRIMINACAO:TEXT","string" )
+				Case cCodMun = "1501402" //Belem
+					cDescServi	:= WSAdvValue( oXml, "_RPS:_DESCRICAORPS:TEXT","string" )
             EndCase
 		EndIf
 	ELSEIF UPPER( cTipoArq ) == 'JSON'
@@ -886,6 +925,43 @@ User Function XML_PDF(cArquiv, cTipoArq, nTipoXML, cCodMun)
 						cCOFINS    := ""
 					ENDIF
 					cPIS    := WSAdvValue( oXml, "_TIPOS_INFRPS:_TIPOS_SERVICO:_TIPOS_VALORES:_TIPOS_VALORPIS:TEXT","string" )
+					if !EMPTY( cPIS )
+						cPIS := Alltrim(Transform(val(cPIS), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cPIS    := ""
+					ENDIF
+				Case cCodMun = "1501402" //Belem
+					cValorServ := WSAdvValue( oXml, "_RPS:_ITENS:_ITEM:_VALORTOTAL:TEXT","string" )
+					if !EMPTY( cValorServ )
+						cValorServ := Alltrim(Transform(val(cValorServ), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cValorServ    := ""
+					ENDIF
+					cINSS   := WSAdvValue( oXml, "_RPS:_VALORINSS:TEXT","string" )
+					if !EMPTY( cINSS )
+						cINSS := Alltrim(Transform(val(cINSS), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cINSS    := ""
+					ENDIF
+					cIRRF   := WSAdvValue( oXml, "_RPS:_VALORIRRF:TEXT","string" )
+					if !EMPTY( cIRRF )
+						cIRRF := Alltrim(Transform(val(cIRRF), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cIRRF    := ""
+					ENDIF
+					cCSLL   := WSAdvValue( oXml, "_RPS:_VALORCSLL:TEXT","string" )
+					if !EMPTY( cCSLL )
+						cCSLL := Alltrim(Transform(val(cCSLL), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cCSLL    := ""
+					ENDIF
+					cCOFINS := WSAdvValue( oXml, "_RPS:_VALORCOFINS:TEXT","string" )
+					if !EMPTY( cCOFINS )
+						cCOFINS := Alltrim(Transform(val(cCOFINS), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cCOFINS    := ""
+					ENDIF
+					cPIS    := WSAdvValue( oXml, "_RPS:_VALORPIS:TEXT","string" )
 					if !EMPTY( cPIS )
 						cPIS := Alltrim(Transform(val(cPIS), PesqPict("SF2","F2_VALBRUT")))
 					Else
@@ -1168,6 +1244,37 @@ User Function XML_PDF(cArquiv, cTipoArq, nTipoXML, cCodMun)
 						cISS    := ""
 					ENDIF
 					cCredito    := WSAdvValue( oXml, "_TIPOS_INFRPS:_TIPOS_SERVICO:_TIPOS_VALORES:_TIPOS_VALORCREDITO:TEXT","string" )
+					if !EMPTY( cCredito )
+						cCredito := Alltrim(Transform(val(cCredito), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cCredito    := ""
+					ENDIF
+				Case cCodMun = "1501402" //Belem
+					cDeducoes    := WSAdvValue( oXml, "_RPS:_DEDUCOES:TEXT","string" )
+					if !EMPTY( cDeducoes )
+						cDeducoes := Alltrim(Transform(val(cDeducoes), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cDeducoes    := ""
+					ENDIF
+					cBaseCalc    := WSAdvValue( oXml, "_RPS:_ITENS:_ITEM:_VALORTOTAL:TEXT","string" )
+					if !EMPTY( cBaseCalc )
+						cBaseCalc := Alltrim(Transform(val(cBaseCalc), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cBaseCalc    := ""
+					ENDIF
+					cAliquota    := WSAdvValue( oXml, "_RPS:_ALIQUOTAATIVIDADE:TEXT","string" )
+					if !EMPTY( cAliquota )
+						cAliquota := Alltrim(Transform(val(cAliquota), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cAliquota    := ""
+					ENDIF
+					cISS    := WSAdvValue( oXml, "_RPS:_VALORISS:TEXT","string" )
+					if !EMPTY( cISS )
+						cISS := Alltrim(Transform(val(cISS), PesqPict("SF2","F2_VALBRUT")))
+					Else
+						cISS    := ""
+					ENDIF
+					cCredito    := WSAdvValue( oXml, "_RPS:_VALORCREDITO:TEXT","string" )
 					if !EMPTY( cCredito )
 						cCredito := Alltrim(Transform(val(cCredito), PesqPict("SF2","F2_VALBRUT")))
 					Else

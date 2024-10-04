@@ -7,6 +7,12 @@ User Function ENV_NFSE(cEmail, cArquivXML, cArquivPDF, cAssunto, cHtml, _cTipoAr
     Local cNomePDF  := ''
     Local aArquivo  := {}
 
+	If IsBlind()
+		lJob := .T.
+	Else
+		lJob := .F.
+	Endif
+
 	If at(",",cEmail) > 0
 		aEmails := strtokarr(cEmail, ",")
 	ElseIf at(";",cEmail) > 0
@@ -67,7 +73,11 @@ Static Function SendMail(cEmail,cAssunto,cHtml,cPathXML,cFiNameXML,cPathPDF,cFiN
 
 	IF EMPTY(cMailConta) .OR. EMPTY(cMailServer) .OR. EMPTY(cMailSenha) .OR. EMPTY(nPorta)
 		lRet := .F.
-		FWAlertWarning("Verifique se os parâmetros de e-mail estão corretos (MV_EMSENHA, MV_RELSERV, MV_PORSMTP, MV_EMCONTA).")
+		If lJob
+            ConOut("Verifique se os parâmetros de e-mail estão corretos (MV_EMSENHA, MV_RELSERV, MV_PORSMTP, MV_EMCONTA).")
+        Else
+            FWAlertWarning("Verifique se os parâmetros de e-mail estão corretos (MV_EMSENHA, MV_RELSERV, MV_PORSMTP, MV_EMCONTA).")
+        EndIf
 		Return lRet
 	ENDIF
 
@@ -125,21 +135,33 @@ Static Function SendMail(cEmail,cAssunto,cHtml,cPathXML,cFiNameXML,cPathPDF,cFiN
 
 	xRet := oServer:Init( "", cMailServer, cMailConta, cMailSenha, 0, nPorta ) //inicilizar o servidor
 	if xRet != 0
-		FWAlertWarning("O servidor SMTP não foi inicializado: " + oServer:GetErrorString( xRet ))
+		If lJob
+            ConOut("O servidor SMTP não foi inicializado: " + oServer:GetErrorString( xRet ))
+        Else
+            FWAlertWarning("O servidor SMTP não foi inicializado: " + oServer:GetErrorString( xRet ))
+        EndIf
 		lRet := .f.
 		return lRet
 	endif
 
 	xRet := oServer:SetSMTPTimeout( 60 ) //Indica o tempo de espera em segundos.
 	if xRet != 0
-		FWAlertWarning("Não foi possível definir " + cProtocol + " tempo limite para " + cValToChar( nTimeout ))
+		If lJob
+            ConOut("Não foi possível definir " + cProtocol + " tempo limite para " + cValToChar( nTimeout ))
+        Else
+            FWAlertWarning("Não foi possível definir " + cProtocol + " tempo limite para " + cValToChar( nTimeout ))
+        EndIf
 		lRet := .f.
         return lRet
 	endif
 
 	xRet := oServer:SMTPConnect()
 	if xRet <> 0
-		FWAlertWarning("Não foi possível conectar ao servidor SMTP: " + oServer:GetErrorString( xRet ))
+		If lJob
+            ConOut("Não foi possível conectar ao servidor SMTP: " + oServer:GetErrorString( xRet ))
+        Else
+            FWAlertWarning("Não foi possível conectar ao servidor SMTP: " + oServer:GetErrorString( xRet ))
+        EndIf
 		lRet := .f.
 		return lRet
 	endif
@@ -152,7 +174,11 @@ Static Function SendMail(cEmail,cAssunto,cHtml,cPathXML,cFiNameXML,cPathPDF,cFiN
 		//configuração (INI) do TOTVS Application Server, para determinar o valor.
 		xRet := oServer:SmtpAuth( cMailConta, cMailSenha )
 		if xRet <> 0
-			FWAlertWarning("Could not authenticate on SMTP server: " + oServer:GetErrorString( xRet ))
+			If lJob
+				ConOut("Could not authenticate on SMTP server: " + oServer:GetErrorString( xRet ))
+			Else
+				FWAlertWarning("Could not authenticate on SMTP server: " + oServer:GetErrorString( xRet ))
+			EndIf
 			oServer:SMTPDisconnect()
 			lRet := .f.
 			return lRet
@@ -161,14 +187,22 @@ Static Function SendMail(cEmail,cAssunto,cHtml,cPathXML,cFiNameXML,cPathPDF,cFiN
 
 	xRet := oMessage:Send( oServer )
 	if xRet <> 0
-		FWAlertWarning("Não foi possível enviar mensagem: " + oServer:GetErrorString( xRet ))
+		If lJob
+            ConOut("Não foi possível enviar mensagem: " + oServer:GetErrorString( xRet ))
+        Else
+            FWAlertWarning("Não foi possível enviar mensagem: " + oServer:GetErrorString( xRet ))
+        EndIf
 		lRet := .f.
         return lRet
 	endif
 
 	xRet := oServer:SMTPDisconnect()
 	if xRet <> 0
-		FWAlertWarning("Não foi possível desconectar o servidor SMTP: " + oServer:GetErrorString( xRet ))
+		If lJob
+            ConOut("Não foi possível desconectar o servidor SMTP: " + oServer:GetErrorString( xRet ))
+        Else
+            FWAlertWarning("Não foi possível desconectar o servidor SMTP: " + oServer:GetErrorString( xRet ))
+        EndIf
 		lRet := .f.
         return lRet
 	endif

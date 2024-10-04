@@ -13,26 +13,30 @@
     @see (links_or_references)
     /*/
 User Function CONSTXML()
-    Local cCaminho      := '/NFSERVICO/'+cfilant
-    Local cArquivXML    := ''
-    Local cArquivPDF    := ''
-    Local cEmail        := ''
-    Local lEnvio        := .F.
-    Local cDoc          := ''
-    Local cNomeClien    := ''
-    Local cTipoArq      := ''
-    Local nTipoXML      := 0
-    Local cCodMun       := ""
-    Local cChvNFE       := ""
-    Local cNumFNSe      := ""
-	Local cCodVerf      := ""
-    Local cAssunto      := ""
-    Local cFilNome      := ""
-    Local cHtml         := ""
+    Local aArea         := GetArea()
+    Local cQuery        := ""
+    Local cAliasSF2     := GetNextAlias()
+    Local cDataIni      := SuperGetMv("MV_ZWFCOB4",.F.,"20240501")
+    Private cCaminho    := '/NFSERVICO/'+cfilant
     Private cFileXML    := ""
+    Private lJob	    := ( GetRemoteType() == -1 )	// Identifica que não foi iniciado por SMARTCLIENT
+
+	IF lJob
+		cEmpInt := "01"
+		cFilInt := "01"
+
+		RpcClearEnv()
+		RpcSetEnv(cEmpInt,cFilInt)
+		CONOUT("["+LEFT(DTOC(Date()),5)+"]["+LEFT(Time(),5)+"][CONSTXML] Iniciando processamento via schedule.")
+		nOpca:= 1
+    EndIf
 
     if !ChkFile("SF2")
-        MsgStop('Tabela SF2 não encontrada')
+        If lJob
+            ConOut('Tabela SF2 não encontrada')
+        Else
+            MsgStop('Tabela SF2 não encontrada')
+        EndIf
 		Return
     ENDIF
 
@@ -58,21 +62,74 @@ User Function CONSTXML()
     // ENDIF
 
     If !ExistBlock("XML_PDF")
-        MsgStop('Função não compilada XML_PDF')
+        If lJob
+            ConOut('Função não compilada XML_PDF')
+        Else
+            MsgStop('Função não compilada XML_PDF')
+        EndIf
 		Return
     ENDIF
 
-    If SF2->(EoF())
-        MsgStop('Não está posicionado em uma NF')
-		Return
+    If lJob
+        //Query busca notas
+        cQuery := " SELECT F2_FILIAL, F2_DOC, F2_SERIE, F2_CLIENTE, F2_LOJA, F2_CHVNFE, F2_HAUTNFE, F2_XENMAIL "
+        cQuery += " FROM "+RetSqlName("SF2") + " SF2 "
+        cQuery += " WHERE F2_CHVNFE <> '' "
+        cQuery += " AND F2_HAUTNFE <> '' "
+        cQuery += " AND F2_XENMAIL <> '1' "
+        cQuery += " AND E1_EMISSAO>= '"+cDataIni+"' "
+        cQuery += " AND SF2.D_E_L_E_T_=' ' "
+        cQuery := ChangeQuery(cQuery)
+        dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSF2,.F.,.T.)
+        (cAliasSF2)->(DbGoTop())
+
+        While (cAliasSF2)->(!Eof())
+            SF2->(dbSetOrder(1))
+		    If SF2->(dbSeek( (cAliasSF2)->(F2_FILIAL + F2_DOC + F2_SERIE + F2_CLIENTE + F2_LOJA)))
+                fProcDocs()
+            EndIf
+            (cAliasSF2)->(DbSkip())
+        EndDo
+    Else
+        If SF2->(EoF())
+            MsgStop('Não está posicionado em uma NF')
+            Return
+        EndIf
+
+        fProcDocs()
     EndIf
 
-    cDoc    := ALLTRIM( SF2->F2_DOC )
-    cSerie  := ALLTRIM( SF2->F2_SERIE )
+    IF lJob
+		RpcClearEnv()
+	EndIf
+
+    FWRestArea(aArea)
+
+Return
+
+Static Function fProcDocs()
+    Local cArquivXML    := ''
+    Local cArquivPDF    := ''
+    Local cEmail        := ''
+    Local lEnvio        := .F.
+    Local cDoc          := ''
+    Local cNomeClien    := ''
+    Local cTipoArq      := ''
+    Local nTipoXML      := 0
+    Local cCodMun       := ""
+    Local cChvNFE       := ""
+    Local cNumFNSe      := ""
+	Local cCodVerf      := ""
+    Local cAssunto      := ""
+    Local cFilNome      := ""
+    Local cHtml         := ""
+
+    cDoc    := SF2->F2_DOC
+    cSerie  := SF2->F2_SERIE
     cCodMun := SM0->M0_CODMUN
     cChvNFE := SF2->F2_CHVNFE
-	cNumFNSe    := AllTrim(SF2->F2_NFELETR)
-	cCodVerf    := AllTrim(SF2->F2_CODNFE)
+    cNumFNSe    := AllTrim(SF2->F2_NFELETR)
+    cCodVerf    := AllTrim(SF2->F2_CODNFE)
     SA1->(DBSETORDER( 1 ))
     if SA1->(DBSEEK( xFilial('SA1') + SF2->F2_CLIENTE + SF2->F2_LOJA ))
         cNomeClien  := ALLTRIM( SA1->A1_NOME )
@@ -81,16 +138,28 @@ User Function CONSTXML()
         cNomeClien  := STRTRAN( cNomeClien, '.', '_' )
         cEmail      := ALLTRIM(SA1->A1_EMAIL)
     else
-        MsgStop('Cliente não encontrado')
+        If lJob
+            ConOut('Cliente não encontrado')
+        Else
+            MsgStop('Cliente não encontrado')
+        EndIf
     ENDIF
 
     if EMPTY( cEmail )
-        FWAlertWarning('Cliente não tem e-mail')
+        If lJob
+            ConOut('Cliente não tem e-mail')
+        Else
+            FWAlertWarning('Cliente não tem e-mail')
+        EndIf
     ENDIF
 
     If !Empty(cNumFNSe)
         //Gera XML
-        FwMsgRun( ,{|| nTipoXML := fGeraXML(cDoc, cSerie, cNomeClien, cCodMun) }, , "Gerando XML, por favor aguarde..." )
+        If lJob
+            nTipoXML := fGeraXML(cDoc, cSerie, cNomeClien, cCodMun)
+        Else
+            FwMsgRun( ,{|| nTipoXML := fGeraXML(cDoc, cSerie, cNomeClien, cCodMun) }, , "Gerando XML, por favor aguarde..." )
+        EndIf
         //Define se é arquivo xml ou JSON
         If cCodMun <> "3556701"
             cTipoArq := 'XML'
@@ -100,36 +169,48 @@ User Function CONSTXML()
         
         //Gera PDF
         if file(cFileXML)
-            FwMsgRun( ,{|| U_XML_PDF(cFileXML, cTipoArq, nTipoXML, cCodMun) }, , "Gerando PDF, por favor aguarde..." )
+            If lJob
+                U_XML_PDF(cFileXML, cTipoArq, nTipoXML, cCodMun)
+            Else
+                FwMsgRun( ,{|| U_XML_PDF(cFileXML, cTipoArq, nTipoXML, cCodMun) }, , "Gerando PDF, por favor aguarde..." )
+            EndIf
         else
-            MsgStop("Arquivo XML não encontrado") 
+            If lJob
+                ConOut("Arquivo XML não encontrado")
+            Else
+                MsgStop("Arquivo XML não encontrado") 
+            EndIf
             Return
         ENDIF
     else
-        MsgStop("Nota nao possui numero RPS, nao é possivel gerar XML") 
+        If lJob
+            ConOut("Nota nao possui numero RPS, nao é possivel gerar XML")
+        Else
+            MsgStop("Nota nao possui numero RPS, nao é possivel gerar XML") 
+        EndIf
         Return
     ENDIF
 
-    cArquivPDF  := 'C:\TEMP\NFSERVICO\'+cFilAnt+'\PDF\' + cFilAnt + "_" + cDoc + '_'  + cNomeClien +'.pdf'
+    cArquivPDF  := 'C:\TEMP\NFSERVICO\'+cFilAnt+'\PDF\' + cFilAnt + "_" + AllTrim(cDoc) + '_'  + cNomeClien +'.pdf'
     if file(cArquivPDF)
 
-        if file(cCaminho + '/PDF/' + cFilAnt + "_" + cDoc + '_'  + cNomeClien +'.pdf')
-            FErase(cCaminho + '/PDF/' + cFilAnt + "_" + cDoc + '_'  + cNomeClien +'.pdf')
+        if file(cCaminho + '/PDF/' + cFilAnt + "_" + AllTrim(cDoc) + '_'  + cNomeClien +'.pdf')
+            FErase(cCaminho + '/PDF/' + cFilAnt + "_" + AllTrim(cDoc) + '_'  + cNomeClien +'.pdf')
         ENDIF
 
         //Copia arquivos para servidor
-        __CopyFile(cArquivPDF, cCaminho + '/PDF/' + cFilAnt + "_" + cDoc + '_'  + cNomeClien +'.pdf')
+        __CopyFile(cArquivPDF, cCaminho + '/PDF/' + cFilAnt + "_" + AllTrim(cDoc) + '_'  + cNomeClien +'.pdf')
         If cTipoArq = 'XML'
-            __CopyFile(cFileXML  , cCaminho + '/XML/' + cFilAnt + "_" + cDoc + '_'  + cNomeClien +'.xml')
+            __CopyFile(cFileXML  , cCaminho + '/XML/' + cFilAnt + "_" + AllTrim(cDoc) + '_'  + cNomeClien +'.xml')
         Else
-            __CopyFile(cFileXML  , cCaminho + '/JSON/' + cFilAnt + "_" + cDoc + '_'  + cNomeClien +'.json')
+            __CopyFile(cFileXML  , cCaminho + '/JSON/' + cFilAnt + "_" + AllTrim(cDoc) + '_'  + cNomeClien +'.json')
         EndIf
 
-        cArquivPDF := cCaminho + '/PDF/' + cFilAnt + "_" + cDoc + '_'  + cNomeClien
+        cArquivPDF := cCaminho + '/PDF/' + cFilAnt + "_" + AllTrim(cDoc) + '_'  + cNomeClien
         If cTipoArq = 'XML'
-            cArquivXML := cCaminho + '/XML/' + cFilAnt + "_" + cDoc + '_'  + cNomeClien
+            cArquivXML := cCaminho + '/XML/' + cFilAnt + "_" + AllTrim(cDoc) + '_'  + cNomeClien
         Else
-            cArquivXML := cCaminho + '/JSON/' + cFilAnt + "_" + cDoc + '_'  + cNomeClien
+            cArquivXML := cCaminho + '/JSON/' + cFilAnt + "_" + AllTrim(cDoc) + '_'  + cNomeClien
         EndIf
 
         if file(cArquivPDF + ".pdf")
@@ -155,16 +236,28 @@ User Function CONSTXML()
 
             cEmail := "vanderleimiguel@hotmail.com"//VM
             cAssunto := "IBM Filial " +AllTrim(cFilNome)+ " NFS-e: " + cNumFNSe  
-            FwMsgRun( ,{|| lEnvio := U_ENV_NFSE(cEmail, cArquivXML, cArquivPDF, cAssunto, cHtml, cTipoArq) }, , "Enviando e-mail, por favor aguarde..." )//VM
+            If lJob
+                lEnvio := U_ENV_NFSE(cEmail, cArquivXML, cArquivPDF, cAssunto, cHtml, cTipoArq)
+            Else
+                FwMsgRun( ,{|| lEnvio := U_ENV_NFSE(cEmail, cArquivXML, cArquivPDF, cAssunto, cHtml, cTipoArq) }, , "Enviando e-mail, por favor aguarde..." )//VM
+            EndIf
         ENDIF
 
     else
-        MsgStop("Arquivo PDF não encontrado")
-		Return
+        If lJob
+            ConOut("Arquivo PDF não encontrado")
+        Else
+            MsgStop("Arquivo PDF não encontrado") 
+        EndIf
+        Return
     ENDIF
 
     if lEnvio
-        FWAlertSuccess("E-mail enviado para o cliente contando a NFS-e")
+        If lJob
+            ConOut("E-mail enviado para o cliente contando a NFS-e")
+        Else
+            FWAlertSuccess("E-mail enviado para o cliente contando a NFS-e")
+        EndIf
     ENDIF
 
 Return
@@ -175,7 +268,7 @@ Static Function fGeraXML(_cDoc, _cSerie, _cNomeClien, _cCodMun)
     Local _cCaminho := 'C:\TEMP\NFSERVICO\'+cFilAnt
     Local cIdflush  := _cSerie+_cDoc
     Local cURL     	:= PadR(GetNewPar("MV_SPEDURL","http://"),250)
-    Local cIdEnt    := RetIdEnti() //GetIdEnt()
+    Local cIdEnt    := RetIdEnti()
     Local nHdl 	    := 0
     Local nRet      := 0
 
@@ -228,9 +321,9 @@ Static Function fGeraXML(_cDoc, _cSerie, _cNomeClien, _cCodMun)
                 If !Empty(cXml) .OR. !Empty(cXmlERP)
                 
                     If _cCodMun <> "3556701"
-                        cFileXML := _cCaminho + '\XML\' + cFilAnt + "_" + _cDoc + '_'  + _cNomeClien +'.xml'
+                        cFileXML := _cCaminho + '\XML\' + cFilAnt + "_" + AllTrim(_cDoc) + '_'  + _cNomeClien +'.xml'
                     Else
-                        cFileXML := _cCaminho + '\JSON\' + cFilAnt + "_" + _cDoc + '_'  + _cNomeClien +'.json'
+                        cFileXML := _cCaminho + '\JSON\' + cFilAnt + "_" + AllTrim(_cDoc) + '_'  + _cNomeClien +'.json'
                     EndIf
 
                     if file(cFileXML)
@@ -239,7 +332,7 @@ Static Function fGeraXML(_cDoc, _cSerie, _cNomeClien, _cCodMun)
                     nHdl  :=	MsFCreate(cFileXML)
         
                     If ( nHdl >= 0 )
-                        If !Empty(cXml) .AND. _cCodMun <> "1302603" .AND. _cCodMun <> "3556701"
+                        If !Empty(cXml) .AND. _cCodMun <> "1302603" .AND. _cCodMun <> "3556701" .AND. _cCodMun <> "1501402"
                             FWrite (nHdl, cXml)
                             nRet    := 1
                         Else
@@ -250,33 +343,6 @@ Static Function fGeraXML(_cDoc, _cSerie, _cNomeClien, _cCodMun)
                     EndIf						
                     
                 EndIf
-
-                //Tratamento para geração do XML Cancelado.FDL.
-
-                If Type( "oWs:oWsRetornaNfseResult:OWSNOTAS:OWSNFSES5[1]:oWSNFECANCELADA:cXMLPROT" ) <> "U"
-                    cXml  := encodeUTF8(oWs:oWsRetornaNfseResult:OWSNOTAS:OWSNFSES5[1]:oWSNFECANCELADA:cXMLPROT)
-                    cXmlERP := encodeUTF8(oWs:oWsRetornaNfseResult:OWSNOTAS:OWSNFSES5[1]:oWSNFECANCELADA:cXMLERP)
-                
-                    If !Empty(cXml) .OR. !Empty(cXmlERP)
-                    
-                        cFileXML := _cCaminho + '\XML\' + cFilAnt + "_" + _cDoc + '_'  + _cNomeClien +'.xml'
-                        if file(cFileXML)
-                            FErase(cFileXML)
-                        ENDIF                
-                        nHdl  :=	MsFCreate(cFileXML)
-            
-                        If ( nHdl >= 0 )
-                            If !Empty(cXml)
-                                FWrite (nHdl, cXml)
-                                nRet    := 1
-                            Else
-                                FWrite (nHdl, cXmlERP)
-                                nRet    := 2
-                            EndIf
-                            FClose (nHdl)					
-                         EndIf						
-                    EndIf
-                EndIf	
             EndIf
         EndIf       
        
