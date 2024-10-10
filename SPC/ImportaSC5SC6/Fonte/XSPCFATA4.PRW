@@ -32,7 +32,20 @@ Info: Integração das compras Loja Virtual - Magento x Protheus
 ************************************************************************/
 User Function XSPCFATA4()
 
-	Private cArqOri := ""
+	Private cArqOri 	:= ""
+    Private nTxT
+    Private cPasta  	:= "c:\temp\
+    Private cFile   	:= cPasta + "ErroPed.txt"
+	Private nLinhaAtu  := 0
+
+    If file( cFile )
+		ferase( cFile )
+	Endif
+
+    nTxT := fCreate(cFile)
+    If nTxT == -1
+        MsgStop("Falha ao criar arquivo de log - erro "+str(ferror()))
+    Endif
 
 	//Mostra o Prompt para selecionar arquivos
 	cArqOri := tFileDialog( "CSV files (*.csv) ", 'Seleção de Arquivos', , , .F., )
@@ -42,18 +55,21 @@ User Function XSPCFATA4()
 
 		//Somente se existir o arquivo e for com a extensão CSV
 		If File(cArqOri) .And. Upper(SubStr(cArqOri, RAt('.', cArqOri) + 1, 3)) == 'CSV'
-			Processa({|| fImpCsv() }, "Importando...")
+			Processa({|| fImpCsv() }, "Importando pedidos...")
 		Else
 			MsgStop("Arquivo e/ou extensão inválida!", "Atenção")
 		EndIf
 	EndIf
+
+    If nTxT > -1
+        fClose(nTxT)
+    EndIf
 
 Return
 
 Static Function fImpCsv()
     Local nTotLinhas := 0
     Local cLinAtu    := ""
-    Local nLinhaAtu  := 0
     Local aLinha     := {}
     Local aCols      := {}
     Local oArquivo
@@ -106,6 +122,9 @@ Static Function fImpCsv()
 	Private dDtTrans  := SToD("  /  /    ")
 	Private dDtCompen := SToD("  /  /    ")
 
+    Private nLinIni := 0
+    Private nLinFin := 0
+    Private lImport := .F.
 
     //Definindo o arquivo a ser lido
     oArquivo := FWFileReader():New(cArqOri)
@@ -126,20 +145,32 @@ Static Function fImpCsv()
             oArquivo := FWFileReader():New(cArqOri)
             oArquivo:Open()
 
+            //Verifica linhas iniciais
+            LinhasCSV()
+            If lImport
+                If nLinIni < 1 .OR. nLinFin < 1
+                    MSGSTOP("Valores de linha inicial e linha final devem ser maior que 0!", "Importacao de Pedidos")
+                    Return                  
+                EndIf
+            Else
+                MSGSTOP("Importação de pedidos cancelada", "Importacao de Pedidos")
+                Return
+            EndIf
+
             //Enquanto tiver linhas
             While (oArquivo:HasLine())
                 aCols := {}
                 //Incrementa na tela a mensagem
                 nLinhaAtu++
 
-                IncProc("Analisando linha " + cValToChar(nLinhaAtu) + " de " + cValToChar(nTotLinhas) + "...")
+                IncProc("Pedido linha " + cValToChar(nLinhaAtu) + " de " + cValToChar(nTotLinhas) + "...")
                  
                 //Pegando a linha atual e transformando em array
                 cLinAtu := oArquivo:GetLine()
                 aLinha  := StrTokArr2(cLinAtu, ";", .T. )
 
-                If nLinhaAtu >= 11100 .AND. nLinhaAtu <= 12705
-				// If nLinhaAtu >= 165 .AND. nLinhaAtu <= 165
+                If nLinhaAtu >= nLinIni .AND. nLinhaAtu <= nLinFin
+				// If nLinhaAtu >= 165 .AND. nLinhaAtu <= 13558
 
 					aRetorno 	:= {}
 					aParams 	:= {}
@@ -332,6 +363,11 @@ Static Function xIncCli()
 	Local cCodCli   := ""
 	Local cLoja     := ""
 	Local lProcesOk := .T.
+	Local nCPFE     := 0
+	Local nCPFQtd   := 0
+	Local nPosErr1  := 0
+	Local nPosErr2 	:= 0
+	Local cMsgErr   := ""
 
 	Private lMsErroAuto     := .F.
 	Private lAutoErrNoFile	:= .T.
@@ -339,10 +375,24 @@ Static Function xIncCli()
 	//Tratativa para CEP e CPF
 	cCPF := AllTrim(StrTran(cCPF,".",""))
 	cCPF := AllTrim(StrTran(cCPF,"/","")) 
+	cCPF := AllTrim(StrTran(cCPF,",","")) 
 	cCPF := AllTrim(StrTran(cCPF,"-",""))
 	cCEP := AllTrim(StrTran(cCEP,"-",""))
-
+	cCEP := PADL(cCEP ,8, "0")
+	
 	//Efetua tratamento de CPF
+	nCPFE	:= At('E+', cCPF)
+	If nCPFE > 0
+		nCPFQtd	:= Val(SubStr(cCPF,(nCPFE+2)))  
+		cCPF	:= SubStr(cCPF,1,(nCPFE-1)) 
+		If nCPFQtd >= 11
+			cCPF	:= PADR(cCPF ,14, "0")
+		Else
+			cCPF	:= PADR(cCPF ,11, "0")
+		EndIf 
+	EndIf
+
+	//Verifica colocar zeros a esquerda no cpf
 	If Len(cCPF) <> 14 .AND. Len(cCPF) <> 11
 		If Len(cCPF) > 11
 			cCPF	:= PADL(cCPF ,14, "0")
@@ -418,6 +468,13 @@ Static Function xIncCli()
 			//cMsg := xIdentaMsg(cMsg)
 
 			aAdd(aRetorno,{{'Key',cMsg},{'Value','0'}})
+
+			nPosErr1	:= AT("Mensagem do erro:",cMsg) + 18
+			nPosErr2	:= AT("Mensagem da solucao:",cMsg)
+			cMsgErr		:= SubStr(cMsg, (nPosErr1), (nPosErr2-nPosErr1))
+			If nTxT > -1
+           		fWrite(nTxT,"Cadastro de Cliente: erro na Linha: " + cValToChar(nLinhaAtu) + ", " + cMsgErr + ", Cnpj: " + cCPF + chr(13)+chr(10) )
+    		EndIf
 			
 			DisarmTransaction()
 			
@@ -435,18 +492,22 @@ Static Function xIncCli()
 			//conout("[SPCFATA4]-ENCONTROU CLIENTE " + cCodCli + " - " +cLoja )
 			conout("[SPCFATA4]-ENCONTROU CLIENTE " + SA1->A1_COD + " - " + SA1->A1_LOJA )
 			//Inclusão do pedido de vendas
-
-			If AllTrim(aProdutos[1,1]) <> "321-11" .AND. AllTrim(aProdutos[1,1]) <> "537-3" .AND. AllTrim(aProdutos[1,1]) <>  "18";
-			.AND. AllTrim(aProdutos[1,1]) <> "CONSULTE-STORE" .AND. AllTrim(aProdutos[1,1]) <> "321-5";
-			.AND. AllTrim(aProdutos[1,1]) <> "321-6" .AND. AllTrim(aProdutos[1,1]) <> "531-2" .AND. AllTrim(aProdutos[1,1]) <> "677-1";
-			.AND. AllTrim(aProdutos[1,1]) <> "55" .AND. AllTrim(aProdutos[1,1]) <> "674-1" .AND. AllTrim(aProdutos[1,1]) <> "678-1";
-			.AND. AllTrim(aProdutos[1,1]) <> "332-1" .AND. AllTrim(aProdutos[1,1]) <> "293.79" .AND. AllTrim(aProdutos[1,1]) <> "676-1"
-				lProcesOk := xIncPed(cCodCli,cLoja)
-			EndIf
+			lProcesOk := xIncPed(cCodCli,cLoja)
+			// If AllTrim(aProdutos[1,1]) <> "321-11" .AND. AllTrim(aProdutos[1,1]) <> "537-3" .AND. AllTrim(aProdutos[1,1]) <>  "18";
+			// .AND. AllTrim(aProdutos[1,1]) <> "CONSULTE-STORE" .AND. AllTrim(aProdutos[1,1]) <> "321-5";
+			// .AND. AllTrim(aProdutos[1,1]) <> "321-6" .AND. AllTrim(aProdutos[1,1]) <> "531-2" .AND. AllTrim(aProdutos[1,1]) <> "677-1";
+			// .AND. AllTrim(aProdutos[1,1]) <> "55" .AND. AllTrim(aProdutos[1,1]) <> "674-1" .AND. AllTrim(aProdutos[1,1]) <> "678-1";
+			// .AND. AllTrim(aProdutos[1,1]) <> "332-1" .AND. AllTrim(aProdutos[1,1]) <> "293.79" .AND. AllTrim(aProdutos[1,1]) <> "676-1"
+			// 	lProcesOk := xIncPed(cCodCli,cLoja)
+			// EndIf
 		 
 		Else 	
 			lProcesOk := .F.
 			aAdd(aRetorno,{{'Key',"Cadastro do cliente nao foi realizado!"},{'Value','0'}})	
+
+			If nTxT > -1
+           		fWrite(nTxT,"Linha: " + cValToChar(nLinhaAtu) + " não encontrou cliente: " + cCodCli + ", para cadastrar pedido" + chr(13)+chr(10) )
+    		EndIf
 		Endif 
 		
 	Endif 
@@ -477,6 +538,9 @@ Static Function xIncPed(cCodCli,cLoja)
 	Local cVendedor := GetMV("LV_VEND",.F.,"000003")
 	Local cMsg      := ""
 	Local lProcesOk := .T.	
+	Local nPosErr1  := 0
+	Local nPosErr2 	:= 0
+	Local cMsgErr   := ""
 	
 	Private lMsErroAuto := .F.
     Private lMsHelpAuto := .T.
@@ -567,6 +631,13 @@ Static Function xIncPed(cCodCli,cLoja)
 			//cMsg := xIdentaMsg(cMsg)
 		
 			aAdd(aRetorno,{{'Key',cMsg},{'Value','0'}})
+
+			// nPosErr1	:= AT("Mensagem do erro:",cMsg) + 18
+			// nPosErr2	:= AT("Mensagem da solucao:",cMsg)
+			cMsgErr		:= SubStr(cMsg, 1, 50)
+			If nTxT > -1
+           		fWrite(nTxT,"Cadastro de Pedido: erro na Linha: " + cValToChar(nLinhaAtu) + ", " + cMsgErr + ", produto: " + AllTrim(aProdutos[1,1] + chr(13)+chr(10)))
+    		EndIf
 			
 			DisarmTransaction()	
 			
@@ -1183,3 +1254,36 @@ Static Function xIdentaMsg(cMensagem)
 	Endif 
 
 Return(cMensagem)
+
+
+/*---------------------------------------------------------------------*
+ | Func:  LinhasCSV                                                    |
+ | Desc:  Funcao para escolher linhas de inicio e fim de leitura       |
+ *---------------------------------------------------------------------*/
+Static Function LinhasCSV()
+	Local oSay1
+	Local oSay2
+	Local btnOut
+	Local btnGrv
+    Private cFontUti    := "Tahoma"
+    Private oFontSubN   := TFont():New(cFontUti, , -20, , .T.)
+    Private oFontBtn    := TFont():New(cFontUti, , -14)
+	Private oFontSay    := TFont():New(cFontUti, , -12)
+	Private oDlg1
+
+	DEFINE MsDialog oDlg1 TITLE "Importa de Pedidos" STYLE DS_MODALFRAME FROM 0,0 TO 250,500 PIXEL
+
+	@ 10,010 SAY oSay1 PROMPT 'Defina a linha inicial e linha final do CSV' SIZE 290,20 COLORS CLR_BLACK FONT oFontSubN OF oDlg1 PIXEL
+    
+    @ 40,010 SAY oSay1 PROMPT 'Linha Inicial: ' SIZE 100,20 COLORS CLR_BLACK FONT oFontBtn OF oDlg1 PIXEL
+    @ 35,060 MSGET oSay2 VAR nLinIni PICTURE "@E 999,999" SIZE 050, 20 OF oDlg1 PIXEL
+
+    @ 70,010 SAY oSay1 PROMPT 'Linha Final: ' SIZE 100,20 COLORS CLR_BLACK FONT oFontBtn OF oDlg1 PIXEL
+    @ 65,060 MSGET oSay3 VAR nLinFin PICTURE "@E 999,999" SIZE 050, 20 OF oDlg1 PIXEL
+                 
+	@ 100,030 BUTTON btnGrv PROMPT "Importar" SIZE 100, 017 FONT oFontBtn ACTION (oDlg1:End(),iif(!lImport,lImport := .T.,lImport := .F.)) OF oDlg1  PIXEL
+	@ 100,135 BUTTON btnOut PROMPT "Sair" 	SIZE 100, 017 FONT oFontBtn ACTION (oDlg1:End()) OF oDlg1  PIXEL
+	
+	ACTIVATE DIALOG oDlg1 CENTERED
+
+Return
