@@ -1,22 +1,17 @@
 #INCLUDE "totvs.ch"
 
-/*/{Protheus.doc} User Function nomeFunction
-    (long_description)
-    @type  Function
-    @author Victor David
-    @since 01/06/2024
-    @version 1.0
-    @param param_name, param_type, param_descr
-    @return return_var, return_type, return_description
-    @example
-    (examples)
-    @see (links_or_references)
-    /*/
+/*/{Protheus.doc} CONSTXML
+Função para gerar xml, nfse e envio de email
+@author Wagner Neves
+@since 09/10/2024
+@version 1.0
+@type function
+/*/
 User Function CONSTXML()
     Local aArea         := GetArea()
     Local cQuery        := ""
     Local cAliasSF2     := GetNextAlias()
-    Local cDataIni      := SuperGetMv("MV_ZWFCOB4",.F.,"20240501")
+    Local cDataIni      := SuperGetMv("MV_XNFSE1",.F.,"20240101")
     Private cCaminho    := '/NFSERVICO/'+cfilant
     Private cFileXML    := ""
     Private lJob	    := ( GetRemoteType() == -1 )	// Identifica que não foi iniciado por SMARTCLIENT
@@ -55,11 +50,6 @@ User Function CONSTXML()
     IF !file(cCaminho + '/PDF')
         MAKEDIR( cCaminho + '/PDF')
     ENDIF
-
-    // If !ExistBlock("PREFTXML")
-    //     MsgStop('Função não compilada PREFTXML')
-	// 	Return
-    // ENDIF
 
     If !ExistBlock("XML_PDF")
         If lJob
@@ -107,6 +97,10 @@ User Function CONSTXML()
 
 Return
 
+/*---------------------------------------------------------------------*
+ | Func:  fProcDocs                                                    |
+ | Desc:  Função que processa documentos                               |
+ *---------------------------------------------------------------------*/
 Static Function fProcDocs()
     Local cArquivXML    := ''
     Local cArquivPDF    := ''
@@ -234,7 +228,10 @@ Static Function fProcDocs()
             cHtml   += ' <br>'
             cHtml   += '</table>'
 
-            cEmail := "vanderleimiguel@hotmail.com"//VM
+            //Verifica se esta em modo teste
+            If GetMv("MV_XNFSE2")
+                cEmail := Alltrim(GetMv("MV_XNFSE3"))
+            Endif
             cAssunto := "IBM Filial " +AllTrim(cFilNome)+ " NFS-e: " + cNumFNSe  
             If lJob
                 lEnvio := U_ENV_NFSE(cEmail, cArquivXML, cArquivPDF, cAssunto, cHtml, cTipoArq)
@@ -254,14 +251,18 @@ Static Function fProcDocs()
 
     if lEnvio
         If lJob
-            ConOut("E-mail enviado para o cliente contando a NFS-e")
+            ConOut("E-mail enviado para o cliente contendo a NFS-e")
         Else
-            FWAlertSuccess("E-mail enviado para o cliente contando a NFS-e")
+            FWAlertSuccess("E-mail enviado para o cliente contendo a NFS-e")
         EndIf
     ENDIF
 
 Return
 
+/*---------------------------------------------------------------------*
+ | Func:  fGeraXML                                                     |
+ | Desc:  Função que gera xml                                          |
+ *---------------------------------------------------------------------*/
 Static Function fGeraXML(_cDoc, _cSerie, _cNomeClien, _cCodMun)
     Local cXML      := ''
     Local cXmlERP   := ""
@@ -332,7 +333,8 @@ Static Function fGeraXML(_cDoc, _cSerie, _cNomeClien, _cCodMun)
                     nHdl  :=	MsFCreate(cFileXML)
         
                     If ( nHdl >= 0 )
-                        If !Empty(cXml) .AND. _cCodMun <> "1302603" .AND. _cCodMun <> "3556701" .AND. _cCodMun <> "1501402"
+                        If !Empty(cXml) .AND. _cCodMun <> "1302603" .AND. _cCodMun <> "3556701" .AND. _cCodMun <> "1501402";
+                        .AND. _cCodMun <> "3547304" .AND. _cCodMun <> "2111300" .AND. _cCodMun <> "3509502"
                             FWrite (nHdl, cXml)
                             nRet    := 1
                         Else

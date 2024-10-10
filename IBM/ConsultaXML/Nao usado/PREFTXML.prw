@@ -3,7 +3,7 @@
 /*/{Protheus.doc} User Function prefeitura
     (long_description)
     @type  Function
-    @author Victor David
+    @author Wagner Neves
     @since 01/06/2024
     @version 1.0
     @param param_name, param_type, param_descr

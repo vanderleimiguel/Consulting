@@ -1,5 +1,12 @@
 #INCLUDE "totvs.ch"
 
+/*/{Protheus.doc} ENV_NFSE
+Função envia por email xml e nfse
+@author Wagner Neves
+@since 09/10/2024
+@version 1.0
+@type function
+/*/
 User Function ENV_NFSE(cEmail, cArquivXML, cArquivPDF, cAssunto, cHtml, _cTipoArq)
 	Local nX     	:= 0
 	Local aEmails 	:= {}
@@ -45,6 +52,10 @@ User Function ENV_NFSE(cEmail, cArquivXML, cArquivPDF, cAssunto, cHtml, _cTipoAr
 
 Return lRet
 
+/*---------------------------------------------------------------------*
+ | Func:  SendMail                                                     |
+ | Desc:  Função que envia email		                               |
+ *---------------------------------------------------------------------*/
 Static Function SendMail(cEmail,cAssunto,cHtml,cPathXML,cFiNameXML,cPathPDF,cFiNamePDF, cTipoArq)
 	Local xRet
 	Local lRet := .T.

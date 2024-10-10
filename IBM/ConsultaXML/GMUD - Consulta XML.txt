@@ -1,0 +1,14 @@
+Passo-a-Passo para instalação da consulta xml:
+==============================================================
+
+1. Compilar fontes: 
+	Consulta xml\Compatibilizador\UPDROCHI.prw			-  Compatibilizador I
+    Consulta xml\Fontes\CONSTXML.prw  					- Função para gerar xml, nfse e envio de email
+    Consulta xml\Fontes\ENV_NFSE.prw  					- Função envia por email xml e nfse
+    Consulta xml\Fontes\XML_PDF.prw  					- Função transforma o xml para Nfs-e em formato pdf
+	Consulta xml\Ponto de Entrada\FIRSTNFSE.tlpp		- Ponto de Entrada Inclui botões no aRotina FISA022
+
+2. Executar o compatibilizador :
+	Consulta xml\Compatibilizador\UPDIBM1.prw			-  Compatibilizador I
+
+.Fim
