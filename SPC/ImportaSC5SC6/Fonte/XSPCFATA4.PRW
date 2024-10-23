@@ -2,39 +2,18 @@
 #Include "TopConn.ch"
 #INCLUDE "PROTHEUS.CH"
 
-/***********************************************************************
---| INFORMAÇÕES PARA DEPLOY EM PRODUÇÃO |-- 
-	
--> Criar índice na SE1 para o campo E1_VEND1;
--> Criar campo E1_XIDTRAN na SE1 para armazenar os códigos de transação da Loja Virtual;
--> Criar campo E2_XIDTRAN na SE2 para armazenar os códigos de transação da Loja Virtual na gravação das taxas;
--> Criar o parâmetro LV_TESPF para gravar a TES de Pessoa Física no Pedido de Vendas;
--> Criar o parâmetro LV_TESPJ para gravar a TES de Pessoa Jurídica no Pedido de Vendas;
--> Criar o parâmetro LV_VEND para gravar o código do vendedor Pag Seguro da Loja Virtual no Pedido de Vendas;
--> Criar o parâmetro LV_SERIE para gravar a série da nota fiscal;
--> Criar o parâmetro LV_FORNEC para gravar o código do fornecedor que será gravado no título de taxa no contas a pagar;
--> Criar o parâmetro LV_PREFIX para gravar o Prefixo que será gravado no título de taxa no contas a pagar;
--> Criar o parâmetro LV_NATUR para gravar a natureza que será gravada no título de taxa no contas a pagar;
--> Criar o parâmetro LV_CCUSTO para gravar o centro de custo que será gravado no título de taxa no contas a pagar;
--> Criar o parâmetro LV_COND1 para gravar o código da condição de pagamento de uma única parcela no pedido de vendas;
--> Criar o parâmetro LV_COND2 para gravar o código da condição de pagamento de duas parcelas no pedido de vendas;
--> Criar o parâmetro LV_COND3 para gravar o código da condição de pagamento de três parcelas no pedido de vendas
-************************************************************************/
-/***********************************************************************
-Autor: Vinicius N. de Oliveira
-Data: 11/03/2022
-Consultoria: Prox
-Uso: SPC
-Tipo: Atualizações
-Rotina: Faturamento
-Função: SPCFATA4
-Info: Integração das compras Loja Virtual - Magento x Protheus
-************************************************************************/
+/*/{Protheus.doc} XSPCFATA4
+Função para importar pedidos de venda
+@author Wagner Neves
+@since 11/10/2024
+@version 1.0
+@type function
+/*/
 User Function XSPCFATA4()
 
 	Private cArqOri 	:= ""
     Private nTxT
-    Private cPasta  	:= "c:\temp\
+    Private cPasta  	:= "c:\temp\"
     Private cFile   	:= cPasta + "ErroPed.txt"
 	Private nLinhaAtu  := 0
 
@@ -67,6 +46,10 @@ User Function XSPCFATA4()
 
 Return
 
+/*---------------------------------------------------------------------*
+ | Func:  fImpCsv                                                      |
+ | Desc:  Função para extrair dados do arquivo csv					   |
+ *---------------------------------------------------------------------*/
 Static Function fImpCsv()
     Local nTotLinhas := 0
     Local cLinAtu    := ""
@@ -146,16 +129,16 @@ Static Function fImpCsv()
             oArquivo:Open()
 
             //Verifica linhas iniciais
-            LinhasCSV()
-            If lImport
-                If nLinIni < 1 .OR. nLinFin < 1
-                    MSGSTOP("Valores de linha inicial e linha final devem ser maior que 0!", "Importacao de Pedidos")
-                    Return                  
-                EndIf
-            Else
-                MSGSTOP("Importação de pedidos cancelada", "Importacao de Pedidos")
-                Return
-            EndIf
+            // LinhasCSV()
+            // If lImport
+            //     If nLinIni < 1 .OR. nLinFin < 1
+            //         MSGSTOP("Valores de linha inicial e linha final devem ser maior que 0!", "Importacao de Pedidos")
+            //         Return                  
+            //     EndIf
+            // Else
+            //     MSGSTOP("Importação de pedidos cancelada", "Importacao de Pedidos")
+            //     Return
+            // EndIf
 
             //Enquanto tiver linhas
             While (oArquivo:HasLine())
@@ -169,8 +152,8 @@ Static Function fImpCsv()
                 cLinAtu := oArquivo:GetLine()
                 aLinha  := StrTokArr2(cLinAtu, ";", .T. )
 
-                If nLinhaAtu >= nLinIni .AND. nLinhaAtu <= nLinFin
-				// If nLinhaAtu >= 165 .AND. nLinhaAtu <= 13558
+                // If nLinhaAtu >= nLinIni .AND. nLinhaAtu <= nLinFin
+				If nLinhaAtu >= 2 .AND. nLinhaAtu <= 13558
 
 					aRetorno 	:= {}
 					aParams 	:= {}
@@ -316,13 +299,17 @@ Static Function fImpCsv()
 
 					Elseif Empty(cCodMun)
 					
-						aAdd(aRetorno,{{"Key","Municipio nao foi encontrado no Protheus!"},{"Value","0"}})
+						aAdd(aRetorno,{{"Key","Municipio nao foi encontrado no Protheus! cidade: " + cCidade + "/" + cEstado },{"Value","0"}})
 						
 					Endif 
 					
 					If Len(aRetorno) == 0
 						lProcesOk := xIncCli() //Inclusão de Cadastro de Cliente
-					Endif 		
+					Else
+						If nTxT > -1
+           					fWrite(nTxT,"Falta Informação para cadastro: erro na Linha: " + cValToChar(nLinhaAtu) + ", " + ARETORNO[1][1][2] + chr(13)+chr(10) )
+    					EndIf
+					EndIf		
 					
 					//Caso a variável aRetorno estiver vazia significa que o processo ocorreu sem inconsistências
 					If Len(aRetorno) == 0
@@ -344,13 +331,10 @@ Static Function fImpCsv()
  
 Return(aRetorno)
 
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 14/03/2022
-Consultoria: Prox
-Uso: SPC
-Info: Inclusão do Cadastro de Cliente
-*==================================================================*/
+/*---------------------------------------------------------------------*
+ | Func:  xIncCli                                                      |
+ | Desc:  Função para incluir cliente								   |
+ *---------------------------------------------------------------------*/
 Static Function xIncCli()
 	
 	Local aArea     := GetArea()  
@@ -516,13 +500,10 @@ Static Function xIncCli()
 	
 Return(lProcesOk) 
 
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 25/02/2022
-Consultoria: Prox
-Uso: SPC
-Info: Inclusão do Pedido de Vendas
-*==================================================================*/
+/*---------------------------------------------------------------------*
+ | Func:  xIncPed                                                      |
+ | Desc:  Função para incluir pedidos								   |
+ *---------------------------------------------------------------------*/
 Static Function xIncPed(cCodCli,cLoja)
 
 	Local nOpc      := 3
@@ -538,8 +519,6 @@ Static Function xIncPed(cCodCli,cLoja)
 	Local cVendedor := GetMV("LV_VEND",.F.,"000003")
 	Local cMsg      := ""
 	Local lProcesOk := .T.	
-	Local nPosErr1  := 0
-	Local nPosErr2 	:= 0
 	Local cMsgErr   := ""
 	
 	Private lMsErroAuto := .F.
@@ -658,316 +637,10 @@ Static Function xIncPed(cCodCli,cLoja)
 
 Return(lProcesOk) 
 
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 25/02/2022
-Consultoria: Prox
-Uso: SPC
-Info: Inicio do processo de faturamento
-*==================================================================*/
-Static Function xGeraFat(nVlrTaxa,cRefTran,dDtCompen)
-
-	Local cPedido   := ""
-	Local cFilEmp   := ""
-	Local lCredito  := .T.
-	Local lEstoque  := .T.
-	Local lAvCred   := .F.
-	Local lAvEst    := .T.
-	Local lProcesOk := .T.
-	Local nRecnoSC5 := 0
-	
-	cFilEmp   := SC5->C5_FILIAL
-	cPedido   := SC5->C5_NUM
-	nRecnoSC5 := SC5->(Recno())
-	
-	DbSelectArea("SC9")	
-
-	DbSelectArea("SC6")
-	SC6->(DbSetOrder(1))
-	
-	If SC6->(DbSeek(cFilEmp+cPedido))
-	
-		While !SC6->(Eof()) .And. SC6->(C6_FILIAL+C6_NUM) == cFilEmp+cPedido
-		
-			SC9->(DbSetOrder(1))
-		
-			If !SC9->(DbSeek(cFilEmp+cPedido+SC6->C6_ITEM))	
-
-				MaLibDoFat(SC6->(RecNo()),SC6->C6_QTDVEN,lCredito,lEstoque,lAvCred,lAvEst)	
-			
-			Endif 
-		
-			SC6->(DbSkip())
-		
-		EndDo
-		
-		SC6->(MaLiberOk({cPedido}))
-		
-	Endif 	
-	
-	lProcesOk := xGeraNF(nRecnoSC5,nVlrTaxa,cRefTran,dDtCompen)
-
-Return(lProcesOk)
-
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 25/02/2022
-Consultoria: Prox
-Uso: SPC
-Info: Gera as Notas fiscais para os Pedidos Liberados 
-*==================================================================*/
-Static Function xGeraNF(nRecnoSC5,nVlrTaxa,cRefTran,dDtCompen)
-
-	Local nNotas   	:= 0
-	Local cFilEmp  	:= ""
-	Local cPedido  	:= "" 
-	Local cCondPag 	:= ""
-	Local cTES     	:= ""
-	Local cSerie   	:= GetMV("LV_SERIE",.F.,"RPS")
-	Local cCliente 	:= ""
-	Local cLojaCli 	:= ""
-	Local aPvlNFs  	:= {}
-	Local lProcesOk := .T.
-
-	DbSelectArea("SC5")
-	SC5->(DbGoTo(nRecnoSC5))
-	
-	cFilEmp  := SC5->C5_FILIAL
-	cPedido  := SC5->C5_NUM
-	cCliente := SC5->C5_CLIENTE
-	cLojaCli := SC5->C5_LOJACLI
-	
-	DbSelectArea("SC9")	
-	SC9->(DbSetOrder(1))
-	
-	If SC9->(DbSeek(cFilEmp+cPedido))
-
-		While !SC9->(Eof()) .And. SC9->(C9_FILIAL+C9_PEDIDO) == cFilEmp+cPedido
-	
-			cTES     := Posicione("SC6",1,xFilial("SC6")+SC9->C9_PEDIDO+SC9->C9_ITEM,"C6_TES")
-			cCondPag := Posicione("SC5",1,xFilial("SC5")+SC9->C9_PEDIDO,"C5_CONDPAG")
-			
-			//Abertura das áreas de trabalho na inclusão da nota fiscal de saída
-			DbSelectArea("SF4")
-			DbSelectArea("SB1")
-			DbSelectArea("SB2")
-			DbSelectArea("SE4")
-			// ---
-			
-			// aAdd(aPvlNFs,{;
-			// 	SC9->C9_PEDIDO,;
-			// 	SC9->C9_ITEM,;
-			// 	SC9->C9_SEQUEN,;
-			// 	SC9->C9_QTDLIB,;
-			// 	SC9->C9_PRCVEN,;
-			// 	SC9->C9_PRODUTO,;
-			// 	SF4->F4_ISS == "S",;
-			// 	SC9->(RecNo()),;
-			// 	SC5->(Recno(Posicione("SC5",1,xFilial("SC5")+SC9->C9_PEDIDO,""))),;
-			// 	SC6->(Recno(Posicione("SC6",1,xFilial("SC6")+SC9->C9_PEDIDO+SC9->C9_ITEM,""))),;
-			// 	SE4->(Recno(Posicione("SE4",1,xFilial("SE4")+cCondPag,""))),;
-			// 	SB1->(Recno(Posicione("SB1",1,xFilial("SB1")+SC9->C9_PRODUTO,""))),;
-			// 	SB2->(Recno(Posicione("SB2",1,xFilial("SB2")+SC9->C9_PRODUTO,""))),;
-			// 	SF4->(Recno(Posicione("SF4",1,xFilial("SF4")+cTes,""))),;
-			// 	Posicione("SB2",1,xFilial("SB2")+SC9->C9_PRODUTO,"B2_LOCAL"),;
-			// 	1,;
-			// 	SC9->C9_QTDLIB2;
-				// })
-
-			SC9->(DbSkip())			
-		
-		EndDo
-		
-		If Len(aPvlNFs) > 0
-		
-			DbSelectArea("SA1")
-			SA1->(DbSetOrder(1))
-			
-			If SA1->(DbSeek(xFilial("SA1")+cCliente+cLojaCli))
-     	
-				cNumNota := MAPVLNFS(aPvlNFs,cSerie,.F.,.F.,.F.,.F.,.F.,1,1,.T.,.F.,,,)
-		
-				If Empty(cNumNota)
-					
-					lProcesOk := .F.
-					
-					aAdd(aRetorno,{{'Key',"Ocorreu um problema ao gerar a nota fiscal de saida!"},{'Value','0'}})		
-					
-				Else				
-					
-					nNotas ++
-					
-					//Gravo informações no título que foi criado na tabela SE1
-					xGravaInfSE1(cNumNota,cSerie,nVlrTaxa,cFilEmp,cCliente,cLojaCli,cRefTran,dDtCompen)
-				
-				Endif
-				
-			Endif 	
-				
-		Endif 	
-		
-	Else
-
-		lProcesOk := .F.
-	
-		aAdd(aRetorno,{{'Key',"Pedido de vendas com itens nao liberados!"},{'Value','0'}})	
-	
-	Endif
-	
-	//Limpo as variáveis para um novo processamento
-	aPvlNFs := {}	
-
-	//Mensagem de término de excução do Job 
-	If nNotas == 0
-	
-		lProcesOk := .F.
-	
-		aAdd(aRetorno,{{'Key',"Termino de processamento nenhuma nota foi gerada!"},{'Value','0'}})
-	
-	Endif 
-
-Return(lProcesOk)
-
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 24/10/2022
-Consultoria: Prox
-Uso: SPC
-Info: Gravo informações complementares no título do Contas a Receber
-*==================================================================*/
-Static Function xGravaInfSE1(cNumNota,cSerie,nVlrTaxa,cFilEmp,cCliente,cLojaCli,cRefTran,dDtCompen)
-	
-	DbSelectArea("SE1")
-	SE1->(DbSetOrder(2))
-	
-	If SE1->(DbSeek(AvKey(cFilEmp,"E1_FILIAL")+AvKey(cCliente,"E1_CLIENTE")+AvKey(cLojaCli,"E1_LOJA")+AvKey(cSerie,"E1_PREFIXO")+AvKey(cNumNota,"E1_NUM")))
-
-		//Validação criada para impedir a não criação do titulo no contas a pagar por conta da data conforme alinhado com a SPC no dia 02/01/2023
-		If dDtCompen < dDataBase
-			dDtCompen := DaySum(dDtCompen,10)
-			dDtCompen := DataValida(dDtCompen,.T.)
-		Endif 
-		// ---
-
-		RecLock("SE1",.F.)
-		SE1->E1_DECRESC := nVlrTaxa
-		SE1->E1_SDDECRE := nVlrTaxa
-		SE1->E1_XIDTRAN := cRefTran
-		SE1->E1_VENCTO  := dDtCompen
-		SE1->E1_VENCREA := DataValida(dDtCompen,.T.) 
-		SE1->(MsUnlock())	
-	
-	Endif 
-
-Return
-
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 07/09/2022
-Consultoria: Prox
-Uso: SPC
-Info: 
-*==================================================================*/
-/*Static Function xGeraTxPag(nVlrTaxa,dDtCompen,cRefTran)
-
-	Local cFornecedor := GetMV("LV_FORNEC",.F.,"000075")
-	Local cPrefixo    := GetMV("LV_PREFIX",.F.,"PAG")
-	Local cTipo       := GetMV("LV_TPTIT",.F.,"BOL")
-	Local cNatureza   := GetMV("LV_NATUR",.F.,"D06026")
-	Local cCCusto     := GetMV("LV_CCUSTO",.F.,"D03601001")
-	Local cNumero     := xNumero(cPrefixo,cTipo)
-	Local cMsg        := ""
-	Local aTitulo     := {}
-	Local aLog        := {}
-	Local nX          := 0
-	
-	Private lMsErroAuto := .F.
-	
-	//Validação criada para impedir a não criação do titulo no contas a pagar por conta da data conforme alinhado com a SPC no dia 02/01/2023
-	If dDtCompen < dDataBase
-		dDtCompen := DaySum(dDtCompen,10)
-		dDtCompen := DataValida(dDtCompen,.T.)
-	Endif 
-	// ---
-	
-	aTitulo := {{"E2_FILIAL" 	, xFilial("SE2")             ,Nil},;
-			    {"E2_PREFIXO" 	, cPrefixo                   ,Nil},;    
-			    {"E2_NUM"     	, cNumero   	             ,Nil},;
-			    {"E2_TIPO"    	, cTipo     	             ,Nil},;
-			    {"E2_NATUREZ" 	, cNatureza		             ,Nil},;
-			    {"E2_FORNECE" 	, cFornecedor	             ,Nil},;
-			    {"E2_LOJA"    	, "01"      	             ,Nil},;		           
-			    {"E2_EMISSAO" 	, dDataBase                  ,Nil},;
-			    {"E2_VENCTO" 	, dDtCompen                  ,Nil},;
-			    {"E2_VENCREA" 	, DataValida(dDtCompen,.T.)  ,Nil},;
-				{"E2_CC"        , cCCusto                    ,Nil},;
-			    {"E2_VALOR"   	, nVlrTaxa		             ,Nil},;
-			    {"E2_VLCRUZ"   	, nVlrTaxa                   ,Nil},;
-				{"E2_XIDTRAN"   , cRefTran                   ,Nil}} //ID do Magento
-
-	MsExecAuto( { |x,y,z| FINA050(x,y,z)},aTitulo,,3)  // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
-	
-	If lMsErroAuto
-		
-		lProcesOk := .F.
-
-		aLog := GetAutoGRLog()	
-			
-		For nX := 1 To Len(aLog)
-			cMsg += aLog[nX] + Chr(10)
-		Next nX
-	
-		Conout(cMsg)
-		ConOut("["+AllTrim(AllToChar(Date()))+" - "+AllTrim(Time())+"] ->>>> SPCFATA4 - Erro na inclusao da taxa no contas a pagar")
-		ConOut("["+AllTrim(AllToChar(Date()))+" - "+AllTrim(Time())+"] -------------------------------------------------------------------")
-		ConOut("["+AllTrim(AllToChar(Date()))+" - "+AllTrim(Time())+"] ->>>> SPCFATA4 - Detalhes do Erro da inclusao da Taxa: ")
-		ConOut(cMsg)
-		ConOut("["+AllTrim(AllToChar(Date()))+" - "+AllTrim(Time())+"] -------------------------------------------------------------------")
-		
-	Else 
-		lProcesOk := .T.
-	Endif 
-
-Return(lProcesOk)*/
-
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 07/09/2022
-Consultoria: Prox
-Uso: SPC
-Info: 
-*==================================================================*/
-Static Function xNumero(cPrefixo,cTipo)
-
-	Local cNumero := ""
-	Local cQuery  := ""
-	Local cTemp   := GetNextAlias()
-
-	cQuery := " SELECT MAX(E2_NUM) AS NUMERO FROM "+RetSQLName("SE2")
-	cQuery += "	WHERE E2_FILIAL = '"+xFilial("SE2")+"'"
-	cQuery += "		AND E2_PREFIXO = '"+cPrefixo+"'"
-	cQuery += "		AND E2_TIPO = '"+cTipo+"'"
-	cQuery += "		AND D_E_L_E_T_ = ' '"
-
-	cQuery := ChangeQuery(cQuery)
-
-	DbUseArea(.F., "TOPCONN", TcGenQry(,,cQuery), cTemp, .T., .T.)
-
-	DbSelectArea(cTemp)
-
-	cNumero := Soma1((cTemp)->NUMERO)	
-
-	(cTemp)->(DbCloseArea())
-
-Return(cNumero)
-
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 26/04/2022
-Consultoria: Prox
-Uso: SPC
-Info: 
-*==================================================================*/
+/*---------------------------------------------------------------------*
+ | Func:  xCodMun                                                      |
+ | Desc:  Função para pesquisar codigo do municipio					   |
+ *---------------------------------------------------------------------*/
 Static Function xCodMun()
 
     Local cQuery   := ""
@@ -1091,13 +764,10 @@ Static Function xCodMun()
 	
 Return(cRetorno)
 
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 27/04/2022
-Consultoria: Prox
-Uso: SPC
-Info: Condições de pagamento conforme a parcela
-*==================================================================*/
+/*---------------------------------------------------------------------*
+ | Func:  xCondPag                                                     |
+ | Desc:  Função para verificar condicao de pagamento				   |
+ *---------------------------------------------------------------------*/
 Static Function xCondPag()
 
 	Local cCondPag  := ""
@@ -1117,13 +787,10 @@ Static Function xCondPag()
 
 Return(cCondPag)
 
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 25/02/2022
-Consultoria: Prox
-Uso: SPC
-Info: Tratativa para extração de caracteres especiais
-*==================================================================*/
+/*---------------------------------------------------------------------*
+ | Func:  xNoAccent                                                    |
+ | Desc:  Função para tratar caracteres especiais					   |
+ *---------------------------------------------------------------------*/
 Static Function xNoAccent(cConteudo)
 
 	//Retirando caracteres
@@ -1218,43 +885,6 @@ Static Function xNoAccent(cConteudo)
 	cConteudo := NoAcento(cConteudo)
 
 Return(Upper(AllTrim(cConteudo)))
-
-/*=================================================================
-Autor: Vinicius N. de Oliveira
-Data: 21/10/2022
-Consultoria: Prox
-Uso: SPC
-Info: Tratativa para identar a mensagem de erro do execauto da TOTVS
-*==================================================================*/
-Static Function xIdentaMsg(cMensagem)
-	
-	Local aMensagem := StrTokArr(cMensagem,Chr(10))
-	Local nX        := 0
-	Local cTexto    := "Invalido"
-	Local cMsgBkp   := ""
-	
-	cMsgBkp   := cMensagem
-	cMensagem := ""
-	
-	For nX := 1 To Len(aMensagem)
-
-		If nX == 1
-			cMensagem += AllTrim(aMensagem[nX])+" - "
-		Elseif nX == 2
-			cMensagem += AllTrim(xNoAccent(aMensagem[nX]))+" - "
-		Elseif cTexto $ AllTrim(aMensagem[nX])
-			cMensagem += AllTrim(aMensagem[nX])
-		Endif 		
-	
-	Next nX
-
-	//Caso a mensagem venha em branco utilizo a original 
-	If Empty(cMensagem)
-		cMensagem := cMsgBkp
-	Endif 
-
-Return(cMensagem)
-
 
 /*---------------------------------------------------------------------*
  | Func:  LinhasCSV                                                    |
