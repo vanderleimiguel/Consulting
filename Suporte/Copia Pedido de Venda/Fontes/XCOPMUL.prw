@@ -6,14 +6,13 @@
 #DEFINE ITENSSC6 300
 
 /*/{Protheus.doc} XCOPMUL
-Função para copiar pedidos de venda
+Função para copiar multiplos pedidos de venda
 @author Wagner Neves
 @since 25/09/2024
 @version 1.0
 @type function
 /*/
 User Function XCOPMUL()
-	Local aArea     	:= GetArea()
 	Private nCopiado    := 0
 	Private nQtdCop		:= 0
 	Private lCopia		:= .F.
@@ -25,23 +24,9 @@ User Function XCOPMUL()
 	If lCopia .AND. nQtdCop > 0
 	
 		Processa({|| fCopPedV('SC5',SC5->(RecNo()),3, nQtdCop)}, "Copia de Pedidos")
-		// Processa({|| teste(nQtdCop)}, "Copia de Pedidos")
-
+	
 		MsgInfo("Foram copiados: " +cValToChar(nCopiado)+ " pedidos de venda com sucesso!", "Copia Multipla")
 	EndIf
-	RestArea(aArea)
-Return
-
-Static Function teste(_nQtdCop)
-	Local nI
-
-	ProcRegua(_nQtdCop)
-
-	For nI := 1 To _nQtdCop
-
-		IncProc("Copiando Pedido: " + cValToChar(nI) + " de " + cValToChar(_nQtdCop) + "...")
-		nCopiado++
-	Next
 
 Return
 
@@ -78,8 +63,7 @@ Return
  | Func:  fCopPedV                                                     |
  | Desc:  Função que executa a copia dos pedidos de venda              |
  *---------------------------------------------------------------------*/
-static function fCopPedV(cAlias,nReg,nOpc,_nQtdCop)
-	Local aArea     := GetArea()
+Static function fCopPedV(cAlias,nReg,nOpc,_nQtdCop)
 	Local nI
 	Local aPosObj   := {}
 	Local aObjects  := {}
@@ -157,7 +141,7 @@ static function fCopPedV(cAlias,nReg,nOpc,_nQtdCop)
 	ProcRegua(_nQtdCop)
 
 	For nI := 1 To _nQtdCop
-
+		
 		IncProc("Copiando Pedido: " + cValToChar(nI) + " de " + cValToChar(_nQtdCop) + "...")
 
 		aPosObj   	:= {}
@@ -226,6 +210,7 @@ static function fCopPedV(cAlias,nReg,nOpc,_nQtdCop)
 		//³Verifica se o campo de codigo de lancamento cat 83 ³
 		//³deve estar visivel no acols                        ³
 		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
 		If !SuperGetMV("MV_CAT8309",,.F.)
 			aAdd(aNoFields,"C6_CODLAN")
 		EndIf
@@ -370,6 +355,7 @@ static function fCopPedV(cAlias,nReg,nOpc,_nQtdCop)
 			EndIf
 		EndIf
 
+				//vm
 		If lContinua
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³Inicializa ambiente de integração com Planilha ³
@@ -417,85 +403,7 @@ static function fCopPedV(cAlias,nReg,nOpc,_nQtdCop)
 			EndIf
 		EndIf
 		If ( lContinua )
-			If ( Type("l410Auto") == "U" .OR. !l410Auto )
-				nNumDec := IIf(cPaisLoc <> "BRA",MsDecimais(M->C5_MOEDA),TamSX3("C6_VALOR")[2])
-				cCadastro := IIF(cCadastro == Nil,OemToAnsi("Atualização de Pedidos de Venda"),cCadastro) //"Atualização de Pedidos de Venda"
-				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-				//³ Faz o calculo automatico de dimensoes de objetos     ³
-				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				aSize := MsAdvSize()
-				aObjects := {}
-				aAdd( aObjects, { 100, 100, .t., .t. } )
-				aAdd( aObjects, { 100, 100, .t., .t. } )
-				aAdd( aObjects, { 100, 020, .t., .f. } )
-				aInfo := { aSize[ 1 ], aSize[ 2 ], aSize[ 3 ], aSize[ 4 ], 3, 3 }
-				aPosObj := MsObjSize( aInfo, aObjects )
-				aPosGet := MsObjGetPos(aSize[3]-aSize[1],315,{{003,033,160,200,240,263}} )
-				nGetLin := aPosObj[3,1]
-				If lContTPV
-					DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL STYLE nOR( WS_VISIBLE ,DS_MODALFRAME )
-				Else
-					DEFINE MSDIALOG oDlg TITLE cCadastro From aSize[7],0 to aSize[6],aSize[5] of oMainWnd PIXEL
-				EndIf
-				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-				//³ Armazenar dados do Pedido anterior.                  ³
-				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				IF M->C5_TIPO $ "DB"
-					aTrocaF3 := {{"C5_CLIENTE","SA2"}}
-				Else
-					aTrocaF3 := {}
-				EndIf
-				oGetPV:=MSMGet():New( "SC5", nReg, nOpc, , , , , aPosObj[1],,3,,,"A415VldTOk")
-		//		@ nGetLin,aPosGet[1,1]  SAY OemToAnsi(IIF(M->C5_TIPO$"DB",STR0008,STR0009)) SIZE 020,09 PIXEL	//"Fornec.:"###"Cliente: "
-				@ nGetLin,aPosGet[1,2]  SAY oSAY1 VAR Space(40)						SIZE 120,09 PICTURE "@!"	OF oDlg PIXEL
-				@ nGetLin,aPosGet[1,3]  SAY OemToAnsi("Total :")						SIZE 020,09 OF oDlg PIXEL	//"Total :"
-				@ nGetLin,aPosGet[1,4]  SAY oSAY2 VAR 0 							SIZE 060,09 PICTURE IIf(cPaisloc $ "CHI|PAR",Nil,TM(0,22,nNumDec)) OF oDlg PIXEL
-				@ nGetLin,aPosGet[1,5]  SAY OemToAnsi("Desc. :")						SIZE 035,09 OF oDlg PIXEL 	//"Desc. :"
-				@ nGetLin,aPosGet[1,6]  SAY oSAY3 VAR 0 							SIZE 060,09 PICTURE IIf(cPaisloc $ "CHI|PAR",Nil,TM(0,22,nNumDec)) OF oDlg PIXEL RIGHT
-				@ nGetLin+10,aPosGet[1,5]  SAY OemToAnsi("=")						SIZE 020,09 OF oDlg PIXEL
-				If cPaisLoc == "BRA"
-					@ nGetLin+10,aPosGet[1,6]  SAY oSAY4 VAR 0								SIZE 060,09 PICTURE TM(0,22,2) OF oDlg PIXEL RIGHT
-				Else
-					@ nGetLin+10,aPosGet[1,6]  SAY oSAY4 VAR 0								SIZE 060,09 PICTURE IIf(cPaisloc $ "CHI|PAR",Nil,TM(0,22,nNumDec)) OF oDlg PIXEL RIGHT
-				EndIf
-				oDlg:Cargo	:= {|c1,n2,n3,n4| oSay1:SetText(c1),;
-					oSay2:SetText(n2),;
-					oSay3:SetText(n3),;
-					oSay4:SetText(n4) }
-				Set Key VK_F4 to A440Stok(NIL,"A410")
-
-				If cPaisLoc == "BRA" .And. !(M->C5_TIPO $ "C")
-					nPosTpCompl := Ascan(oGetPV:aEntryCtrls,{|x| UPPER(TRIM(x:cReadVar))=="M->C5_TPCOMPL"})
-					If nPosTpCompl > 0
-						oGetPV:aEntryCtrls[nPosTpCompl]:lReadOnly := .T.
-					EndIf
-				EndIf
-
-				oGetd:=MsGetDados():New(aPosObj[2,1],aPosObj[2,2],aPosObj[2,3],aPosObj[2,4],nOpc,"A410LinOk","A410TudOk","+C6_ITEM/C6_Local/C6_TES/C6_CF/C6_PEDCLI",.T.,,nColFreeze,,ITENSSC6*IIF(MaGrade(),1,3.33),"A410Blq()",,,"A410ValDel(.F.)",,lFreeze)
-				Private oGetDad:=oGetd
-				A410Bonus(2)
-				Ma410Rodap(oGetD,nTotalPed,nTotalDes)
-
-				A410Limpa(.F.,M->C5_TIPO)
-
-				// ACTIVATE MSDIALOG oDlg ON INIT (Ma410Bar(oDlg,{||nOpcA:=1,if(A410VldTOk(nOpc, aRecnoSE1RA).And.oGetd:TudoOk(),If(!obrigatorio(aGets,aTela),nOpcA := 0,oDlg:End()),nOpcA := 0)},{||oDlg:End()},nOpc,oGetD,nTotalPed,@aRecnoSE1RA,@aHeadAGG,@aColsAGG))
-				nOpcA:=1
-				SetKey(VK_F4,)
-			Else
-				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-				//³ validando dados pela rotina automatica                       ³
-				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				If Type("aRotina") <> "U"
-					If EnchAuto(cAlias,aAutoCab,{|| Obrigatorio(aGets,aTela)},aRotina[nOpc][4]) .and. MsGetDAuto(aAutoItens,"A410LinOk",{|| A410VldTOk(nOpc) .and. A410TudOk()},aAutoCab)
-						nOpcA := 1
-						If cPaisloc == "BRA" .And. ValType(aAposEsp) <> Nil .And. !Empty(aAposEsp) .And. FindFunction("a410INSS")
-							a410INSS()
-						Endif
-					EndIf
-				Else
-					nOpca := 1
-				EndIf
-			EndIf
+			nOpca := 1 //VM
 			If ( nOpcA == 1 )
 				A410Bonus(1)
 				If Type("lOnUpDate") == "U" .Or. lOnUpdate
@@ -547,6 +455,5 @@ static function fCopPedV(cAlias,nReg,nOpc,_nQtdCop)
 		nCopiado++
 	Next
 
-	RestArea(aArea)
-Return
+Return Nil
 

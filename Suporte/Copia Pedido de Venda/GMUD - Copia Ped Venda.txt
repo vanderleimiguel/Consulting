@@ -1,0 +1,8 @@
+Passo-a-Passo para instalação da copia de pedido de venda:
+==============================================================
+
+1. Compilar fontes: 
+	Copia Pedido de Venda\Fontes\XCOPMUL.prw			    - Função para copiar multiplos pedidos de venda
+    Copia Pedido de Venda\Ponto de Entrada\MA410MNU.prw  	- Ponto de entrada para adicionar botoes no pedido de venda ( MATA410 )
+
+.Fim
