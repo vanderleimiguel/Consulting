@@ -100,15 +100,10 @@ User Function PGMRT005()
 		If GetMv("MV_ZWFCOB2")
 			cEmail := Alltrim(GetMv("MV_ZWFCOB3"))
 		Else
-            If !Empty(cA1Email)
-                cEmail := cA1Email
-            EndIf
             If !Empty(cAIEmail)
-                If !Empty(cEmail)
-                    cEmail  := cEmail + ";" + cAIEmail
-                Else
-                    cEmail := cAIEmail
-                EndIf
+                cEmail := cAIEmail
+            ElseIf !Empty(cA1Email)
+                cEmail  := cA1Email
             EndIf
         Endif
 
