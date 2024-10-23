@@ -9,7 +9,17 @@ Função de geração de tela de Envio Manual de WorkFlows
 @type function
 /*/
 User Function PGMRT001()
-	Local aArea := FWGetArea()
+	Local aArea 	:= FWGetArea()
+	Private lVoltar := .F.
+
+	//Chama janela de pergunta
+	fPergunta()
+
+	FWRestArea(aArea)
+
+Return
+
+Static Function fPergunta()
 	Local aPergs   := {}
 	Local CClient := Space(TamSX3('A1_COD')[01])
 	Local CLojaDe := Space(TamSX3('A1_LOJA')[01])
@@ -28,8 +38,6 @@ User Function PGMRT001()
 	If ParamBox(aPergs, "Informe os Parametros")
 		fMontaTela()
 	EndIf
-
-	FWRestArea(aArea)
 
 Return
 
@@ -100,6 +108,12 @@ Static Function fMontaTela()
 	oTempTable:Delete()
 	oMarkBrowse:DeActivate()
 
+	//Verifica se é para voltar a pergunta ou fechar
+	If lVoltar
+		lVoltar	:= .F.
+		fPergunta()
+	EndIf
+
 	RestArea(aArea)
 Return
 
@@ -109,6 +123,7 @@ Static Function MenuDef()
 	//Criação das opções
 	ADD OPTION aRotina TITLE 'Envia WorkFlow'  ACTION 'U_ENVWKFLW'     OPERATION 2 ACCESS 0
 	ADD OPTION aRotina TITLE 'Voltar'  ACTION 'U_ENVWKFL'     OPERATION 3 ACCESS 0
+
 Return aRotina
 
 Static Function fPopula()
@@ -204,6 +219,10 @@ Static Function fCriaCols()
 		aAdd(aColunas, oColumn)
 	Next
 Return aColunas
+
+User Function ENVWKFL()
+	(eval({||oDlgMark:End(),iif(!lVoltar,lVoltar := .T.,lVoltar := .F.)}))	
+Return
 
 User Function ENVWKFLW()
 	Processa({|| fProcessa()}, 'Selecionando Titulos...')
