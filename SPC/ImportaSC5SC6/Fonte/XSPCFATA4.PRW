@@ -153,7 +153,7 @@ Static Function fImpCsv()
                 aLinha  := StrTokArr2(cLinAtu, ";", .T. )
 
                 // If nLinhaAtu >= nLinIni .AND. nLinhaAtu <= nLinFin
-				If nLinhaAtu >= 2 .AND. nLinhaAtu <= 13558
+				If nLinhaAtu >= 2 .AND. nLinhaAtu <= nTotLinhas
 
 					aRetorno 	:= {}
 					aParams 	:= {}
