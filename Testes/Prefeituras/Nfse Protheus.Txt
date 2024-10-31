@@ -1,0 +1,35 @@
+Pontos de entrada FISA022
+
+https://centraldeatendimento.totvs.com/hc/pt-br/articles/360006652632-Cross-Segmentos-Backoffice-Protheus-Doc-Eletr%C3%B4nicos-NFSe-IMPLANTA%C3%87%C3%83O-DE-NFSE
+
+FIRSTNFSE
+Ponto de entrada para o cliente customizar os botoes apresentados
+http://tdn.totvs.com/pages/releaseview.action?pageId=6077188
+
+FISASQL01-
+Ponto de entrada para o cliente customizar a query do filto de busca 
+https://tdn.totvs.com/pages/releaseview.action?pageId=634509919
+
+FISVLNFSE
+PONTO DE ENTRADA PARA VALIDAÇÃO DA TRANSMISSAO DA NOTA
+http://tdn.totvs.com/pages/releaseview.action?pageId=203763863
+
+F022ATUNF
+Ponto de entrada para o cliente customizar a gravação de campos proprios no SF2/SF1 a partir do refreh no monitor de notas
+http://tdn.totvs.com/pages/releaseview.action?pageId=235336799
+
+
+https://github.com/JRicardoGuimaraes/Git---Ricardo/tree/master/RDMAKE
+https://github.com/JRicardoGuimaraes/Git---Ricardo/tree/master/RDMAKE/nfse
+
+Prefeituras tratadas pelo protheus
+https://centraldeatendimento.totvs.com/hc/pt-br/articles/360018816211-Cross-Segmentos-Backoffice-Protheus-Doc-Eletr%C3%B4nicos-NFSE-TSS-Munic%C3%ADpios-Homologados-para-Emiss%C3%A3o-de-NFSE
+https://tdn.totvs.com/pages/releaseview.action?pageId=4814340
+
+Transmissão de Documentos Eletronicos
+https://tdn.totvs.com/pages/releaseview.action?pageId=203771195
+
+https://cloud.importaxml.com.br/Public/CidadesHomologadas?data=eyJDaGF2ZSI6IjdQOFA2LXNPTkpEd1V0ZXJ1emxpZkd3UXZibVZIQnU0elUta1IzWm5zbGRISENxUGtUUHp0NGRXdDhhQ1ZGOCJ9&_gl=1*1xdwdpx*_ga*MTQyMTczODExMC4xNzE1MjY3NDQ4*_ga_N0PBY76S8B*MTcxNjk5MjYxOC4xLjEuMTcxNjk5MjYyOS40OS4wLjY1MjA5NTAwNw..&_ga=2.112719172.1378976324.1716992615-1421738110.1715267448
+
+Referências
+https://www.google.com.br/search?q=abrasf+nfse&sca_esv=e29bad09a751d822&sca_upv=1&biw=1872&bih=924&sxsrf=ADLYWIKNV_vwQS_JXhdfaiz0HchTkNqAlA%3A1716330466559&ei=4h9NZrm3IefM1sQP3NOFmA8&udm=&oq=ABRASF&gs_lp=Egxnd3Mtd2l6LXNlcnAiBkFCUkFTRioCCAQyCxAuGIAEGMcBGK8BMgsQLhiABBjHARivATILEC4YgAQYxwEYrwEyDhAuGIAEGMcBGI4FGK8BMgUQABiABDIFEAAYgAQyBRAAGIAEMgUQABiABDIHEAAYgAQYCjIQEC4YgAQYxwEYChiOBRivAUi7PVAAWMoHcAB4AZABAJgBkwGgAfsFqgEDMC42uAEByAEA-AEBmAIJoALNbMICChAjGIAEGCcYigXCAgQQIxgnwgIWEC4YgAQYsQMY0QMYQxiDARjHARiKBcICCxAAGIAEGLEDGIMBwgIOEAAYgAQYsQMYgwEYigXCAggQABiABBixA8ICDhAuGIAEGLEDGNEDGMcBwgIKEAAYgAQYQxiKBcICCxAuGIAEGLEDGIMBwgIIEC4YgAQYsQPCAhcQLhiABBixAxiXBRjcBBjeBBjfBNgBAcICERAuGIAEGLEDGIMBGMcBGK8BwgIgEC4YgAQYsQMYgwEYxwEYrwEYlwUY3AQY3gQY4ATYAQHCAhoQLhiABBjHARivARiXBRjcBBjeBBjgBNgBAZgDALoGBggBEAEYFJIHCTAuNi44LTEuMqAHjlc&sclient=gws-wiz-serp
