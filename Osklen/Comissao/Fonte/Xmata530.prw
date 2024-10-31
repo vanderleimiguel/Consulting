@@ -1,5 +1,6 @@
 #INCLUDE "PROTHEUS.CH"
 #include "FWMVCDEF.CH"
+#include "TOTVS.CH"
 
 Static lFWCodFil := FindFunction("FWCodFil")
 Static lAtuSldNat := FindFunction("AtuSldNat") .AND. AliasInDic("FIV") .AND. AliasInDic("FIW")
@@ -13,7 +14,7 @@ Função para pagar comissao baseada no padrao MATA530
 @type function
 /*/
 User Function XMATA530()
-	Local cCadastro 	:= OemToAnsi("Atual. Pag. de Comissao     ") //"Atual. Pag. de Comiss„o     "
+	Local cCadastro 	:= OemToAnsi("Atual. Pag. de Comissão     ")
 	LOCAL nOpca 		:= 0
 	Local aSays			:={}, aButtons:={}
 	Local lReturn 		:= .F.
@@ -26,42 +27,43 @@ User Function XMATA530()
 	Private lCpoProcCo	:= SE3->(ColumnPos("E3_PROCCOM")) > 0
 	Private lCpoMoeda	:= SE3->(ColumnPos("E3_MOEDA")) > 0
 
-	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-	//³ Variaveis utilizadas para parametros                     ³
-	//³ mv_par01            // Gerar pela(Emissao/Baixa/Ambos)   ³
-	//³ mv_par02            // Considera da data                 ³
-	//³ mv_par03            // ate a data                        ³
-	//³ mv_par04            // Do Vendedor                       ³
-	//³ mv_par05            // Ate o vendedor                    ³
-	//³ mv_par06            // Data de Pagamento                 ³
-	//³ mv_par07            // Gera ctas a Pagar (Sim/Nao)       ³
-	//³ mv_par08            // Contabiliza on-line               ³
-	//³ mv_par09            // Mostra lcto Contabil              ³
-	//³ mv_par10            // Vencimento de                     ³
-	//³ mv_par11            // Vencimento Ate                    ³
-	//³ mv_par12            // Considera data (Vencto/Pagamento) ³
-	//³ mv_par13            // Seleciona Filial					 ³
-	//³ mv_par14            // Filial De? 						 ³
-	//³ mv_par15            // Filial Até?						 ³
-	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+	/*
+	---------------------------------------------------------------------------
+	Variaveis utilizadas para parametros                     
+	mv_par01            // Gerar pela(Emissao/Baixa/Ambos)   
+	mv_par02            // Considera da data                 
+	mv_par03            // ate a data                        
+	mv_par04            // Do Vendedor                       
+	mv_par05            // Ate o vendedor                    
+	mv_par06            // Data de Pagamento                 
+	mv_par07            // Gera ctas a Pagar (Sim/Nao)       
+	mv_par08            // Contabiliza on-line               
+	mv_par09            // Mostra lcto Contabil              
+	mv_par10            // Vencimento de                     
+	mv_par11            // Vencimento Ate                    
+	mv_par12            // Considera data (Vencto/Pagamento) 
+	mv_par13            // Seleciona Filial					 
+	mv_par14            // Filial De? 						 
+	mv_par15            // Filial Até?						 
+	---------------------------------------------------------------------------
+	*/
 
-	Pergunte("XMTA530",.F.)
-	AADD(aSays,OemToAnsi( "Este programa tem como objetivo solicitar e atualizar" ) ) //"      Este programa tem como objetivo solicitar e atualizar"
-	AADD(aSays,OemToAnsi( "a data para pagamento das comiss”es dos Vendedores.        " ) ) //"a data para pagamento das comiss”es dos Vendedores.        "
+	Pergunte("MTA530",.F.)
+	AADD(aSays,OemToAnsi( "Este programa tem como objetivo solicitar e atualizar" ) )
+	AADD(aSays,OemToAnsi( "a data para pagamento das comissões dos Vendedores.        " ) )
 
 	If lPanelFin  //Chamado pelo Painel Financeiro
 		aButtonTxt := {}
-		AADD(aButtonTxt,{"Parêmetros","Parêmetros", {||Pergunte("XMTA530",.T. )}}) // Parametros
+		AADD(aButtonTxt,{"Parâmetros","Parâmetros", {||Pergunte("MTA530",.T. )}})
 		FaMyFormBatch(aSays,aButtonTxt,{||nOpca:= 1,If(CA530Ok(),,nOpca:=0 )},{||nOpca:=0})
 	Else
-		AADD(aButtons, { 5,.T.,{|| Pergunte("XMTA530",.T. ) } } )
+		AADD(aButtons, { 5,.T.,{|| Pergunte("MTA530",.T. ) } } )
 		AADD(aButtons, { 1,.T.,{|o| nOpca:= 1, If( CA530Ok(), o:oWnd:End(), nOpca:=0 ) }} )
 		AADD(aButtons, { 2,.T.,{|o| o:oWnd:End() }} )
 		FormBatch( cCadastro, aSays, aButtons ,,220,380)
 	Endif
 
 	If nOpca == 1 .Or. lReturn
-
 		If ( FindFunction( "UsaSeqCor" ) .And. UsaSeqCor() )
 			cCodDiario := CTBAVerDia()
 		EndIf
@@ -87,6 +89,7 @@ Static Function fMontaTela()
 	Local aColunas 		:= {}
 	Local cFontPad    	:= 'Tahoma'
 	Local oFontGrid   	:= TFont():New(cFontPad,,-14)
+	Local aSeek   		:= {}
 	//Janela e componentes
 	Private oDlgMark
 	Private oPanGrid
@@ -109,6 +112,7 @@ Static Function fMontaTela()
 	aAdd(aCampos, { 'E3_FILIAL'	, 'C', TamSX3("E3_FILIAL")[1]	, 0})
 	aAdd(aCampos, { 'E3_VEND'	, 'C', TamSX3("E3_VEND")[1]		, 0})
 	aAdd(aCampos, { 'E3_NUM'	, 'C', TamSX3("E3_NUM")[1]		, 0})
+	aAdd(aCampos, { 'E3_PARCELA', 'C', TamSX3("E3_PARCELA")[1]  , 0})
 	aAdd(aCampos, { 'E3_TIPO'	, 'C', TamSX3("E3_TIPO")[1]		, 0})
 	aAdd(aCampos, { 'E3_BAIEMI'	, 'C', TamSX3("E3_BAIEMI")[1]	, 0})
 	aAdd(aCampos, { 'E3_VENCTO'	, 'D', TamSX3("E3_VENCTO")[1]	, 0})
@@ -116,11 +120,21 @@ Static Function fMontaTela()
 	aAdd(aCampos, { 'E3_COMIS'	, 'N', TamSX3("E3_COMIS")[1]	, 2})
 	aAdd(aCampos, { 'E3_MOEDA'	, 'C', TamSX3("E3_MOEDA")[1]	, 0})
 	aAdd(aCampos, { 'E3_PROCCOM', 'C', TamSX3("E3_PROCCOM")[1]	, 0})
+	aAdd(aCampos, { 'E3_PREFIXO', 'C', TamSX3("E3_PREFIXO")[1]	, 0})
+	aAdd(aCampos, { 'E3_PEDIDO',  'C', TamSX3("E3_PEDIDO")[1]	, 0})
+	aAdd(aCampos, { 'E3_SERIE',   'C', TamSX3("E3_SERIE")[1]	, 0})
+	aAdd(aCampos, { 'A3_NOME',    'C', TamSX3("A3_NOME")[1]		, 0})
+	aAdd(aCampos, { 'E3_CODCLI',  'C', TamSX3("E3_CODCLI")[1]	, 0})
+	aAdd(aCampos, { 'E3_LOJA',    'C', TamSX3("E3_LOJA")[1]		, 0})
+	aAdd(aCampos, { 'A1_NREDUZ',  'C', TamSX3("A1_NREDUZ")[1]	, 0})
+	aAdd(aCampos, { 'E3_BASE',    'N', TamSX3("E3_BASE")[1]		, 2})
+	aAdd(aCampos, { 'E3_PORC',    'N', TamSX3("E3_PORC")[1]		, 2})
 	aAdd(aCampos, { 'E3Recno'	, 'N', 20	, 0})
 
 	//Cria a tabela temporária
 	oTempTable:= FWTemporaryTable():New(cAliasTmp)
 	oTempTable:SetFields( aCampos )
+	oTempTable:AddIndex("1", {"E3_FILIAL", "E3_NUM"})
 	oTempTable:Create()
 
 	//Popula a tabela temporária
@@ -130,28 +144,35 @@ Static Function fMontaTela()
 	aColunas := fCriaCols()
 
 	//Criando a janela
-	DEFINE MSDIALOG oDlgMark TITLE 'Pagamento de Comissoes' FROM 000, 000  TO nJanAltu, nJanLarg COLORS 0, 16777215 PIXEL
+
+    cCampoAux := "E3_NUM"
+    aAdd(aSeek,{GetSX3Cache(cCampoAux, "X3_TITULO"), {{"", GetSX3Cache(cCampoAux, "X3_TIPO"), GetSX3Cache(cCampoAux, "X3_TAMANHO"), GetSX3Cache(cCampoAux, "X3_DECIMAL"), AllTrim(GetSX3Cache(cCampoAux, "X3_TITULO")), AllTrim(GetSX3Cache(cCampoAux, "X3_PICTURE"))}}}  )
+
+	DEFINE MSDIALOG oDlgMark TITLE 'Pagamento de Comissões' FROM 000, 000  TO nJanAltu, nJanLarg COLORS 0, 16777215 PIXEL
 	
-	@ 300,010 SAY oSay1 PROMPT "Titulos Marcados:"  SIZE 150,20 COLORS CLR_BLACK FONT oFontBtn OF oDlgMark PIXEL
+	@ 300,010 SAY oSay1 PROMPT "Títulos Marcados:"  SIZE 150,20 COLORS CLR_BLACK FONT oFontBtn OF oDlgMark PIXEL
     @ 300,070 SAY oSay2 VAR nMarcado PICTURE "@E 999,999" SIZE 030, 015 COLORS CLR_BLACK FONT oFontBtn OF oDlgMark PIXEL
 	@ 320,010 SAY oSay3 PROMPT "Valor Marcado R$"  SIZE 150,20 COLORS CLR_BLACK FONT oFontBtn OF oDlgMark PIXEL
     @ 320,070 SAY oSay4 VAR nValorMar PICTURE '@E 999,999.99' SIZE 030, 015 COLORS CLR_BLACK FONT oFontBtn OF oDlgMark PIXEL
 	//Dados
 	oPanGrid := tPanel():New(001, 001, '', oDlgMark, , , , RGB(000,000,000), RGB(254,254,254), (nJanLarg/2)-1, 290)
 	oMarkBrowse := FWMarkBrowse():New()
+	oMarkBrowse:SetDescription('Títulos de Comissões')
 	oMarkBrowse:SetAlias(cAliasTmp)
-	oMarkBrowse:SetDescription('Titulos das Comissoes')
-	oMarkBrowse:DisableFilter()
-	oMarkBrowse:DisableConfig()
-	oMarkBrowse:DisableSeek()
-	oMarkBrowse:DisableSaveConfig()
-	oMarkBrowse:SetFontBrowse(oFontGrid)
-	oMarkBrowse:SetFieldMark('OK')
+	oMarkBrowse:oBrowse:SetDBFFilter(.T.)
+    oMarkBrowse:oBrowse:SetUseFilter(.T.) //Habilita a utilização do filtro no Browse
+    oMarkBrowse:oBrowse:SetFixedBrowse(.T.)
+    oMarkBrowse:SetWalkThru(.F.) //Habilita a utilização da funcionalidade Walk-Thru no Browse
+    oMarkBrowse:SetAmbiente(.T.) //Habilita a utilização da funcionalidade Ambiente no Browse
 	oMarkBrowse:SetTemporary(.T.)
+	oMarkBrowse:oBrowse:SetSeek(.T.,aSeek)
+	oMarkBrowse:oBrowse:SetFilterDefault("") //Indica o filtro padrão do Browse
+	oMarkBrowse:SetFieldMark('OK')
+	oMarkBrowse:SetFontBrowse(oFontGrid)
+	oMarkBrowse:SetOwner(oPanGrid)
 	oMarkBrowse:SetColumns(aColunas)
 	oMarkBrowse:SetAfterMark({|| fMarcado()})
-	//oMarkBrowse:AllMark()
-	oMarkBrowse:SetOwner(oPanGrid)
+	// oMarkBrowse:SetAllMark({|| oMarkBrowse:AllMark() })
 	oMarkBrowse:Activate()
 	ACTIVATE MsDialog oDlgMark CENTERED
 
@@ -169,20 +190,13 @@ Return
 Static Function fMarcado()
 	Local cMarca    	:= oMarkBrowse:Mark()
 
-	nMarcado	:= 0
-	nValorMar	:= 0
-
-	(cAliasTmp)->(DbGoTop())
-	While !(cAliasTmp)->(EoF())
-		If oMarkBrowse:IsMark(cMarca)
-			nMarcado++
-			nValorMar	+= (cAliasTmp)->E3_COMIS
-		EndIf
-		
-		(cAliasTmp)->(DbSkip())
-	EndDo
-	(cAliasTmp)->(DbGoTop())
-	oMarkBrowse:Refresh(.T.)
+	If oMarkBrowse:IsMark(cMarca)
+		nMarcado++
+		nValorMar	+= (cAliasTmp)->E3_COMIS
+	Else
+		nMarcado--
+		nValorMar	-= (cAliasTmp)->E3_COMIS
+	EndIf
 
 Return
 
@@ -194,8 +208,7 @@ Static Function MenuDef()
 	Local aRotina := {}
 
 	//Criação das opções do menu
-	ADD OPTION aRotina TITLE 'Pagar Comissao'  	ACTION 'U_fPagComis'	OPERATION 2 ACCESS 0
-	// ADD OPTION aRotina TITLE 'Voltar'  			ACTION 'U_fVoltar'     	OPERATION 3 ACCESS 0
+	ADD OPTION aRotina TITLE 'Baixar Comissão'  	ACTION 'U_fPagComis'	OPERATION 2 ACCESS 0	
 
 Return aRotina
 
@@ -209,34 +222,39 @@ Static Function fPopula()
 	Local nAtual 	:= 0
 
 	//Busca titulos atraves dos parametros
-	cQryDados := " SELECT E3_NUM, E3_VEND,E3_TIPO,E3_BAIEMI,E3_FILIAL,E3_VENCTO,E3_DATA,E3_COMIS, "
+	cQryDados := " SELECT E3_PREFIXO,E3_NUM,E3_PARCELA,E3_VEND,E3_PEDIDO,E3_TIPO,E3_BAIEMI,E3_FILIAL,E3_VENCTO,E3_DATA,E3_COMIS,E3_SERIE,A3_NOME,E3_CODCLI,E3_LOJA,A1_NREDUZ,E3_BASE,E3_PORC,"
 	If lCpoMoeda
 		cQryDados += " E3_MOEDA, "
 	Endif
 	If lCpoProcCo
 		cQryDados += " E3_PROCCOM, "
 	Endif
-	cQryDados += " R_E_C_N_O_ "
-	cQryDados += " FROM "+RetSqlName("SE3")
+	cQryDados += " SE3.R_E_C_N_O_ "
+	cQryDados += " FROM "+RetSqlName("SE3")+" SE3"
+	cQryDados += " INNER JOIN "+RETSQLNAME("SA1") +" SA1 ON SE3.E3_CODCLI=SA1.A1_COD AND SE3.E3_LOJA=SA1.A1_LOJA AND SA1.D_E_L_E_T_=' '"
+	cQryDados += " INNER JOIN "+RETSQLNAME("SA3") +" SA3 ON SE3.E3_VEND=SA3.A3_COD AND SA3.D_E_L_E_T_=' '"
 	If MV_PAR13 == 2
-		cQryDados += " WHERE E3_FILIAL = '"+ cFilSE3 + "' "
+		cQryDados += " WHERE SE3.E3_FILIAL = '"+ cFilSE3 + "' "
 	Else
-		cQryDados += " WHERE E3_FILIAL BETWEEN '"+MV_PAR14+"' AND '"+MV_PAR15+"' "
+		cQryDados += " WHERE SE3.E3_FILIAL BETWEEN '"+MV_PAR14+"' AND '"+MV_PAR15+"' "
 	EndIf
-	cQryDados += " AND E3_VEND BETWEEN '"+mv_par04+"' AND '"+mv_par05+"' "
-	cQryDados += " AND E3_VENCTO BETWEEN '"+DTOS(mv_par10)+"' AND '"+DTOS(mv_par11)+"' "
-	cQryDados += " AND E3_DATA = '"+Dtos(Ctod(""))+"' "
-	cQryDados += " AND E3_EMISSAO BETWEEN '"+DTOS(mv_par02)+"' AND '"+DTOS(mv_par03)+"' "
+	
+	cQryDados += " AND SE3.E3_TIPO='NF' AND SE3.E3_PEDIDO <> ' '"
+
+	cQryDados += " AND SE3.E3_VEND BETWEEN '"+mv_par04+"' AND '"+mv_par05+"' "
+	cQryDados += " AND SE3.E3_VENCTO BETWEEN '"+DTOS(mv_par10)+"' AND '"+DTOS(mv_par11)+"' "
+	cQryDados += " AND SE3.E3_DATA = '"+Dtos(Ctod(""))+"' "
+	cQryDados += " AND SE3.E3_EMISSAO BETWEEN '"+DTOS(mv_par02)+"' AND '"+DTOS(mv_par03)+"' "
 	If mv_par01 <> 3//Caso a geracao for diferente da opcao TODOS, filtrar por EMISSAO, BAIXA ou MANUAL.
 		If mv_par01 == 1
-			cQryDados += " AND E3_BAIEMI = 'E' "
+			cQryDados += " AND SE3.E3_BAIEMI = 'E' "
 		Elseif mv_par01 == 2
-			cQryDados += " AND (E3_BAIEMI = 'B' OR (E3_TIPO = 'NCC' AND E3_BAIEMI = 'E')) "
+			cQryDados += " AND (SE3.E3_BAIEMI = 'B' OR (SE3.E3_TIPO = 'NCC' AND SE3.E3_BAIEMI = 'E')) "
 		ElseIf mv_par01 == 4
-			cQryDados += " AND E3_BAIEMI = '"+Space(GetSx3Cache("E3_DATA","X3_TAMANHO"))+"' "
+			cQryDados += " AND SE3.E3_BAIEMI = '"+Space(GetSx3Cache("SE3.E3_DATA","X3_TAMANHO"))+"' "
 		EndIf
 	EndIf
-	cQryDados += " AND D_E_L_E_T_=' ' ORDER BY E3_FILIAL,E3_VEND,E3_VENCTO "
+	cQryDados += " AND SE3.D_E_L_E_T_=' ' ORDER BY E3_FILIAL,E3_VEND,E3_VENCTO "
 	PLSQuery(cQryDados, 'QRYDADTMP')
 
 	//Definindo o tamanho da régua
@@ -254,18 +272,26 @@ Static Function fPopula()
 		(cAliasTmp)->OK := Space(2)
 		(cAliasTmp)->E3_FILIAL	:= QRYDADTMP->E3_FILIAL
 		(cAliasTmp)->E3_VEND 	:= QRYDADTMP->E3_VEND
+		(cAliasTmp)->A3_NOME	:= QRYDADTMP->A3_NOME
+		(cAliasTmp)->E3_PREFIXO	:= QRYDADTMP->E3_PREFIXO
 		(cAliasTmp)->E3_NUM 	:= QRYDADTMP->E3_NUM
+		(cAliasTmp)->E3_PARCELA := QRYDADTMP->E3_PARCELA
+		(cAliasTmp)->E3_SERIE	:= QRYDADTMP->E3_SERIE
 		(cAliasTmp)->E3_TIPO 	:= QRYDADTMP->E3_TIPO
+		(cAliasTmp)->E3_CODCLI	:= QRYDADTMP->E3_CODCLI
+		(cAliasTmp)->E3_LOJA	:= QRYDADTMP->E3_LOJA
+		(cAliasTmp)->A1_NREDUZ	:= QRYDADTMP->A1_NREDUZ
 		(cAliasTmp)->E3_BAIEMI 	:= QRYDADTMP->E3_BAIEMI
 		(cAliasTmp)->E3_VENCTO 	:= QRYDADTMP->E3_VENCTO
 		(cAliasTmp)->E3_DATA 	:= QRYDADTMP->E3_DATA
+		(cAliasTmp)->E3_PEDIDO	:= QRYDADTMP->E3_PEDIDO
+		(cAliasTmp)->E3_BASE	:= QRYDADTMP->E3_BASE
+		(cAliasTmp)->E3_PORC	:= QRYDADTMP->E3_PORC
 		(cAliasTmp)->E3_COMIS 	:= QRYDADTMP->E3_COMIS
 		(cAliasTmp)->E3_MOEDA 	:= QRYDADTMP->E3_MOEDA
 		(cAliasTmp)->E3_PROCCOM := QRYDADTMP->E3_PROCCOM
-		(cAliasTmp)->E3Recno 	:= QRYDADTMP->R_E_C_N_O_
-
+		(cAliasTmp)->E3Recno 	:= QRYDADTMP->R_E_C_N_O_	
 		(cAliasTmp)->(MsUnlock())
-
 		QRYDADTMP->(DbSkip())
 	EndDo
 	QRYDADTMP->(DbCloseArea())
@@ -290,16 +316,25 @@ Static Function fCriaCols()
 	//[5] - Decimais
 	//[6] - Máscara
 
-	aAdd(aEstrut, { 'E3_FILIAL'	, 'Filial'		, 'C', TamSX3("E3_FILIAL")[1]	, 0, ''})
-	aAdd(aEstrut, { 'E3_VEND'	, 'Vendedor'	, 'C', TamSX3("E3_VEND")[1]		, 0, ''})
-	aAdd(aEstrut, { 'E3_NUM'	, 'Titulo'		, 'C', TamSX3("E3_NUM")[1]		, 0, ''})
-	aAdd(aEstrut, { 'E3_TIPO'	, 'Tipo'		, 'C', TamSX3("E3_TIPO")[1]		, 0, ''})
-	// aAdd(aEstrut, { 'E3_BAIEMI'	, 'Comissao', 'C', 6, 0, ''})
+	aAdd(aEstrut, { 'E3_FILIAL'	, 'Filial'			, 'C', TamSX3("E3_FILIAL")[1]	, 0, ''})
+	aAdd(aEstrut, { 'E3_VEND'	, 'Vendedor'		, 'C', TamSX3("E3_VEND")[1]		, 0, ''})
+	aAdd(aEstrut, { 'A3_NOME'	, 'Nome Vendedor'	, 'C', TamSX3("A3_NOME")[1]		, 0, ''})
+	aAdd(aEstrut, { 'E3_PREFIXO', 'Prefixo'			, 'C', TamSX3("E3_PREFIXO")[1]	, 0, ''})
+	aAdd(aEstrut, { 'E3_NUM'	, 'Titulo'			, 'C', TamSX3("E3_NUM")[1]		, 0, ''})
+	aAdd(aEstrut, { 'E3_PARCELA', 'Parcela'			, 'C', TamSX3("E3_PARCELA")[1]	, 0, ''})
+	aAdd(aEstrut, { 'E3_SERIE'	, 'Serie'			, 'C', TamSX3("E3_SERIE")[1]	, 0, ''})
+	aAdd(aEstrut, { 'E3_TIPO'	, 'Tipo'			, 'C', TamSX3("E3_TIPO")[1]		, 0, ''})
+	aAdd(aEstrut, { 'E3_CODCLI'	, 'Cliente'			, 'C', TamSX3("E3_CODCLI")[1]	, 0, ''})
+	aAdd(aEstrut, { 'E3_LOJA'	, 'Loja'			, 'C', TamSX3("E3_LOJA")[1]		, 0, ''})
+	aAdd(aEstrut, { 'A1_NREDUZ'	, 'Nome Cliente'	, 'C', TamSX3("A1_NREDUZ")[1]	, 0, ''})
+	aAdd(aEstrut, { 'E3_BAIEMI'	, 'Comissao', 'C', 6, 0, ''})
 	aAdd(aEstrut, { 'E3_VENCTO'	, 'Vencimento'	, 'D', 10, 0, ''})
 	aAdd(aEstrut, { 'E3_DATA'	, 'Data Pag.'	, 'D', 10, 0, ''})
+	aAdd(aEstrut, { 'E3_PEDIDO'	, 'Pedido'		, 'C', TamSX3("E3_PEDIDO")[1]		, 0, ''})
+	aAdd(aEstrut, { 'E3_BASE'	, 'Valor Base'	, 'N', TamSX3("E3_BASE")[1], 2, '@E 99,999,999,999.99'})
+	aAdd(aEstrut, { 'E3_PORC'	, '(%) Comissão', 'N', TamSX3("E3_PORC")[1], 2, '@E 999.99'})
 	aAdd(aEstrut, { 'E3_COMIS'	, 'Valor'		, 'N', TamSX3("E3_COMIS")[1], 2, '@E 99,999,999,999.99'})
-	// aAdd(aEstrut, { 'E3_MOEDA'	, 'Moeda', 'N', 16, 4, '@E 99,999,999,999.99'})
-	// aAdd(aEstrut, { 'E3_PROCCOM', 'Saldo Titulo', 'C', TamSX3("E3_PROCCOM")[1], 0, ''})
+	aAdd(aEstrut, { 'E3_MOEDA'	, 'Moeda'		, 'C', 2, 0, ''})
 
 	//Percorrendo todos os campos da estrutura
 	For nAtual := 1 To Len(aEstrut)
@@ -330,7 +365,7 @@ Return
  | Desc:  Função do botão pagar comissao	    				       |
  *---------------------------------------------------------------------*/
 User Function fPagComis()
-	Processa({|| fProcessa()}, 'Selecionando Titulos...')
+	Processa({|| fProcessa()}, 'Selecionando títulos...')
 Return
 
 /*---------------------------------------------------------------------*
@@ -361,8 +396,8 @@ Static Function fProcessa()
 	Local lDigita   	:= If(mv_par09==1,.T.,.F.)
 	Local lMSE2530	 	:= (existblock("MSE2530"))
 	Local lContrRet  	:= !Empty( SE2->( ColumnPos( "E2_VRETPIS" ) ) ) .And. !Empty( SE2->( ColumnPos( "E2_VRETCOF" ) ) ) .And. ;
-		!Empty( SE2->( ColumnPos( "E2_VRETCSL" ) ) ) .And. !Empty( SE2->( ColumnPos( "E2_PRETPIS" ) ) ) .And. ;
-		!Empty( SE2->( ColumnPos( "E2_PRETCOF" ) ) ) .And. !Empty( SE2->( ColumnPos( "E2_PRETCSL" ) ) )
+						   !Empty( SE2->( ColumnPos( "E2_VRETCSL" ) ) ) .And. !Empty( SE2->( ColumnPos( "E2_PRETPIS" ) ) ) .And. ;
+						   !Empty( SE2->( ColumnPos( "E2_PRETCOF" ) ) ) .And. !Empty( SE2->( ColumnPos( "E2_PRETCSL" ) ) )
 	Local lRestValImp 	:= .F.
 	Local lRetParc    	:= .T.
 	Local lBlqFor		:= .F.
@@ -423,9 +458,9 @@ Static Function fProcessa()
 	Local cFilFun	   	:= ""
 	Local cLastNroPagto := ""
 	Local lPCCBaixa 	:= SuperGetMv("MV_BX10925",.T.,"2") == "1"  .and. (!Empty( SE5->( ColumnPos( "E5_VRETPIS" ) ) ) .And. !Empty( SE5->( ColumnPos( "E5_VRETCOF" ) ) ) .And. ;
-		!Empty( SE5->( ColumnPos( "E5_VRETCSL" ) ) ) .And. !Empty( SE5->( ColumnPos( "E5_PRETPIS" ) ) ) .And. ;
-		!Empty( SE5->( ColumnPos( "E5_PRETCOF" ) ) ) .And. !Empty( SE5->( ColumnPos( "E5_PRETCSL" ) ) ) .And. ;
-		!Empty( SE2->( ColumnPos( "E2_SEQBX"   ) ) ) .And. !Empty( SFQ->( ColumnPos( "FQ_SEQDES"  ) ) ) )
+		                   !Empty( SE5->( ColumnPos( "E5_VRETCSL" ) ) ) .And. !Empty( SE5->( ColumnPos( "E5_PRETPIS" ) ) ) .And. ;
+		                   !Empty( SE5->( ColumnPos( "E5_PRETCOF" ) ) ) .And. !Empty( SE5->( ColumnPos( "E5_PRETCSL" ) ) ) .And. ;
+		                   !Empty( SE2->( ColumnPos( "E2_SEQBX"   ) ) ) .And. !Empty( SFQ->( ColumnPos( "FQ_SEQDES"  ) ) ) )
 	Local cNatCom    	:= PADR(&(GetNewPar("MV_NATCOM","")),TamSx3("E2_NATUREZ")[1])
 	Local nLimInss   	:= GetMv("MV_LIMINSS",.F.,0)
 	Local lAtuSldNat  	:= FindFunction("AtuSldNat") .AND. AliasInDic("FIV") .AND. AliasInDic("FIW")
@@ -1200,7 +1235,7 @@ Static Function fProcessa()
 	dbSetOrder(1)
 
 	//Mostra a mensagem de término e caso queria fechar a dialog, basta usar o método End()
-	FWAlertInfo('Dos [' + cValToChar(nTotMarc) + '] titulos marcados, foram processados [' + cValToChar(nTotProc) + '] titulos', 'Atenção')
+	FWAlertInfo('Dos [' + cValToChar(nTotMarc) + '] títulos marcados, foram processados [' + cValToChar(nTotProc) + '] titulos', 'Atenção !!!')
 	oDlgMark:End()
 
 	FWRestArea(aArea)
