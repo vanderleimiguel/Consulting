@@ -1,0 +1,129 @@
+#include "tlpp-core.th"
+#include "tlpp-rest.th"
+#include "totvs.ch"
+
+#define VERSION "1.0"
+
+/*/{Protheus.doc} API4FIN
+	recebe requisicoes rest da central 4fin
+	@type	 class
+	@author	 Ivan Caproni
+	@since	 10/12/2023
+	@version 1.0
+/*/
+class API4FIN
+	public	method new()
+
+	@Get(endpoint="/4fin/v1/beacon", description="consulta se o servico esta online")
+	public method beacon()
+
+	@Get(endpoint="/4fin/v1/versao", description="consulta as versoes dos fontes")
+	public method versao()
+
+	@Post(endpoint="/4fin/v1/licenca", description="consulta se a empresa tem acesso ao 4fin")
+	public method licenca()
+
+	@Get(endpoint="/4fin/v1/retorno-banco", description="recebe o retorno do banco itau")
+	public method retornoBanco()
+endclass
+
+method new() class API4FIN
+return
+
+method beacon() class API4FIN
+	oRest:setKeyHeaderResponse('Content-Type','application/json')
+	oRest:setKeyHeaderResponse("version",VERSION)
+	oRest:setResponse( { "success" : .T. } )
+return .T.
+
+method versao() class API4FIN
+	local jRet	:= JsonObject():New()
+	local aRet  := {}
+	local nIdx  as numeric
+	Local info  as array
+	local aCode := {"API4FIN.tlpp"	,;
+					"GESTFIN.prw"	,;
+					"GESTFIN2.prw"	,;
+					"GESTFIN3.prw"	,;
+					"GESTFIN4.prw"	,;
+					"GESTFIN5.prw"	,;
+					"GESTFIN6.prw"	,;
+					"GESTFIN7.prw"	,;
+					"GESTFIN8.prw"	,;
+					"GESTFIN9.prw"	,;
+					"GESTFINA.prw"	,;
+					"GESTFINB.prw"	,;
+					"GESTFINC.prw"	,;
+					"xBOLETO.prw"	,;
+					"xCOBRANCA.prw"	,;
+					"xEMAIL.prw"	}
+
+	oRest:setKeyHeaderResponse('Content-Type','application/json')
+	oRest:setKeyHeaderResponse("version",VERSION)
+
+	for nIdx := 1 to Len(aCode)
+		aAdd(aRet,JsonObject():New())
+		if .not. Empty(info := GetApoInfo(aCode[nIdx]))
+			aTail(aRet)["name"] := info[1]
+			aTail(aRet)["lang"] := info[2]
+			aTail(aRet)["meth"] := Iif(info[3]=="1","BUILD_USER",;
+											Iif(info[3]=="3","BUILD_PATCH",;
+															Iif(info[3]=="2","BUILD_PARTNER",;
+																			"BUILD_FULL")))
+			aTail(aRet)["date"] := DtoC(info[4])
+			if Len(info) > 4
+				aTail(aRet)["hour"] := info[5]
+			endif
+		endif
+	next nIdx
+
+	jRet:set(aRet)
+	oRest:setResponse( jRet:toJson() )
+return .T.
+
+method licenca() class API4FIN
+	local jRet	as json
+	local jBody	:= JsonObject():new()
+	local aAux	as array
+
+	oRest:setKeyHeaderResponse('Content-Type','application/json')
+	oRest:setKeyHeaderResponse("version",VERSION)
+
+	jBody:fromJson( oRest:getBodyRequest() )
+	if jBody == nil
+		oRest:setStatusCode(400)
+		jRet := { "code" : 400 , "detailedMessage" : "" , "message" : "erro no parser do body" }
+		oRest:setResponse( jRet:toJson() )
+		return .T.
+	endif
+
+	if Empty(jBody["cnpj"])
+		jRet := { "success" : .F. , "contas" : {} }
+	else
+		aAux := getContas(jBody["cnpj"])
+		if Len(aAux) > 0
+			jRet := { "success" : .T. , "contas" : aClone(aAux) }
+			FwFreeArray(aAux)
+		else
+			jRet := { "success" : .T. , "contas" : {} }
+		endif
+	endif
+
+	oRest:setResponse(jRet:toJson())
+return .T.
+
+static function getContas(cnpj)
+	local aCnpj := {} ; local nLen as numeric
+	aAdd(aCnpj,JsonObject():new()) ; nLen := Len(aCnpj)
+	aCnpj[nLen]["banco"]	:= "422"
+	aCnpj[nLen]["agencia"]	:= "13500"
+	aCnpj[nLen]["conta"]	:= "000201702"
+return aCnpj
+
+method retornoBanco() class API4FIN
+	local oResponse := JsonObject():new()
+	oResponse:fromJson( oRest:getBodyRequest() )
+	if SE1->( dbSeek(oResponse["txid"]) )
+		//FINA070()
+	endif
+return
