@@ -217,21 +217,26 @@ static function fnLegenda(lLista)
 		aAdd(aLegenda,{"BR_PRETO"	, "Titulo em Bordero" })
 		aAdd(aLegenda,{"BR_BRANCO"	, "Adiantamento com saldo" })
 		aAdd(aLegenda,{"BR_CINZA"	, "Titulo baixado parcialmente e em bordero" })
-		aAdd(aLegenda,{"BR_MARROM"  , "Titulo Conciliado"})
+		aAdd(aLegenda,{"BR_AMARELO" , "Titulo Conciliado"})
 		BrwLegenda(cCadastro, "Legenda", aLegenda)
 	else
 		aAux := Fa040Legenda("SE1")
 		//Adiciona legenda de conciliado
 		aSize(aAux, Len(aAux) + 1)//acrescenta uma posição
 		aIns(aAux, 1)//Reposiciona legenda no array
-    	aAux[1] := {"ROUND(E1_SALDO,2) = 0", "BR_MARROM"}//add legenda
+    	aAux[1] := {"ROUND(E1_SALDO,2) = 0", "BR_AMARELO"}//add legenda
 		for nInd := 1 to Len(aAux)
 			if &(aAux[nInd][1])
                 If nInd = 1
-					SE5->( DbSetOrder(2) )
-					If SE5->(DbSeek(xFilial("SE5")+"VL"+cPrefixo+cNum+cParcela+cTipo+DtoS(dData)+cCliente+cLoja))
-						cRet := aAux[nInd][2]
-						exit
+					SE5->( DbSetOrder(7) )                                                                                
+					If SE5->(DbSeek(xFilial("SE5")+cPrefixo+cNum+cParcela+cTipo+cCliente+cLoja))
+						If !Empty(SE5->E5_RECONC)
+							cRet := aAux[nInd][2]
+							exit
+						else
+							cRet := "BR_VERMELHO"
+							exit
+						EndIf
 					EndIf
 				else
 					cRet := aAux[nInd][2]
@@ -308,18 +313,18 @@ static function fnValid()
 	if ! (lRet := lRet .and. fnValid4fin())
 		Alert("falha na liberacao do acesso. Contatar o departamento comercial da Fas Solutions")
 	endif
-	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
-	// 	Alert("campo EE_XCONFIG nao criado")
-	// endif
-	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
-	// 	Alert("campo EE_XTIPAPI nao criado")
-	// endif
-	// if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
-	// 	Alert("campo A1_XEMLCOB nao criado")
-	// endif
-	// if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
-	// 	Alert("campo E1_XAPI nao criado")
-	// endif
+	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
+		Alert("campo EE_XCONFIG nao criado")
+	endif
+	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
+		Alert("campo EE_XTIPAPI nao criado")
+	endif
+	if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
+		Alert("campo A1_XEMLCOB nao criado")
+	endif
+	if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
+		Alert("campo E1_XAPI nao criado")
+	endif
 return lRet
 
 static function fnValid4fin()
