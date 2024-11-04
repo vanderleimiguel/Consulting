@@ -1,6 +1,6 @@
 #include "totvs.ch"
 
-static oEnch  := nil
+static oEnch2  := nil
 
 /*/{Protheus.doc} GESTFIN9
 	retorno das API
@@ -18,15 +18,15 @@ return
 
 static function fnExec(cTmp)
 	local bAction := {|| FWMsgRun(,{|oSay| fnBaixar(aTemps,oSay) },"Processando","Processando a rotina...") , oModal:deActivate() }
-	Private n1Marcado   := 10
-	Private n1Total     := 10.00
-	Private n1TotMarc   := 10.00
-	Private n2Marcado   := 20
-	Private n2Total     := 20.00
-	Private n2TotMarc   := 20.00
-	Private n3Marcado   := 30
-	Private n3Total     := 30.00
-	Private n3TotMarc   := 30.00
+	Private n1Marcado   := 0
+	Private n1Total     := 0.00
+	Private n1TotMarc   := 0.00
+	Private n2Marcado   := 0
+	Private n2Total     := 0.00
+	Private n2TotMarc   := 0.00
+	Private n3Marcado   := 0
+	Private n3Total     := 0.00
+	Private n3TotMarc   := 0.00
 
 	oModal := FwDialogModal():New()
 	oModal:setEscClose(.T.)
@@ -93,7 +93,7 @@ static function fnExec(cTmp)
 	oSafra:activateView()
 	aAdd(aTemps,oSafra:oTmp) */
 	
-	M->CTG := M->VLR := M->MKD := 0
+	M->CTG2 := M->VLR2 := M->MKD2 := 0
 	MsgRun("Criando totais ...." ,"AGUARDE",{|| TotalDef(oWin2) })
 	oModal:activate()
 
@@ -846,22 +846,22 @@ return cRet
 static Function fAtuTotal()
 
 	If oFolder:noption = 1
-		M->CTG	:= n1Marcado
-		M->VLR  := n1Total
-		M->MKD  := n1TotMarc
+		M->CTG2	:= n1Marcado
+		M->VLR2  := n1Total
+		M->MKD2  := n1TotMarc
 	Elseif oFolder:noption = 2
-		M->CTG  := n2Marcado
-		M->VLR  := n2Total
-		M->MKD  := n2TotMarc
+		M->CTG2  := n2Marcado
+		M->VLR2  := n2Total
+		M->MKD2  := n2TotMarc
 	ElseIf oFolder:noption = 3
-		M->CTG  := n3Marcado
-		M->VLR  := n3Total
-		M->MKD  := n3TotMarc
+		M->CTG2  := n3Marcado
+		M->VLR2  := n3Total
+		M->MKD2  := n3TotMarc
 	EndIf
 
 	//Atualiza totais
-	if oEnch != nil
-		oEnch:refresh()
+	if oEnch2 != nil
+		oEnch2:refresh()
 	endif
 return
 
@@ -1100,11 +1100,11 @@ Return nRec
 
 static function TotalDef(oWin2)
 	local aField := {}
-	local aCpoEnch := {"CTG","VLR","MKD"}
+	local aCpoEnch2 := {"CTG2","VLR2","MKD2"}
 	local aPos := {000,000,010,010}
 
 	Aadd(aField, {"Marcados",;				// [01] - Titulo
-				"CTG",;						// [02] - campo
+				"CTG2",;						// [02] - campo
 				"N",;						// [03] - Tipo
 				16,;						// [04] - Tamanho
 				0,;							// [05] - Decimal
@@ -1123,7 +1123,7 @@ static function TotalDef(oWin2)
 				nil,;						// [18] - pictvar
 				"N"})						// [19] - gatilho
 	Aadd(aField, {"Total R$",;				// [01] - Titulo
-				"VLR",;						// [02] - campo
+				"VLR2",;						// [02] - campo
 				"N",;						// [03] - Tipo
 				14,;						// [04] - Tamanho
 				2,;							// [05] - Decimal
@@ -1142,7 +1142,7 @@ static function TotalDef(oWin2)
 				nil,;						// [18] - pictvar
 				"N"})						// [19] - gatilho
 	Aadd(aField, {"Total Marcado R$",;		// [01] - Titulo
-				"MKD",;						// [02] - campo
+				"MKD2",;						// [02] - campo
 				"N",;						// [03] - Tipo
 				14,;						// [04] - Tamanho
 				2,;							// [05] - Decimal
@@ -1161,10 +1161,10 @@ static function TotalDef(oWin2)
 				nil,;						// [18] - pictvar
 				"N"})						// [19] - gatilho
 
-	oEnch := MsmGet():new(,,2,/*aCRA*/,/*cLetras*/,/*cTexto*/,aCpoEnch,aPos,{},/*nModelo*/,;
+	oEnch2 := MsmGet():new(,,2,/*aCRA*/,/*cLetras*/,/*cTexto*/,aCpoEnch2,aPos,{},/*nModelo*/,;
 	/*nColMens*/,/*cMensagem*/, /*cTudoOk*/,oWin2,/*lF3*/,.T.,/*lColumn*/,/*caTela*/,;
 	/*lNoFolder*/,/*lProperty*/,aField)
-	oEnch:oBox:align := CONTROL_ALIGN_ALLCLIENT
+	oEnch2:oBox:align := CONTROL_ALIGN_ALLCLIENT
 
 	fAtuTotal()
 return
