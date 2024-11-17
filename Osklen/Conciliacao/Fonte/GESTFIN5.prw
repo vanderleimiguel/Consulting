@@ -1,6 +1,6 @@
 #include "protheus.ch"
 /*/{Protheus.doc} GESTFIN5
-	estornar o bordero gerado
+	Realiza Baixa do titulo
 	@type function
 	@version 1.0
 	@author ivan.caproni
@@ -17,6 +17,7 @@ static function fnExec(cTmp)
 	local nOpc as numeric
 	// local cHistor as character
 	local aPar as array
+	Local nRecSE1 as numeric
 
 	nOpc := Aviso("Ação","Escolha a opção desejada?",{"Baixar Marcados","Baixar Posicionado","Cancelar"},2)
 
@@ -28,9 +29,13 @@ static function fnExec(cTmp)
 		(cTmp)->(dbSetOrder(2))
 		if (cTmp)->(dbSeek("T"))
 			while (cTmp)->( ! Eof() .and. XX_OK == 'T' )
+				nRecSE1	:= 0
 				SE1->( dbGoto((cTmp)->XX_RECNO) )
 				if SE1->E1_SALDO > 0
 					fnBaixar(cTmp)
+					//Efetua conciliacao
+					nRecSE1	:= (cTmp)->XX_RECNO
+					U_XConcilia(nRecSE1)
 				endif
 				(cTmp)->(dbSkip())
 			end
@@ -42,6 +47,9 @@ static function fnExec(cTmp)
 			return
 		else
 			fnBaixar(cTmp)
+			//Efetua conciliacao
+			nRecSE1	:= (cTmp)->XX_RECNO
+			U_XConcilia(nRecSE1)
 		endif
 	endif
 

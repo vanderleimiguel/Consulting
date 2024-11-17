@@ -40,6 +40,35 @@ User Function GESTFIN
 	private cModo		:= FwModeAccess("SE1", 1) + FwModeAccess("SE1", 2) + FwModeAccess("SE1", 3)
 	private __aConta	:= {}
 	private cCadastro	:= "Gerenciador de Boletos"
+	//objeto0 
+    Private oChkObj0 
+    Private lChkObj0    := .T.  
+    Private oChkObj1 
+    Private lChkObj1    := .F.  
+    Private oChkObj2 
+    Private lChkObj2    := .F.  
+    Private oChkObj3 
+    Private lChkObj3    := .F.  
+    Private oChkObj4 
+    Private lChkObj4    := .F.  
+    Private oChkObj5 
+    Private lChkObj5    := .F.  
+    Private oChkObj6 
+    Private lChkObj6    := .F.  
+    Private oChkObj7 
+    Private lChkObj7    := .F.  
+    Private oChkObj8 
+    Private lChkObj8    := .F.  
+    Private oChkObj9 
+    Private lChkObj9    := .F.  
+    Private oChkObj10 
+    Private lChkObj10   := .F.  
+    Private oChkObj11 
+    Private lChkObj11   := .F.  
+    Private oChkObj12 
+    Private lChkObj12   := .F.  	
+	Private cFontNome   := 'Tahoma'
+    Private oFontPadrao := TFont():New(cFontNome, , -13)
 
 	oDlg := FwDialogModal():new()
 	oDlg:setTitle(cCadastro)
@@ -59,9 +88,9 @@ User Function GESTFIN
 
 	oLayer:addCollumn('COLUNA_DIR',85,.T.,'LINHA')
 	if FWGetDialogSize(oLayer:getColPanel('COLUNA_DIR','LINHA'))[3] > 768
-		aDimen := {10,75,15}
+		aDimen := {10,65,25}
 	else
-		aDimen := {15,65,20}
+		aDimen := {15,55,30}
 	endif
 
 	oLayer:addWindow('COLUNA_DIR','JANELA_DIR_CIMA'  ,'Filtros'			 ,aDimen[1],.F.,.T.,,'LINHA')
@@ -93,10 +122,11 @@ User Function GESTFIN
 		return
 	endif
 
-	M->CTG := M->VLR := M->SLD := M->BXD := M->MKD := 0
+	M->CTG := M->VLR := M->SLD := M->BXD := M->CON := M->NCO := M->MKD := 0
 
 	MsgRun("Criando browse ...." ,"AGUARDE",{|| BrowserDef(opDir) })
-	MsgRun("Criando filtros ....","AGUARDE",{|| Filter2Def(opFtr) })
+	// MsgRun("Criando filtros ....","AGUARDE",{|| Filter2Def(opFtr) })
+	MsgRun("Criando filtros ....","AGUARDE",{|| fTcheckbox(opFtr) })
 	MsgRun("Criando totais ...." ,"AGUARDE",{|| TotalDef(opTot) })
 
 	oDlg:activate()
@@ -118,13 +148,15 @@ static function Filter1Def()
 	aAdd(aFilt,{ "ABERTOS"		, "E1_SALDO > 0 .AND. E1_VALOR == E1_SALDO"	, "E1_SALDO > 0 AND E1_VALOR = E1_SALDO"	})
 	aAdd(aFilt,{ "PARC BAIXADOS", "E1_SALDO > 0 .AND. E1_VALOR != E1_SALDO"	, "E1_SALDO > 0 AND E1_VALOR <> E1_SALDO"	})
 	aAdd(aFilt,{ "BAIXADOS"		, "E1_SALDO == 0"							, "E1_SALDO = 0"							})
-	aAdd(aFilt,{ "COM BORDERO"	, "E1_PORTADO != ''"						, "E1_PORTADO <> ''"						})
-	aAdd(aFilt,{ "SEM BORDERO"	, "Empty(E1_PORTADO)"						, "E1_PORTADO = ''"							})
+	aAdd(aFilt,{ "COM BORD"		, "E1_PORTADO != ''"						, "E1_PORTADO <> ''"						})
+	aAdd(aFilt,{ "SEM BORD"		, "Empty(E1_PORTADO)"						, "E1_PORTADO = ''"							})
 	aAdd(aFilt,{ "ADIANTAMENTO"	, "E1_TIPO == 'RA '"						, "E1_TIPO = 'RA '"							})
-	aAdd(aFilt,{ "NO ITAU"		, "E1_PORTADO == '341'"						, "E1_PORTADO = '341'"						})
-	aAdd(aFilt,{ "NO SANTANDER"	, "E1_PORTADO == '033'"						, "E1_PORTADO = '033'"						})
-	aAdd(aFilt,{ "NO B.BRASIL"	, "E1_PORTADO == '001'"						, "E1_PORTADO = '001'"						})
-	aAdd(aFilt,{ "NO SAFRA"		, "E1_PORTADO == '422'"						, "E1_PORTADO = '422'"						})
+	aAdd(aFilt,{ "CONCILIADOS"	, "XX_RECONC == 'x'"						, "XX_RECONC = 'x'"							})
+	aAdd(aFilt,{ "NAO CONCILIAD", "XX_RECONC <> 'x'" 						, "XX_RECONC <> 'x'"						})
+	aAdd(aFilt,{ "ITAU"			, "E1_PORTADO == '341'"						, "E1_PORTADO = '341'"						})
+	aAdd(aFilt,{ "SANTANDER"	, "E1_PORTADO == '033'"						, "E1_PORTADO = '033'"						})
+	aAdd(aFilt,{ "B.BRASIL"		, "E1_PORTADO == '001'"						, "E1_PORTADO = '001'"						})
+	aAdd(aFilt,{ "SAFRA"		, "E1_PORTADO == '422'"						, "E1_PORTADO = '422'"						})
 return
 
 static function LoadDef()
@@ -134,10 +166,11 @@ static function LoadDef()
 	aEval(FwSx3Util():getAllFields("SE1",.F.),{|x| cSelect += x + "," })
 
 	cReal := oTable:getRealName()
-	cSql := "INSERT INTO "+cReal+" ("+cSelect+"XX_OK,XX_RECNO)"
-	cSql += " SELECT "+cSelect+"'F' AS XX_OK,R_E_C_N_O_"
-	cSql += " FROM "+RetSqlName("SE1")
-	cSql += " WHERE D_E_L_E_T_=' '"
+	cSql := "INSERT INTO "+cReal+" ("+cSelect+"XX_OK,XX_RECNO,XX_RECONC)"
+	cSql += " SELECT "+cSelect+"'F' AS XX_OK,SE1.R_E_C_N_O_,SE5.E5_RECONC"
+	cSql += " FROM "+RetSqlName("SE1")+" SE1 "
+	cSql += " LEFT JOIN " + RetSqlName("SE5") + " SE5 ON SE5.E5_DTCANBX = ' ' AND SE5.E5_RECPAG = 'R' AND SE5.E5_PREFIXO = SE1.E1_PREFIXO AND SE5.E5_NUMERO = SE1.E1_NUM AND SE5.E5_PARCELA = SE1.E1_PARCELA AND SE5.D_E_L_E_T_ = ''"
+	cSql += " WHERE SE1.D_E_L_E_T_=' '"
 
 	if TcSqlExec(cSql) != 0
 		Alert(TcSqlError())
@@ -146,24 +179,12 @@ static function LoadDef()
 return .T.
 
 static function RefreshDef(lGotop)
-	MsgRun("atualizando dados ....","AGUARDE",{|| oTable:zap() , LoadDef() , fnUpdateTotal() , oGrid:refresh(lGotop) })
+	MsgRun("atualizando dados ....","AGUARDE",{|| oTable:zap() , M->MKD:=0, LoadDef() , fnUpdateTotal() , oGrid:refresh(lGotop) })
 return
 
 static function fnMark(lMarkAll)
-	local nAt := oGrid:at()
 	if lMarkAll
-		(cTmp)->( dbSetOrder(2) )
-		if (cTmp)->( dbSeek("T") )
-			while (cTmp)->( ! Eof() .and. XX_OK == "T" )
-				fnExecMark(.F.)
-				(cTmp)->( dbSkip() )
-			end
-
-			oGrid:goTo(nAt,.T.)
-			if oEnch != nil
-				oEnch:refresh()
-			endif
-		endif
+		fnAllMark()
 	else
 		fnExecMark()
 		oGrid:lineRefresh()
@@ -175,17 +196,17 @@ return
 
 static function fnExecMark(lMsg)
 	default lMsg := .T.
-	if fnCanIAdd(lMsg)
+	// if fnCanIAdd(lMsg)
 		Reclock(cTmp,.F.)
 		(cTmp)->XX_OK := StrTran(cValtochar( .not. ((cTmp)->XX_OK == "T") ),".")
 		(cTmp)->(msUnlock())
 
 		if (cTmp)->XX_OK == "T"
-			M->MKD += (cTmp)->E1_SALDO
+			M->MKD += (cTmp)->E1_VALOR
 		else
-			M->MKD -= (cTmp)->E1_SALDO
+			M->MKD -= (cTmp)->E1_VALOR
 		endif
-	endif
+	// endif
 return
 
 static function fnCanIAdd(lMsg)
@@ -200,13 +221,6 @@ static function fnLegenda(lLista)
 	local cRet as character
 	local aLegenda as array
 	local nInd as numeric
-	Local cPrefixo	:= E1_PREFIXO
-	Local cNum		:= E1_NUM
-	Local cParcela	:= E1_PARCELA
-	Local cTipo		:= E1_TIPO
-	Local dData		:= E1_VENCREA
-	Local cCliente	:= E1_CLIENTE
-	Local cLoja		:= E1_LOJA
 	default lLista 	:= .T.
 	
 	if lLista
@@ -217,17 +231,48 @@ static function fnLegenda(lLista)
 		aAdd(aLegenda,{"BR_PRETO"	, "Titulo em Bordero" })
 		aAdd(aLegenda,{"BR_BRANCO"	, "Adiantamento com saldo" })
 		aAdd(aLegenda,{"BR_CINZA"	, "Titulo baixado parcialmente e em bordero" })
-		aAdd(aLegenda,{"BR_AMARELO" , "Titulo Conciliado"})
 		BrwLegenda(cCadastro, "Legenda", aLegenda)
 	else
 		aAux := Fa040Legenda("SE1")
-		//Adiciona legenda de conciliado
-		aSize(aAux, Len(aAux) + 1)//acrescenta uma posição
-		aIns(aAux, 1)//Reposiciona legenda no array
-    	aAux[1] := {"ROUND(E1_SALDO,2) = 0", "BR_AMARELO"}//add legenda
 		for nInd := 1 to Len(aAux)
 			if &(aAux[nInd][1])
-                If nInd = 1
+				cRet := aAux[nInd][2]
+				exit
+			endif
+		next nInd
+		FwFreeArray(aAux)
+	endif
+return cRet
+
+static function fnLegConc(lLista)
+	local cRet as character
+	local aLegenda as array
+	local aAux as array
+	local nInd as numeric
+	Local cPrefixo	:= E1_PREFIXO
+	Local cNum		:= E1_NUM
+	Local cParcela	:= E1_PARCELA
+	Local cTipo		:= E1_TIPO
+	Local cCliente	:= E1_CLIENTE
+	Local cLoja		:= E1_LOJA
+	default lLista 	:= .T.
+	
+	if lLista
+		aLegenda := {}
+		aAdd(aLegenda,{"BR_VERMELHO", "Titulo nao conciliado" })
+		aAdd(aLegenda,{"BR_AZUL"	, "Titulo Conciliado" })
+		BrwLegenda(cCadastro, "Legenda", aLegenda)
+	else
+		aAux := {}
+		aadd(aAux, {"ROUND(E1_SALDO,2) > 0", "BR_VERMELHO"} )
+		aadd(aAux, {"ROUND(E1_SALDO,2) = 0", "BR_AZUL"} )
+
+		for nInd := 1 to Len(aAux)
+			if &(aAux[nInd][1])
+				If nInd = 1
+					cRet := aAux[nInd][2]
+					exit
+				Else
 					SE5->( DbSetOrder(7) )                                                                                
 					If SE5->(DbSeek(xFilial("SE5")+cPrefixo+cNum+cParcela+cTipo+cCliente+cLoja))
 						If !Empty(SE5->E5_RECONC)
@@ -237,13 +282,17 @@ static function fnLegenda(lLista)
 							cRet := "BR_VERMELHO"
 							exit
 						EndIf
+					else
+						cRet := "BR_VERMELHO"
+						exit
 					EndIf
-				else
-					cRet := aAux[nInd][2]
-					exit
 				EndIf
 			endif
 		next nInd
+
+		if oEnch != nil
+			oEnch:refresh()
+		endif
 		FwFreeArray(aAux)
 	endif
 return cRet
@@ -313,18 +362,18 @@ static function fnValid()
 	if ! (lRet := lRet .and. fnValid4fin())
 		Alert("falha na liberacao do acesso. Contatar o departamento comercial da Fas Solutions")
 	endif
-	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
-		Alert("campo EE_XCONFIG nao criado")
-	endif
-	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
-		Alert("campo EE_XTIPAPI nao criado")
-	endif
-	if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
-		Alert("campo A1_XEMLCOB nao criado")
-	endif
-	if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
-		Alert("campo E1_XAPI nao criado")
-	endif
+	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
+	// 	Alert("campo EE_XCONFIG nao criado")
+	// endif
+	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
+	// 	Alert("campo EE_XTIPAPI nao criado")
+	// endif
+	// if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
+	// 	Alert("campo A1_XEMLCOB nao criado")
+	// endif
+	// if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
+	// 	Alert("campo E1_XAPI nao criado")
+	// endif
 return lRet
 
 static function fnValid4fin()
@@ -425,6 +474,7 @@ static function BrowserDef(oPanel)
 	oGrid:addMarkColumns({|| Iif(XX_OK=='T',"LBOK","LBNO") }, {|| fnMark(.F.) }, {|| fnMark(.T.) })
 	oGrid:addStatusColumns({|| fnLegBco() })
 	oGrid:addStatusColumns({|| fnLegenda(.F.) },{|| fnLegenda() })
+	oGrid:addStatusColumns({|| fnLegConc(.F.) },{|| fnLegConc() })
 
 	for nInd := 1 to Len(aBrowse)
 		cFld := aBrowse[nInd]
@@ -447,6 +497,7 @@ static function StructDef()
 	aEval(FwSx3Util():getAllFields("SE1",.F.),{|x| aAdd(aHeader,FwSx3Util():getFieldStruct(x)) })
 	aAdd(aHeader,{"XX_OK","C",1,0})
 	aAdd(aHeader,{"XX_RECNO","N",9,0})
+	aAdd(aHeader,{"XX_RECONC","C",1,0})
 
 	oTable := FwTemporaryTable():new(,aHeader)
 	oTable:addIndex("1",Separa(SE1->(IndexKey(1)),"+",.F.))
@@ -495,11 +546,13 @@ static function ButtonDef(oPanel)
 	local oMoeda		as object
 	local oSaldoBco		as object
 	local oContabil		as object
+	local oConcilia		as object
 
 	local bTitulo		:= {|| U_GESTFINC(cTmp) , oGrid:goTo((cTmp)->(Recno()),.T.) , oGrid:setFocus() }
 	local bBoleto		:= {|| U_xBOLETO(cTmp) }
 	local bEnviarBol	:= {|| U_xEMAIL(cTmp) }
 	local bBaixar		:= {|| U_GESTFIN5(cTmp) , RefreshDef(.T.), oGrid:setFocus() }
+	local bConcilia		:= {|| U_GESTFINJ(cTmp) , RefreshDef(.T.), oGrid:setFocus() }
 	local bItau			:= {|| U_GESTFIN2(cTmp,"341") , oGrid:goTo((cTmp)->(Recno()),.T.) , oGrid:setFocus() }
 	local bSantander	:= {|| U_GESTFIN2(cTmp,"033") , oGrid:goTo((cTmp)->(Recno()),.T.) , oGrid:setFocus() }
 	local bBB			:= {|| U_GESTFIN2(cTmp,"001") , oGrid:goTo((cTmp)->(Recno()),.T.) , oGrid:setFocus() }
@@ -555,6 +608,10 @@ static function ButtonDef(oPanel)
 	oBaixar := TButton():new(1,202,'Baixar Titulo',oPanel,bBaixar,35,15,,,.F.,.T.,.F.,,.F.,,,.F.)
 	oBaixar:setCss(StrTran(cCssBtn,"##BANCO##","LIQCHECK"))
 	oBaixar:align := CONTROL_ALIGN_TOP
+
+	oConcilia := TButton():new(1,202,'Conciliar',oPanel,bConcilia,35,15,,,.F.,.T.,.F.,,.F.,,,.F.)
+	oConcilia:setCss(StrTran(cCssBtn,"##BANCO##","LIQCHECK"))
+	oConcilia:align := CONTROL_ALIGN_TOP
 
 	oItau := TButton():new(1,202,'Itau',oPanel,bItau,35,15,,,.F.,.T.,.F.,,.F.,,,.F.)
 	oItau:setCss(StrTran(cCssBtn,"##BANCO##","itau"))
@@ -671,26 +728,92 @@ static function Filter2Def(oPanel)
 	oRadio:align   := CONTROL_ALIGN_ALLCLIENT
 return
 
+Static Function fTcheckbox(oPanel)
+
+    oChkObj0  := TCheckBox():New(2, 1, "TODOS", {|u| Iif(PCount() > 0 , lChkObj0 := u, lChkObj0)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+ 	oChkObj0:bLClicked := {|| u_fnfinChck(oChkObj0,lChkObj0,0)}
+    oChkObj1  := TCheckBox():New(2, 40, aFilt[1][1], {|u| Iif(PCount() > 0 , lChkObj1 := u, lChkObj1)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj1:bLClicked := {|| u_fnfinChck(oChkObj1,lChkObj1,1)}
+    oChkObj2  := TCheckBox():New(2, 85, aFilt[2][1], {|u| Iif(PCount() > 0 , lChkObj2 := u, lChkObj2)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj2:bLClicked := {|| u_fnfinChck(oChkObj2,lChkObj2,2)}
+    oChkObj3  := TCheckBox():New(2, 145, aFilt[3][1], {|u| Iif(PCount() > 0 , lChkObj3 := u, lChkObj3)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj3:bLClicked := {|| u_fnfinChck(oChkObj3,lChkObj3,3)}
+    oChkObj4  := TCheckBox():New(2, 190, aFilt[4][1], {|u| Iif(PCount() > 0 , lChkObj4 := u, lChkObj4)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj4:bLClicked := {|| u_fnfinChck(oChkObj4,lChkObj4,4)}
+    oChkObj5  := TCheckBox():New(2, 240, aFilt[5][1], {|u| Iif(PCount() > 0 , lChkObj5 := u, lChkObj5)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj5:bLClicked := {|| u_fnfinChck(oChkObj5,lChkObj5,5)}
+    oChkObj6  := TCheckBox():New(2, 290, aFilt[6][1], {|u| Iif(PCount() > 0 , lChkObj6 := u, lChkObj6)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj6:bLClicked := {|| u_fnfinChck(oChkObj6,lChkObj6,6)}
+    oChkObj7  := TCheckBox():New(2, 350, aFilt[7][1], {|u| Iif(PCount() > 0 , lChkObj7 := u, lChkObj7)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj7:bLClicked := {|| u_fnfinChck(oChkObj7,lChkObj7,7)}
+    oChkObj8  := TCheckBox():New(2, 410, aFilt[8][1], {|u| Iif(PCount() > 0 , lChkObj8 := u, lChkObj8)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj8:bLClicked := {|| u_fnfinChck(oChkObj8,lChkObj8,8)}
+    oChkObj9  := TCheckBox():New(2, 470, aFilt[9][1], {|u| Iif(PCount() > 0 , lChkObj9 := u, lChkObj9)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj9:bLClicked := {|| u_fnfinChck(oChkObj9,lChkObj9,9)}
+    oChkObj10  := TCheckBox():New(2, 500, aFilt[10][1], {|u| Iif(PCount() > 0 , lChkObj10 := u, lChkObj10)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj10:bLClicked := {|| u_fnfinChck(oChkObj10,lChkObj10,10)}
+    oChkObj11  := TCheckBox():New(2, 555, aFilt[11][1], {|u| Iif(PCount() > 0 , lChkObj11 := u, lChkObj11)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj11:bLClicked := {|| u_fnfinChck(oChkObj11,lChkObj11,11)}
+    oChkObj12  := TCheckBox():New(2, 600, aFilt[12][1], {|u| Iif(PCount() > 0 , lChkObj12 := u, lChkObj12)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+	oChkObj12:bLClicked := {|| u_fnfinChck(oChkObj12,lChkObj12,12)}
+
+Return
+
+User Function fnfinChck(oCheck, lCHECK, nSet)
+  If valType(oCheck) <> "U"
+    If oCheck:lModified //Verifica se foi alterado
+		fnApplyFilter(nSet)
+    EndIf
+  Endif
+Return
+
 static function fnApplyFilter(nSet)
-	local nItem := nSet -1
+	// local nItem := nSet -1
+	local nItem := nSet
 	local nIdx as numeric
-	for nIdx := 1 to Len(oGrid:oFwFilter:aFilter)
-		oGrid:oFwFilter:aFilter[nIdx][6] := .F.
-		oGrid:oFwFilter:aCheckFil[nIdx] := .F.
-		// oGrid:aFilterDefault[nIdx][6] := .F.
-	next nIdx
+
+	RefreshDef(.T.)
+	
+	If nItem == 0
+		for nIdx := 1 to Len(oGrid:oFwFilter:aFilter)
+			oGrid:oFwFilter:aFilter[nIdx][6] := .F.
+			oGrid:oFwFilter:aCheckFil[nIdx] := .F.
+			// oGrid:aFilterDefault[nIdx][6] := .F.
+			lChkObj1	:= .F.
+			lChkObj2	:= .F.
+			lChkObj3	:= .F.
+			lChkObj4	:= .F.
+			lChkObj5	:= .F.
+			lChkObj6	:= .F.
+			lChkObj7	:= .F.
+			lChkObj8	:= .F.
+			lChkObj9	:= .F.
+			lChkObj10	:= .F.
+			lChkObj11	:= .F.
+			lChkObj12	:= .F.
+		next nIdx
+	EndIf 
+
 	if nItem > 0
-		oGrid:oFwFilter:aFilter[nItem][6] := .T.
-		oGrid:oFwFilter:aCheckFil[nItem] := .T.
+		lChkObj0	:= .F.
+		If oGrid:oFwFilter:aFilter[nItem][6]
+			oGrid:oFwFilter:aFilter[nItem][6] 	:= .F.
+			oGrid:oFwFilter:aCheckFil[nItem] 	:= .F.
+		Else
+			oGrid:oFwFilter:aFilter[nItem][6] 	:= .T.
+			oGrid:oFwFilter:aCheckFil[nItem]	:= .T.
+		EndIf
 		// oGrid:aFilterDefault[nItem][6] := .T.
 	endif
+
 	oGrid:oFwFilter:executeFilter()
-	oGrid:refresh(.F.)
+	oGrid:refresh(.T.)
+	
 return
 
 static function TotalDef(oPanel)
 	local aField := {}
-	local aCpoEnch := {"CTG","VLR","SLD","BXD","MKD"}
+	local aCpoEnch := {"CTG","VLR","SLD","BXD","CON", "NCO","MKD"}
 	local aPos := {000,000,010,010}
 
 	fnUpdateTotal()
@@ -754,6 +877,44 @@ static function TotalDef(oPanel)
 				"N"})						// [19] - gatilho
 	Aadd(aField, {"Total Baixado R$",;		// [01] - Titulo
 				"BXD",;						// [02] - campo
+				"N",;						// [03] - Tipo
+				14,;						// [04] - Tamanho
+				2,;							// [05] - Decimal
+				"@E 9,999,999,999.99",;		// [06] - Picture
+				".T.",;						// [07] - Valid
+				.F.,;						// [08] - Obrigat
+				0,;							// [09] - Nivel
+				"",;						// [10] - Inicializador Padrao
+				nil,;						// [11] - F3
+				"",;						// [12] - when
+				.T.,;						// [13] - visual
+				.F.,;						// [14] - chave
+				"",;						// [15] - box
+				nil,;						// [16] - folder
+				.T.,;						// [17] - nao alteravel
+				nil,;						// [18] - pictvar
+				"N"})						// [19] - gatilho
+	Aadd(aField, {"Total Conciliado R$",;	// [01] - Titulo
+				"CON",;						// [02] - campo
+				"N",;						// [03] - Tipo
+				14,;						// [04] - Tamanho
+				2,;							// [05] - Decimal
+				"@E 9,999,999,999.99",;		// [06] - Picture
+				".T.",;						// [07] - Valid
+				.F.,;						// [08] - Obrigat
+				0,;							// [09] - Nivel
+				"",;						// [10] - Inicializador Padrao
+				nil,;						// [11] - F3
+				"",;						// [12] - when
+				.T.,;						// [13] - visual
+				.F.,;						// [14] - chave
+				"",;						// [15] - box
+				nil,;						// [16] - folder
+				.T.,;						// [17] - nao alteravel
+				nil,;						// [18] - pictvar
+				"N"})						// [19] - gatilho
+	Aadd(aField, {"Total Nao Conciliado R$",;	// [01] - Titulo
+				"NCO",;						// [02] - campo
 				"N",;						// [03] - Tipo
 				14,;						// [04] - Tamanho
 				2,;							// [05] - Decimal
@@ -836,18 +997,20 @@ static function fnUpdateTotal()
 		cExp := "%"+Alltrim(cExp)+"%"
 	endif
 
-	if Empty(aActiveFilt)
-		nRadio := 1
-		oRadio:refresh()
-	elseif ! Empty(nAux)
-		nRadio := nAux
-		oRadio:refresh()
-	endif
+	// if Empty(aActiveFilt)
+	// 	nRadio := 1
+	// 	oRadio:refresh()
+	// elseif ! Empty(nAux)
+	// 	nRadio := nAux
+	// 	oRadio:refresh()
+	// endif
 
 	BeginSql alias cTbl
 		SELECT
 			COUNT(E1_SALDO) CTG,
 			SUM(E1_SALDO) SLD,
+			SUM(CASE WHEN XX_RECONC = 'x' THEN E1_VALOR ELSE 0 END) CON,
+			SUM(CASE WHEN XX_RECONC = ' ' THEN E1_VALOR ELSE 0 END) NCO,
 			SUM(E1_VALOR) VLR
 		FROM %exp:cTql%
 		WHERE %exp:cExp%
@@ -856,6 +1019,8 @@ static function fnUpdateTotal()
 	M->CTG := (cTbl)->CTG
 	M->VLR := (cTbl)->VLR
 	M->SLD := (cTbl)->SLD
+	M->CON := (cTbl)->CON
+	M->NCO := (cTbl)->NCO
 	M->BXD := (cTbl)->(VLR-SLD)
 
 	(cTbl)->(dbClosearea())
@@ -864,3 +1029,47 @@ static function fnUpdateTotal()
 		oEnch:refresh()
 	endif
 return .T.
+
+static function fnAllMark()
+	local cTql := "%"+cReal+"%"
+	local cTbl := GetNextAlias()
+
+	M->MKD	:= 0
+
+	BeginSql alias cTbl
+		SELECT
+			XX_RECNO,
+			XX_OK
+		FROM %exp:cTql%
+	EndSql
+
+	(cTbl)->(DbGoTop())
+	(cTmp)->( dbSetOrder(4) )
+
+	While (cTbl)->(!EOF())
+		If (cTbl)->XX_RECNO > 0 .AND. (cTbl)->XX_RECNO <> Nil
+			If (cTmp)->( dbSeek((cTbl)->XX_RECNO) )
+				If (cTmp)->XX_OK == "T"
+					Reclock(cTmp,.F.)
+					(cTmp)->XX_OK := "F"
+					(cTmp)->(msUnlock())
+				Else
+					Reclock(cTmp,.F.)
+					(cTmp)->XX_OK := "T"
+					M->MKD += (cTmp)->E1_VALOR
+					(cTmp)->(msUnlock())
+				EndIf
+			EndIf
+		EndIf
+		(cTbl)->(dbSkip())
+	EndDo
+
+	(cTbl)->(dbClosearea())
+
+	if oEnch != nil
+		oEnch:refresh()
+	endif
+	oGrid:Refresh(.T.)
+	oGrid:setFocus() 
+
+Return
