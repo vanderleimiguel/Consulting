@@ -67,6 +67,7 @@ Static Function fImpCsv()
 	Local cCmpRet     	:= ""
 	Local cCmpInc     	:= ""
 	Local nQtdInc     	:= ""
+	Local cPRDPai	  	:= ALLTRIM(SUPERGETMV("MV_XPRDPAI",.F.,""))
     
 	Private nLinIni     := 0
     Private nLinFin     := 0
@@ -115,103 +116,120 @@ Static Function fImpCsv()
                 cLinAtu := oArquivo:GetLine()
                 aLinha  := StrTokArr2(cLinAtu, ";", .T. )
 
-                If nLinhaAtu >= 2 .AND. nLinhaAtu <= nTotLinhas
+                // If nLinhaAtu >= nLinIni .AND. nLinhaAtu <= nLinFin
+				If nLinhaAtu >= 2 .AND. nLinhaAtu <= nTotLinhas
 					nLido++
 
 					//Extrai dados das colunas
-					cProduto    := PadR(AllTrim(aLinha[1]), TamSx3("G1_COD")[1], " ") 
+					cProduto    := PadR(AllTrim(aLinha[1]), TamSx3("G1_COD")[1], " ") 				
 					cCmpRet     := PadR(AllTrim(aLinha[2]), TamSx3("G1_COMP")[1], " ") 
 					cCmpInc     := PadR(AllTrim(aLinha[3]), TamSx3("G1_COMP")[1], " ") 
-                    If aLinha[4] == ""
-                        nQtdInc := 0
-                    Else
-                        aLinha[4] 	:= StrTran(aLinha[4], '.', '')
-                        nQtdInc		:= VAL(AllTrim(StrTran(aLinha[4], ',', '.')))
-                    EndIf
+					If aLinha[4] == ""
+						nQtdInc := 0
+					Else
+						aLinha[4] 	:= StrTran(aLinha[4], '.', '')
+						nQtdInc		:= VAL(AllTrim(StrTran(aLinha[4], ',', '.')))
+					EndIf
 
-					//Busca produto no cadastro
-					SB1->(dbSetOrder(1))
-					If SB1->(dbSeek( fwxFilial('SB1') + cProduto ))
-
-						nQtdBase 	:= RetFldProd(cProduto,"B1_QBP") // quantidade base
-						cRevAtu		:= SB1->B1_REVATU // revisão atual
-
-						aCab := {}
-						aAdd( aCab, {"G1_COD"   , cProduto	, NIL} ) //Código do produto PAI.
-						aAdd( aCab, {"G1_QUANT" , nQtdBase  , NIL} ) //Quantidade base do produto PAI.
-						aAdd( aCab, {"ATUREVSB1", "S"       , NIL} ) //A variável ATUREVSB1 é utilizada para gerar nova revisão quando MV_REVAUT=.F.
-						aAdd( aCab, {"NIVALT"   , "S"       , NIL} ) //A variável NIVALT é utilizada para recalcular ou não os níveis da estrutura.
-						aAdd( aCab, {"AUTRECPAI", "   "     , NIL} )
-
-						aLinhas := {}
-						dbSelectArea('SG1')
-						SG1->(dbSetOrder(1))
-						If SG1->(dbSeek( fwxFilial('SG1') + SB1->B1_COD ))
-
-							while !SG1->(EOF()) .and. ((SG1->G1_FILIAL == fwxFilial('SG1')) .and. (SG1->G1_COD == SB1->B1_COD ))
-
-								if ((cRevAtu >= SG1->G1_REVINI) .And. (cRevAtu <= SG1->G1_REVFIM))
-									//Encontra produto a deletar na estrutura
-									If SG1->G1_COMP = cCmpRet
-										//Deleta linha
-										aItem := {}
-										aadd( aItem, { "G1_COD"    , SG1->G1_COD            , NIL })
-										aadd( aItem, { "G1_COMP"   , SG1->G1_COMP           , NIL })
-										aadd( aItem, { "G1_TRT"    , SG1->G1_TRT            , NIL })
-										aadd( aItem, { "G1_QUANT"  , SG1->G1_QUANT			, NIL })
-										aadd( aItem, { "G1_PERDA"  , SG1->G1_PERDA			, NIL })
-										aadd( aItem, { "G1_INI"    , SG1->G1_INI			, NIL })
-										aadd( aItem, { "G1_FIM"    , SG1->G1_FIM			, NIL })
-										aadd( aItem, { "LINPOS"    , "G1_COD+G1_COMP+G1_TRT", SG1->G1_COD, SG1->G1_COMP, SG1->G1_TRT   } )
-										aadd( aItem, { "AUTDELETA" , "S"                    , Nil                                      } )							
-
-										aadd( aLinhas, aItem )
-
-										//Adiciona item
-										//Verifica quantidade
-										If nQtdInc = 0
-											nQtdInc := SG1->G1_QUANT
-										EndIf
-										aItem := {}
-										aadd( aItem, { "G1_COD"    , SG1->G1_COD            ,NIL })
-										aadd( aItem, { "G1_COMP"   , cCmpInc                ,NIL })
-										aadd( aItem, { "G1_TRT"    , SG1->G1_TRT            ,NIL })
-										aadd( aItem, { "G1_QUANT"  , nQtdInc        		,NIL })
-										aadd( aItem, { "G1_PERDA"  , 0          			,NIL })
-										aadd( aItem, { "G1_INI"    , dDataBase       		,NIL })
-										aadd( aItem, { "G1_FIM"    , CTOD("31/12/49")       ,NIL })
-
-										aadd( aLinhas, aItem )
-									EndIf
-								endif
-
-								SG1->(dbSkip())
-							enddo
+					//verifica se produto pai esta adicionado no parametro
+					If AllTrim(cProduto) $ cPRDPai .OR. Empty(cPRDPai)
+						//Verifica se possui o produto a incluir na SB1
+						SB1->(dbSetOrder(1))
+						If SB1->(dbSeek( fwxFilial('SB1') + cCmpInc ))					
 						
-							lMsErroAuto		:= .F.
-							lMsHelpAuto     := .F.
+							//Busca produto no cadastro
+							SB1->(dbSetOrder(1))
+							If SB1->(dbSeek( fwxFilial('SB1') + cProduto ))
 
-							MSExecAuto( { |x,y,z| PCPA200(x,y,z)}, aCab, aLinhas, 4 ) //alteracao
-							
-							If lMsErroAuto
-								If nTxT > -1
-									fWrite(nTxT,"Erro na Linha: " + cValToChar(nLinhaAtu) + ", Falha no execauto de alteracao!" + chr(13)+chr(10) )
-								EndIf
+								nQtdBase 	:= RetFldProd(cProduto,"B1_QBP") // quantidade base
+								cRevAtu		:= SB1->B1_REVATU // revisão atual
+
+								aCab := {}
+								aAdd( aCab, {"G1_COD"   , cProduto	, NIL} ) //Código do produto PAI.
+								aAdd( aCab, {"G1_QUANT" , nQtdBase  , NIL} ) //Quantidade base do produto PAI.
+								aAdd( aCab, {"ATUREVSB1", "S"       , NIL} ) //A variável ATUREVSB1 é utilizada para gerar nova revisão quando MV_REVAUT=.F.
+								aAdd( aCab, {"NIVALT"   , "S"       , NIL} ) //A variável NIVALT é utilizada para recalcular ou não os níveis da estrutura.
+								aAdd( aCab, {"AUTRECPAI", "   "     , NIL} )
+
+								aLinhas := {}
+								dbSelectArea('SG1')
+								SG1->(dbSetOrder(1))
+								If SG1->(dbSeek( fwxFilial('SG1') + SB1->B1_COD ))
+
+									while !SG1->(EOF()) .and. ((SG1->G1_FILIAL == fwxFilial('SG1')) .and. (SG1->G1_COD == SB1->B1_COD ))
+
+										if ((cRevAtu >= SG1->G1_REVINI) .And. (cRevAtu <= SG1->G1_REVFIM))
+											//Encontra produto a deletar na estrutura
+											If SG1->G1_COMP = cCmpRet
+												//Deleta linha
+												aItem := {}
+												aadd( aItem, { "G1_COD"    , SG1->G1_COD            , NIL })
+												aadd( aItem, { "G1_COMP"   , SG1->G1_COMP           , NIL })
+												aadd( aItem, { "G1_TRT"    , SG1->G1_TRT            , NIL })
+												aadd( aItem, { "G1_QUANT"  , SG1->G1_QUANT			, NIL })
+												aadd( aItem, { "G1_PERDA"  , SG1->G1_PERDA			, NIL })
+												aadd( aItem, { "G1_INI"    , SG1->G1_INI			, NIL })
+												aadd( aItem, { "G1_FIM"    , SG1->G1_FIM			, NIL })
+												aadd( aItem, { "LINPOS"    , "G1_COD+G1_COMP+G1_TRT", SG1->G1_COD, SG1->G1_COMP, SG1->G1_TRT   } )
+												aadd( aItem, { "AUTDELETA" , "S"                    , Nil                                      } )							
+
+												aadd( aLinhas, aItem )
+
+												//Adiciona item
+												//Verifica quantidade
+												If nQtdInc = 0
+													nQtdInc := SG1->G1_QUANT
+												EndIf
+												aItem := {}
+												aadd( aItem, { "G1_COD"    , SG1->G1_COD            ,NIL })
+												aadd( aItem, { "G1_COMP"   , cCmpInc                ,NIL })
+												aadd( aItem, { "G1_TRT"    , SG1->G1_TRT            ,NIL })
+												aadd( aItem, { "G1_QUANT"  , nQtdInc        		,NIL })
+												aadd( aItem, { "G1_PERDA"  , 0          			,NIL })
+												aadd( aItem, { "G1_INI"    , dDataBase       		,NIL })
+												aadd( aItem, { "G1_FIM"    , CTOD("31/12/49")       ,NIL })
+
+												aadd( aLinhas, aItem )
+											EndIf
+										endif
+
+										SG1->(dbSkip())
+									enddo
+								
+									lMsErroAuto		:= .F.
+									lMsHelpAuto     := .F.
+
+									MSExecAuto( { |x,y,z| PCPA200(x,y,z)}, aCab, aLinhas, 4 ) //alteracao
+									
+									If lMsErroAuto
+										If nTxT > -1
+											fWrite(nTxT,"Erro na Linha: " + cValToChar(nLinhaAtu) + ", Falha no execauto de alteracao!" + chr(13)+chr(10) )
+										EndIf
+									Else
+										nAtualiz++
+									EndIf
+
+								Else
+									If nTxT > -1
+										fWrite(nTxT,"Erro na Linha: " + cValToChar(nLinhaAtu) + ", Produto: " + AllTrim(cProduto) + " nao possui estrutura!" + chr(13)+chr(10) )
+									EndIf
+								Endif
 							Else
-							    nAtualiz++
-							EndIf
-
+								If nTxT > -1
+									fWrite(nTxT,"Erro na Linha: " + cValToChar(nLinhaAtu) + ", Produto Pai: " + AllTrim(cProduto) + " nao encontrado no cadastro de produto!" + chr(13)+chr(10) )
+								EndIf
+							Endif
 						Else
 							If nTxT > -1
-								fWrite(nTxT,"Erro na Linha: " + cValToChar(nLinhaAtu) + ", Produto: " + cProduto + " nao possui estrutura!" + chr(13)+chr(10) )
+								fWrite(nTxT,"Erro na Linha: " + cValToChar(nLinhaAtu) + ", Produto a incluir: " + AllTrim(cCmpInc) + " nao encontrado no cadastro de produto!" + chr(13)+chr(10) )
 							EndIf
 						Endif
-					Else
+                	Else
 						If nTxT > -1
-           					fWrite(nTxT,"Erro na Linha: " + cValToChar(nLinhaAtu) + ", Produto: " + cProduto + " nao encontrado no cadastro de produto!" + chr(13)+chr(10) )
-    					EndIf
+							fWrite(nTxT,"Erro na Linha: " + cValToChar(nLinhaAtu) + ", Produto Pai: " + AllTrim(cProduto) + " nao encontrado no parametros de atualizacao MV_XPRDPAI!" + chr(13)+chr(10) )
+						EndIf
 					Endif
-                EndIf
+				EndIf
             EndDo
 			MsgInfo("Lidas: " + cValToChar(nLido) + " linhas e Atualizadas: " + cValToChar(nAtualiz) + " estruturas!")
         Else
