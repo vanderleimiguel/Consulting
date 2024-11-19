@@ -18,6 +18,7 @@ static function fnExec(cTmp)
 	// local cHistor as character
 	local aPar as array
 	Local nRecSE1 as numeric
+	Local lConcilia	:= SuperGetMv("MV_XBXACON",,.F.)
 
 	nOpc := Aviso("Ação","Escolha a opção desejada?",{"Baixar Marcados","Baixar Posicionado","Cancelar"},2)
 
@@ -33,9 +34,11 @@ static function fnExec(cTmp)
 				SE1->( dbGoto((cTmp)->XX_RECNO) )
 				if SE1->E1_SALDO > 0
 					fnBaixar(cTmp)
-					//Efetua conciliacao
-					nRecSE1	:= (cTmp)->XX_RECNO
-					U_XConcilia(nRecSE1)
+					If lConcilia
+						//Efetua conciliacao
+						nRecSE1	:= (cTmp)->XX_RECNO
+						U_XConcilia(nRecSE1)
+					EndIf
 				endif
 				(cTmp)->(dbSkip())
 			end
@@ -47,9 +50,11 @@ static function fnExec(cTmp)
 			return
 		else
 			fnBaixar(cTmp)
-			//Efetua conciliacao
-			nRecSE1	:= (cTmp)->XX_RECNO
-			U_XConcilia(nRecSE1)
+			If lConcilia
+				//Efetua conciliacao
+				nRecSE1	:= (cTmp)->XX_RECNO
+				U_XConcilia(nRecSE1)
+			EndIf
 		endif
 	endif
 

@@ -60,12 +60,12 @@ Static Function fMontaTela()
 	Local cFontPad    	:= 'Tahoma'
 	Local oFontGrid   	:= TFont():New(cFontPad,,-14)
 	Local aSeek   		:= {}
-	local nInd		as numeric
-	local aSE5		:= FwSx3Util():getAllFields("SE5",.F.)
-	local aAux		:= {}
-	local aFilter	:= {}
-	local aBrowse	:= Iif(Right(cModo,2) == "CC",{},{"E5_FILIAL"})
-	local cTitSeek	as character
+	local nInd			as numeric
+	local aSE5			:= FwSx3Util():getAllFields("SE5",.F.)
+	local aAux			:= {}
+	local aFilter		:= {}
+	local aBrowse		:= Iif(Right(cModo,2) == "CC",{},{"E5_FILIAL"})
+	local cTitSeek		as character
 	//Janela e componentes
 	Private oDlgMark
 	Private oPanGrid
@@ -89,11 +89,11 @@ Static Function fMontaTela()
 	//Adiciona as colunas que serão criadas na temporária
 	aAdd(aCampos, { 'OK'		, 'C', 2						, 0})
 	aAdd(aCampos, { 'E5_FILIAL'	, 'C', TamSX3("E5_FILIAL")[1]	, 0})
+	aAdd(aCampos, { 'E5_DTDISPO', 'D', TamSX3("E5_DTDISPO")[1]	, 0})
 	aAdd(aCampos, { 'E5_PREFIXO', 'C', TamSX3("E5_PREFIXO")[1]	, 0})
 	aAdd(aCampos, { 'E5_NUMERO'	, 'C', TamSX3("E5_NUMERO")[1]	, 0})
 	aAdd(aCampos, { 'E5_PARCELA', 'C', TamSX3("E5_PARCELA")[1]  , 0})
 	aAdd(aCampos, { 'E5_VALOR'	, 'N', TamSX3("E5_VALOR")[1]	, 2})
-	aAdd(aCampos, { 'E5_DATA'	, 'D', TamSX3("E5_DATA")[1]		, 0})
 	aAdd(aCampos, { 'E5_CLIFOR'	, 'C', TamSX3("E5_CLIFOR")[1]	, 0})
 	aAdd(aCampos, { 'E5_LOJA'	, 'C', TamSX3("E5_LOJA")[1]		, 0})
 	aAdd(aCampos, { 'E5_BANCO'	, 'C', TamSX3("E5_BANCO")[1]	, 0})
@@ -225,8 +225,8 @@ Static Function MenuDef()
 	Local aRotina := {}
 
 	//Criação das opções do menu
-	ADD OPTION aRotina TITLE 'Conciliar Titulos'  ACTION 'U_fBtnConc'     OPERATION 2 ACCESS 0
-	ADD OPTION aRotina TITLE 'Voltar'  ACTION 'U_fFinjVolt'     OPERATION 3 ACCESS 0	
+	ADD OPTION aRotina TITLE 'Voltar'  ACTION 'U_fFinjVolt'     OPERATION 6 ACCESS 0	
+	ADD OPTION aRotina TITLE 'Conciliar Titulos'  ACTION 'U_fBtnConc'     OPERATION 3 ACCESS 0
 
 Return aRotina
 
@@ -243,20 +243,20 @@ Static Function fPopula()
 	nVlrTot	:= 0
 	
 	//Busca titulos atraves dos parametros
-	cQryDados := " SELECT E5_RECPAG,E5_PREFIXO,E5_NUMERO,E5_PARCELA,E5_VALOR,E5_DATA,E5_CLIFOR,E5_LOJA,E5_FILIAL,E5_BANCO,E5_AGENCIA,E5_CONTA,"
+	cQryDados := " SELECT E5_RECPAG,E5_PREFIXO,E5_NUMERO,E5_PARCELA,E5_VALOR,E5_DTDISPO,E5_CLIFOR,E5_LOJA,E5_FILIAL,E5_BANCO,E5_AGENCIA,E5_CONTA,"
 	cQryDados += " SE1.E1_SALDO, SE5.R_E_C_N_O_ AS E5RECNO, SE1.R_E_C_N_O_ AS E1RECNO "
 	cQryDados += " FROM "+RetSqlName("SE5")+" SE5 "
 	cQryDados += " INNER JOIN "+RetSqlName("SE1")+" SE1 ON SE1.E1_PREFIXO = SE5.E5_PREFIXO AND SE1.E1_NUM = SE5.E5_NUMERO AND SE1.E1_PARCELA = SE5.E5_PARCELA AND SE1.E1_CLIENTE = SE5.E5_CLIFOR AND SE1.E1_LOJA = SE5.E5_LOJA AND SE1.D_E_L_E_T_ = ' '"
 	cQryDados += " WHERE E5_BANCO = '" + cBanco + "' AND " + CRLF
 	cQryDados += " E5_AGENCIA = '" + cAgencia + "' AND " + CRLF
 	cQryDados += " E5_CONTA   = '" + cConta + "' AND " + CRLF
-	cQryDados += " E5_DATA BETWEEN '"+dtoS(MV_PAR04)+"' AND '"+dtoS(MV_PAR05)+"' AND " + CRLF
+	cQryDados += " E5_DTDISPO BETWEEN '"+dtoS(MV_PAR04)+"' AND '"+dtoS(MV_PAR05)+"' AND " + CRLF
 	cQryDados += " E5_RECONC = ' ' AND " + CRLF
 	cQryDados += " E5_RECPAG = 'R' AND " + CRLF
 	cQryDados += " E5_DTCANBX = ' ' AND " + CRLF
 	cQryDados += " E1_SALDO = 0 AND " + CRLF
 	cQryDados += " SE5.D_E_L_E_T_ = ' '" 
-	cQryDados += " ORDER BY E5_DATA,E5_FILIAL,E5_PREFIXO,E5_NUMERO "
+	cQryDados += " ORDER BY E5_DTDISPO,E5_FILIAL,E5_PREFIXO,E5_NUMERO "
 	PLSQuery(cQryDados, 'QRYDADTMP')
 
 	//Definindo o tamanho da régua
@@ -280,7 +280,7 @@ Static Function fPopula()
 		(cAliasTmp)->E5_NUMERO	:= QRYDADTMP->E5_NUMERO
 		(cAliasTmp)->E5_PARCELA	:= QRYDADTMP->E5_PARCELA
 		(cAliasTmp)->E5_VALOR 	:= QRYDADTMP->E5_VALOR
-		(cAliasTmp)->E5_DATA 	:= QRYDADTMP->E5_DATA
+		(cAliasTmp)->E5_DTDISPO := QRYDADTMP->E5_DTDISPO
 		(cAliasTmp)->E5_CLIFOR	:= QRYDADTMP->E5_CLIFOR
 		(cAliasTmp)->E5_LOJA 	:= QRYDADTMP->E5_LOJA
 		(cAliasTmp)->E5_BANCO	:= QRYDADTMP->E5_BANCO
@@ -317,7 +317,7 @@ Static Function fCriaCols()
 	aAdd(aEstrut, { 'E5_NUMERO'	, 'Numero'	, 'C', TamSX3("E5_NUMERO")[1]	, 0, ''})
 	aAdd(aEstrut, { 'E5_PARCELA', 'Parcela'	, 'C', TamSX3("E5_PARCELA")[1]	, 0, ''})
 	aAdd(aEstrut, { 'E5_VALOR'	, 'Valor'	, 'N', TamSX3("E5_VALOR")[1]	, 2, '@E 9,999,999,999,999.99'})
-	aAdd(aEstrut, { 'E5_DATA'	, 'Data'	, 'D', 10, 0, ''})
+	aAdd(aEstrut, { 'E5_DTDISPO', 'Data Dispon'	, 'D', 10, 0, ''})
 	aAdd(aEstrut, { 'E5_CLIFOR'	, 'Cliente'	, 'C', TamSX3("E5_CLIFOR")[1]	, 0, ''})
 	aAdd(aEstrut, { 'E5_LOJA'	, 'Loja'	, 'C', TamSX3("E5_LOJA")[1]		, 0, ''})
 	aAdd(aEstrut, { 'E5_BANCO'	, 'Banco'	, 'C', TamSX3("E5_BANCO")[1]	, 0, ''})
@@ -424,14 +424,27 @@ return
 User Function XConcilia(nRecSE1, nRecSE5)
 	Local cIdProc	:= ""
 	Local cSeqCon   := ""
+	Local cBcoCon   := ""
+	Local cAgnCon   := ""
+	Local cCntCon   := ""
 	Default nRecSE5 := 0
 
 	SE1->( dbGoto(nRecSE1) )
-	if SE1->E1_SALDO == 0
 
-		mv_par01	:=  SE1->E1_PORTADO // Banco
-		mv_par02	:=  SE1->E1_AGEDEP  // Agencia
-		mv_par03	:=  SE1->E1_CONTA   // Conta
+	if SE1->E1_SALDO == 0
+		If ProcName(1) == "FPROCESSA"
+			cBcoCon   := SE1->E1_PORTADO
+			cAgnCon   := SE1->E1_AGEDEP
+			cCntCon   := SE1->E1_CONTA
+		Else
+			cBcoCon   := SE5->E5_BANCO
+			cAgnCon   := SE5->E5_AGENCIA
+			cCntCon   := SE5->E5_CONTA
+		EndIf
+
+		mv_par01	:=  cBcoCon // Banco
+		mv_par02	:=  cAgnCon  // Agencia
+		mv_par03	:=  cCntCon   // Conta
 		mv_par04	:=  SE1->E1_VENCREA // Data de
 		mv_par05	:=  SE1->E1_VENCREA // Data ate
 		mv_par06	:= 1                // Aglutina lancamentos
@@ -467,18 +480,58 @@ User Function XConcilia(nRecSE1, nRecSE5)
 		SIG->IG_VLREXT 	:= SE1->E1_VALOR
 		SIG->IG_TIPEXT	:= "001"
 		SIG->IG_CARTER	:= "02"
-		SIG->IG_AGEEXT  := SE1->E1_AGEDEP
-		SIG->IG_CONEXT  := SE1->E1_CONTA
+		SIG->IG_AGEEXT  := cAgnCon
+		SIG->IG_CONEXT  := cCntCon
 		SIG->IG_HISTEXT := "Conciliado por GestFin"
 		SIG->IG_FILORIG := cFilAnt
 		SIG->(MsUnlock())
 
 		If nRecSE5 == 0
-			nRecSE5 := fFindSE5(SE1->E1_VENCREA, SE1->E1_PORTADO, SE1->E1_AGEDEP, SE1->E1_CONTA, SE1->E1_TIPO,;
+			nRecSE5 := fFindSE5(SE1->E1_VENCREA, cBcoCon, cAgnCon, cCntCon, SE1->E1_TIPO,;
 				SE1->E1_PREFIXO, SE1->E1_NUM, SE1->E1_PARCELA, SE1->E1_CLIENTE, SE1->E1_LOJA)
 		EndIf
-		fConciliar(nRecSE5, cSeqCon)
+		If nRecSE5 > 0
+			// fGrvSldBc(nRecSE5)
+			fConciliar(nRecSE5, cSeqCon)
+		EndIf
 	EndIf
+
+Return
+
+/*---------------------------------------------------------------------*
+ | Func:  fGrvSldBc                                                    |
+ | Desc:  Função efetua atualizacao de saldo bancario	               |
+ *---------------------------------------------------------------------*/
+Static Function fGrvSldBc(_nRecSE5)
+	Local dDtDisp
+	Local nValor	:= 0
+	Local cQuery    := ""
+	Local cAliasSE8	:= GetNextAlias()
+
+	SE5->(DbGoTo(_nRecSE5))
+	dDtDisp	:= SE5->E5_DTDISPO
+	nValor  := SE5->E5_VALOR
+
+	cQuery := " SELECT R_E_C_N_O_ RECNO "
+	cQuery += " FROM "+RetSqlName('SE8')+" SE8 "
+	cQuery += " WHERE E8_BANCO = '" + cBanco + "' AND " + CRLF
+	cQuery += " E8_AGENCIA = '" + cAgencia + "' AND " + CRLF
+	cQuery += " E8_CONTA   = '" + cConta + "' AND " + CRLF
+	cQuery += " E8_DTSALAT >= '"+dtoS(dDtDisp)+"' AND " + CRLF
+	cQuery += " SE8.D_E_L_E_T_ = ' '"
+	cQuery := ChangeQuery(cQuery)
+	dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasSE8,.F.,.T.)
+
+	(cAliasSE8)->(DbGoTop())
+
+	While (cAliasSE8)->(!EOF())
+		SE8->(DbGoTo((cAliasSE8)->RECNO)) 
+			Reclock("SE8", .F.)
+			SE8->E8_SALRECO := SE8->E8_SALRECO + nValor
+			SE8->( MsUnLock() )
+		(cAliasSE8)->(DbSkip())
+	EndDo
+	(cAliasSE8)->(DbCloseArea())
 
 Return
 
@@ -688,7 +741,7 @@ Return cNovaChave
  | Func:  fFindSE5                                                     |
  | Desc:  Função procura titulo na SE5    				               |
  *---------------------------------------------------------------------*/
-static Function fFindSE5(dData, cBanco, cAgencia, cConta, cTipo, cPrefixo, cNum, cParcela, cCliFor, cLoja)
+static Function fFindSE5(dData, _cBanco, _cAgencia, _cConta, cTipo, cPrefixo, cNum, cParcela, cCliFor, cLoja)
 	Local nRec		:= 0
 	Local cQuery    := ""
 	Local cAlias 	:= GetNextAlias()
@@ -696,9 +749,9 @@ static Function fFindSE5(dData, cBanco, cAgencia, cConta, cTipo, cPrefixo, cNum,
 	cQuery := " SELECT R_E_C_N_O_ RECNO "
 	cQuery += " FROM "+RetSqlName('SE5')+" SE5 "
 	cQuery += " WHERE "
-	cQuery += " E5_BANCO = '" + cBanco + "' AND " + CRLF
-	cQuery += " E5_AGENCIA = '" + cAgencia + "' AND " + CRLF
-	cQuery += " E5_CONTA   = '" + cConta + "' AND " + CRLF
+	cQuery += " E5_BANCO = '" + _cBanco + "' AND " + CRLF
+	cQuery += " E5_AGENCIA = '" + _cAgencia + "' AND " + CRLF
+	cQuery += " E5_CONTA   = '" + _cConta + "' AND " + CRLF
 	cQuery += " E5_SITUACA <> 'C' AND " + CRLF
 	cQuery += " E5_RECONC = ' ' AND " + CRLF
 	cQuery += " E5_PREFIXO = '" + cPrefixo + "' AND " + CRLF
@@ -825,9 +878,9 @@ User Function cEspXSEE()
    	cQuery += " FROM " + RetSqlName("SEE") + " SEE "
    	cQuery += " WHERE SEE.D_E_L_E_T_ = ' ' "
    	cQuery += " AND SEE.EE_FILIAL  = '" + xFilial("SEE") + "' "
-	cQuery += " AND SEE.EE_SUBCTA  = 'ABC' "
-	// cQuery += " AND SEE.EE_SUBCTA  = '4FI' "
-	// cQuery += " AND SEE.EE_XTIPAPI  = 'A' "
+	// cQuery += " AND SEE.EE_SUBCTA  = 'ABC' "
+	cQuery += " AND SEE.EE_SUBCTA  = '4FI' "
+	cQuery += " AND SEE.EE_XTIPAPI  = 'A' "
 
 	cQuery := ChangeQuery(cQuery)
 

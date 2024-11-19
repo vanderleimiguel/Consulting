@@ -116,6 +116,7 @@ static function fnBaixar(aTemps,oSay)
 	local cAlias as character
 	local aBaixa as array
 	Local nRecSE1   := 0
+	Local lConcilia	:= SuperGetMv("MV_XAPICON",,.F.)
 
 	for nInx := 1 to Len(aTemps)
 		cAlias := aTemps[nInx]:getAlias()
@@ -153,9 +154,10 @@ static function fnBaixar(aTemps,oSay)
 					AutoGrLog("TITULO: "+SE1->E1_NUM)
 					MostraErro()
 				Else
-					//Chama fonte de conciliação
-					U_XConcilia(nRecSE1)
-
+					If lConcilia
+						//Chama fonte de conciliação
+						U_XConcilia(nRecSE1)
+					EndIf
 				EndIf
 				FwFreeArray(aBaixa)
 			endif

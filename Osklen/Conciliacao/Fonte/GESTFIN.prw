@@ -113,10 +113,10 @@ User Function GESTFIN
 	
 	oScroll:setFrame(oPButton)
 
-	MsgRun("Definindo filtros estaticos ....","AGUARDE",{|| Filter1Def() })
-	MsgRun("Definindo botoes ...."			 ,"AGUARDE",{|| ButtonDef(oPButton) })
-	MsgRun("Definindo estruturas ...."		 ,"AGUARDE",{|| StructDef() })
-	MsgRun("Definindo dados ...."			 ,"AGUARDE",{|| lContinue := LoadDef() })
+	MsgRun("Definindo filtros estaticos ....","Aguarde",{|| Filter1Def() })
+	MsgRun("Definindo botoes ...."			 ,"Aguarde",{|| ButtonDef(oPButton) })
+	MsgRun("Definindo estruturas ...."		 ,"Aguarde",{|| StructDef() })
+	MsgRun("Definindo dados ...."			 ,"Aguarde",{|| lContinue := LoadDef() })
 
 	if ! lContinue
 		return
@@ -124,10 +124,10 @@ User Function GESTFIN
 
 	M->CTG := M->VLR := M->SLD := M->BXD := M->CON := M->NCO := M->MKD := 0
 
-	MsgRun("Criando browse ...." ,"AGUARDE",{|| BrowserDef(opDir) })
-	// MsgRun("Criando filtros ....","AGUARDE",{|| Filter2Def(opFtr) })
-	MsgRun("Criando filtros ....","AGUARDE",{|| fTcheckbox(opFtr) })
-	MsgRun("Criando totais ...." ,"AGUARDE",{|| TotalDef(opTot) })
+	MsgRun("Criando browse ...." ,"Aguarde",{|| BrowserDef(opDir) })
+	// MsgRun("Criando filtros ....","Aguarde",{|| Filter2Def(opFtr) })
+	MsgRun("Criando filtros ....","Aguarde",{|| fTcheckbox(opFtr) })
+	MsgRun("Criando totais ...." ,"Aguarde",{|| TotalDef(opTot) })
 
 	oDlg:activate()
 
@@ -145,18 +145,18 @@ return
 
 static function Filter1Def()
 	aFilt := {}
-	aAdd(aFilt,{ "ABERTOS"		, "E1_SALDO > 0 .AND. E1_VALOR == E1_SALDO"	, "E1_SALDO > 0 AND E1_VALOR = E1_SALDO"	})
-	aAdd(aFilt,{ "PARC BAIXADOS", "E1_SALDO > 0 .AND. E1_VALOR != E1_SALDO"	, "E1_SALDO > 0 AND E1_VALOR <> E1_SALDO"	})
-	aAdd(aFilt,{ "BAIXADOS"		, "E1_SALDO == 0"							, "E1_SALDO = 0"							})
-	aAdd(aFilt,{ "COM BORD"		, "E1_PORTADO != ''"						, "E1_PORTADO <> ''"						})
-	aAdd(aFilt,{ "SEM BORD"		, "Empty(E1_PORTADO)"						, "E1_PORTADO = ''"							})
-	aAdd(aFilt,{ "ADIANTAMENTO"	, "E1_TIPO == 'RA '"						, "E1_TIPO = 'RA '"							})
-	aAdd(aFilt,{ "CONCILIADOS"	, "XX_RECONC == 'x'"						, "XX_RECONC = 'x'"							})
-	aAdd(aFilt,{ "NAO CONCILIAD", "XX_RECONC <> 'x'" 						, "XX_RECONC <> 'x'"						})
-	aAdd(aFilt,{ "ITAU"			, "E1_PORTADO == '341'"						, "E1_PORTADO = '341'"						})
-	aAdd(aFilt,{ "SANTANDER"	, "E1_PORTADO == '033'"						, "E1_PORTADO = '033'"						})
-	aAdd(aFilt,{ "B.BRASIL"		, "E1_PORTADO == '001'"						, "E1_PORTADO = '001'"						})
-	aAdd(aFilt,{ "SAFRA"		, "E1_PORTADO == '422'"						, "E1_PORTADO = '422'"						})
+	aAdd(aFilt,{ "Abertos"		  , "E1_SALDO > 0 .AND. E1_VALOR == E1_SALDO"	, "E1_SALDO > 0 AND E1_VALOR = E1_SALDO"	})
+	aAdd(aFilt,{ "Parc Baixados"  , "E1_SALDO > 0 .AND. E1_VALOR != E1_SALDO"	, "E1_SALDO > 0 AND E1_VALOR <> E1_SALDO"	})
+	aAdd(aFilt,{ "Baixados"		  , "E1_SALDO == 0"								, "E1_SALDO = 0"							})
+	aAdd(aFilt,{ "Com Borderô"	  , "E1_PORTADO != ''"							, "E1_PORTADO <> ''"						})
+	aAdd(aFilt,{ "Sem Borderô"	  , "Empty(E1_PORTADO)"							, "E1_PORTADO = ''"							})
+	aAdd(aFilt,{ "Adiantamento"	  , "E1_TIPO == 'RA '"							, "E1_TIPO = 'RA '"							})
+	aAdd(aFilt,{ "Conciliados" 	  , "XX_RECONC == 'x'"							, "XX_RECONC = 'x'"							})
+	aAdd(aFilt,{ "Não Conciliados", "XX_RECONC <> 'x'" 							, "XX_RECONC <> 'x'"						})
+	aAdd(aFilt,{ "Itaú"			  , "E1_PORTADO == '341'"						, "E1_PORTADO = '341'"						})
+	aAdd(aFilt,{ "Santander"	  , "E1_PORTADO == '033'"						, "E1_PORTADO = '033'"						})
+	aAdd(aFilt,{ "Banco Brasil  "   , "E1_PORTADO == '001'"						, "E1_PORTADO = '001'"						})
+	aAdd(aFilt,{ "Safra"		  , "E1_PORTADO == '422'"						, "E1_PORTADO = '422'"						})
 return
 
 static function LoadDef()
@@ -275,13 +275,17 @@ static function fnLegConc(lLista)
 				Else
 					SE5->( DbSetOrder(7) )                                                                                
 					If SE5->(DbSeek(xFilial("SE5")+cPrefixo+cNum+cParcela+cTipo+cCliente+cLoja))
-						If !Empty(SE5->E5_RECONC)
-							cRet := aAux[nInd][2]
-							exit
-						else
-							cRet := "BR_VERMELHO"
-							exit
-						EndIf
+						While cPrefixo+cNum+cParcela+cTipo+cCliente+cLoja == SE5->(E5_PREFIXO+E5_NUMERO+E5_PARCELA+E5_TIPO+E5_CLIFOR+E5_LOJA)
+							If !Empty(SE5->E5_RECONC)
+								cRet := aAux[nInd][2]
+								exit
+							else
+								cRet := "BR_VERMELHO"
+								// exit
+							EndIf
+							SE5->(DbSkip())
+						EndDo
+						Exit
 					else
 						cRet := "BR_VERMELHO"
 						exit
@@ -362,25 +366,25 @@ static function fnValid()
 	if ! (lRet := lRet .and. fnValid4fin())
 		Alert("falha na liberacao do acesso. Contatar o departamento comercial da Fas Solutions")
 	endif
-	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
-	// 	Alert("campo EE_XCONFIG nao criado")
-	// endif
-	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
-	// 	Alert("campo EE_XTIPAPI nao criado")
-	// endif
-	// if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
-	// 	Alert("campo A1_XEMLCOB nao criado")
-	// endif
-	// if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
-	// 	Alert("campo E1_XAPI nao criado")
-	// endif
+	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
+		Alert("campo EE_XCONFIG nao criado")
+	endif
+	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
+		Alert("campo EE_XTIPAPI nao criado")
+	endif
+	if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
+		Alert("campo A1_XEMLCOB nao criado")
+	endif
+	if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
+		Alert("campo E1_XAPI nao criado")
+	endif
 return lRet
 
 static function fnValid4fin()
 	local cHeadRet	:= ""
 	local aHeadOut	:= {'Content-Type: application/json'}
 	local nTimeOut	:= 120
-	local cUrl		:= "45.233.112.11:8081/rest/4fin/v1/licenca"
+	local cUrl		:= "177.76.114.124:8081/rest/4fin/v1/licenca"
 	local cRet		:= ""
 	local lOk		:= .T.
 	local jRet		as json
@@ -730,7 +734,7 @@ return
 
 Static Function fTcheckbox(oPanel)
 
-    oChkObj0  := TCheckBox():New(2, 1, "TODOS", {|u| Iif(PCount() > 0 , lChkObj0 := u, lChkObj0)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+    oChkObj0  := TCheckBox():New(2, 1, "Todos", {|u| Iif(PCount() > 0 , lChkObj0 := u, lChkObj0)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
  	oChkObj0:bLClicked := {|| u_fnfinChck(oChkObj0,lChkObj0,0)}
     oChkObj1  := TCheckBox():New(2, 40, aFilt[1][1], {|u| Iif(PCount() > 0 , lChkObj1 := u, lChkObj1)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
 	oChkObj1:bLClicked := {|| u_fnfinChck(oChkObj1,lChkObj1,1)}
@@ -752,7 +756,7 @@ Static Function fTcheckbox(oPanel)
 	oChkObj9:bLClicked := {|| u_fnfinChck(oChkObj9,lChkObj9,9)}
     oChkObj10  := TCheckBox():New(2, 500, aFilt[10][1], {|u| Iif(PCount() > 0 , lChkObj10 := u, lChkObj10)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
 	oChkObj10:bLClicked := {|| u_fnfinChck(oChkObj10,lChkObj10,10)}
-    oChkObj11  := TCheckBox():New(2, 555, aFilt[11][1], {|u| Iif(PCount() > 0 , lChkObj11 := u, lChkObj11)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
+    oChkObj11  := TCheckBox():New(2, 550, aFilt[11][1], {|u| Iif(PCount() > 0 , lChkObj11 := u, lChkObj11)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
 	oChkObj11:bLClicked := {|| u_fnfinChck(oChkObj11,lChkObj11,11)}
     oChkObj12  := TCheckBox():New(2, 600, aFilt[12][1], {|u| Iif(PCount() > 0 , lChkObj12 := u, lChkObj12)}, oPanel, 110, 15, , /*bLClicked*/, oFontPadrao, /*bValid*/, /*nClrText*/, /*nClrPane*/, , .T. )
 	oChkObj12:bLClicked := {|| u_fnfinChck(oChkObj12,lChkObj12,12)}
