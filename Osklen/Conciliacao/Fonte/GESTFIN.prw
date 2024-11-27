@@ -366,18 +366,18 @@ static function fnValid()
 	if ! (lRet := lRet .and. fnValid4fin())
 		Alert("falha na liberacao do acesso. Contatar o departamento comercial da Fas Solutions")
 	endif
-	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
-		Alert("campo EE_XCONFIG nao criado")
-	endif
-	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
-		Alert("campo EE_XTIPAPI nao criado")
-	endif
-	if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
-		Alert("campo A1_XEMLCOB nao criado")
-	endif
-	if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
-		Alert("campo E1_XAPI nao criado")
-	endif
+	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
+	// 	Alert("campo EE_XCONFIG nao criado")
+	// endif
+	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
+	// 	Alert("campo EE_XTIPAPI nao criado")
+	// endif
+	// if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
+	// 	Alert("campo A1_XEMLCOB nao criado")
+	// endif
+	// if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
+	// 	Alert("campo E1_XAPI nao criado")
+	// endif
 return lRet
 
 static function fnValid4fin()
@@ -551,12 +551,16 @@ static function ButtonDef(oPanel)
 	local oSaldoBco		as object
 	local oContabil		as object
 	local oConcilia		as object
+	local oCanBaixa		as object
+	local oEstConci		as object
 
 	local bTitulo		:= {|| U_GESTFINC(cTmp) , oGrid:goTo((cTmp)->(Recno()),.T.) , oGrid:setFocus() }
 	local bBoleto		:= {|| U_xBOLETO(cTmp) }
 	local bEnviarBol	:= {|| U_xEMAIL(cTmp) }
 	local bBaixar		:= {|| U_GESTFIN5(cTmp) , RefreshDef(.T.), oGrid:setFocus() }
+	local bCanBaixa		:= {|| U_GESTFINK(cTmp) , RefreshDef(.T.), oGrid:setFocus() }
 	local bConcilia		:= {|| U_GESTFINJ(cTmp) , RefreshDef(.T.), oGrid:setFocus() }
+	local bEstConci		:= {|| U_GESTFINL(cTmp) , RefreshDef(.T.), oGrid:setFocus() }
 	local bItau			:= {|| U_GESTFIN2(cTmp,"341") , oGrid:goTo((cTmp)->(Recno()),.T.) , oGrid:setFocus() }
 	local bSantander	:= {|| U_GESTFIN2(cTmp,"033") , oGrid:goTo((cTmp)->(Recno()),.T.) , oGrid:setFocus() }
 	local bBB			:= {|| U_GESTFIN2(cTmp,"001") , oGrid:goTo((cTmp)->(Recno()),.T.) , oGrid:setFocus() }
@@ -613,9 +617,17 @@ static function ButtonDef(oPanel)
 	oBaixar:setCss(StrTran(cCssBtn,"##BANCO##","LIQCHECK"))
 	oBaixar:align := CONTROL_ALIGN_TOP
 
+	oCanBaixa := TButton():new(1,202,'Cancela Baixa',oPanel,bCanBaixa,35,15,,,.F.,.T.,.F.,,.F.,,,.F.)
+	oCanBaixa:setCss(StrTran(cCssBtn,"##BANCO##","DELWEB"))
+	oCanBaixa:align := CONTROL_ALIGN_TOP
+
 	oConcilia := TButton():new(1,202,'Conciliar',oPanel,bConcilia,35,15,,,.F.,.T.,.F.,,.F.,,,.F.)
 	oConcilia:setCss(StrTran(cCssBtn,"##BANCO##","LIQCHECK"))
 	oConcilia:align := CONTROL_ALIGN_TOP
+
+	oEstConci := TButton():new(1,202,'Estorno Concil',oPanel,bEstConci,35,15,,,.F.,.T.,.F.,,.F.,,,.F.)
+	oEstConci:setCss(StrTran(cCssBtn,"##BANCO##","DELWEB"))
+	oEstConci:align := CONTROL_ALIGN_TOP
 
 	oItau := TButton():new(1,202,'Itau',oPanel,bItau,35,15,,,.F.,.T.,.F.,,.F.,,,.F.)
 	oItau:setCss(StrTran(cCssBtn,"##BANCO##","itau"))

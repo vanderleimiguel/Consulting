@@ -421,79 +421,84 @@ return
  | Func:  XConcilia                                                    |
  | Desc:  Função inicia conciliacao      				               |
  *---------------------------------------------------------------------*/
-User Function XConcilia(nRecSE1, nRecSE5)
+User Function XConcilia(nRecSE1, nRecSE5, lDesconc, cSeqCon)
 	Local cIdProc	:= ""
-	Local cSeqCon   := ""
 	Local cBcoCon   := ""
 	Local cAgnCon   := ""
 	Local cCntCon   := ""
+	Default cSeqCon := ""
 	Default nRecSE5 := 0
+	Default lDesconc:= .F.
 
 	SE1->( dbGoto(nRecSE1) )
+	
+	If !lDesconc
+		if SE1->E1_SALDO == 0
+			If ProcName(1) == "FPROCESSA"
+				cBcoCon   := SE1->E1_PORTADO
+				cAgnCon   := SE1->E1_AGEDEP
+				cCntCon   := SE1->E1_CONTA
+			Else
+				cBcoCon   := SE5->E5_BANCO
+				cAgnCon   := SE5->E5_AGENCIA
+				cCntCon   := SE5->E5_CONTA
+			EndIf
 
-	if SE1->E1_SALDO == 0
-		If ProcName(1) == "FPROCESSA"
-			cBcoCon   := SE1->E1_PORTADO
-			cAgnCon   := SE1->E1_AGEDEP
-			cCntCon   := SE1->E1_CONTA
-		Else
-			cBcoCon   := SE5->E5_BANCO
-			cAgnCon   := SE5->E5_AGENCIA
-			cCntCon   := SE5->E5_CONTA
+			mv_par01	:=  cBcoCon // Banco
+			mv_par02	:=  cAgnCon  // Agencia
+			mv_par03	:=  cCntCon   // Conta
+			mv_par04	:=  SE1->E1_VENCREA // Data de
+			mv_par05	:=  SE1->E1_VENCREA // Data ate
+			mv_par06	:= 1                // Aglutina lancamentos
+			mv_par07	:= 1                // Mostra lanc. contabeis
+			mv_par08	:= 2                // Contabiliza on-line
+			mv_par09	:= 2                // Seleciona filial
+			mv_par10	:= 2                // exibe baixas com estorno
+
+			cIdProc	:= F473ProxNum("SIF")
+			RecLock("SIF",.T.)
+			SIF->IF_FILIAL 	:= xFilial("SIF")
+			SIF->IF_IDPROC  := cIdProc
+			SIF->IF_DTPROC  := SE1->E1_VENCREA
+			SIF->IF_BANCO	:= SE1->E1_PORTADO
+			SIF->IF_DESC	:= "Conciliado por GestFin"
+			SIF->IF_STATUS 	:= '1'
+			SIF->IF_ARQCFG	:= ""
+			SIF->IF_ARQIMP	:= ""
+			SIF->IF_ARQSUM	:= ""
+			SIF->(MsUnlock())
+
+			// Grava SIG
+			cSeqCon   := F473ProxNum("SIG")
+			RecLock("SIG",.T.)
+			SIG->IG_FILIAL 	:= xFilial("SIG")
+			SIG->IG_IDPROC	:= cIdProc
+			SIG->IG_ITEM	:= "00001"
+			SIG->IG_STATUS	:= '1'
+			SIG->IG_DTEXTR	:= SE1->E1_VENCREA
+			SIG->IG_DTMOVI	:= SE1->E1_VENCREA
+			SIG->IG_DOCEXT	:= SE1->E1_NUM
+			SIG->IG_SEQMOV  := cSeqCon
+			SIG->IG_VLREXT 	:= SE1->E1_VALOR
+			SIG->IG_TIPEXT	:= "001"
+			SIG->IG_CARTER	:= "02"
+			SIG->IG_AGEEXT  := cAgnCon
+			SIG->IG_CONEXT  := cCntCon
+			SIG->IG_HISTEXT := "Conciliado por GestFin"
+			SIG->IG_FILORIG := cFilAnt
+			SIG->(MsUnlock())
+
+			If nRecSE5 == 0
+				nRecSE5 := fFindSE5(SE1->E1_VENCREA, cBcoCon, cAgnCon, cCntCon, SE1->E1_TIPO,;
+					SE1->E1_PREFIXO, SE1->E1_NUM, SE1->E1_PARCELA, SE1->E1_CLIENTE, SE1->E1_LOJA)
+			EndIf
+			If nRecSE5 > 0
+				// fGrvSldBc(nRecSE5)
+				fConciliar(nRecSE5, cSeqCon, lDesconc)
+			EndIf
 		EndIf
-
-		mv_par01	:=  cBcoCon // Banco
-		mv_par02	:=  cAgnCon  // Agencia
-		mv_par03	:=  cCntCon   // Conta
-		mv_par04	:=  SE1->E1_VENCREA // Data de
-		mv_par05	:=  SE1->E1_VENCREA // Data ate
-		mv_par06	:= 1                // Aglutina lancamentos
-		mv_par07	:= 1                // Mostra lanc. contabeis
-		mv_par08	:= 2                // Contabiliza on-line
-		mv_par09	:= 2                // Seleciona filial
-		mv_par10	:= 2                // exibe baixas com estorno
-
-		cIdProc	:= F473ProxNum("SIF")
-		RecLock("SIF",.T.)
-		SIF->IF_FILIAL 	:= xFilial("SIF")
-		SIF->IF_IDPROC  := cIdProc
-		SIF->IF_DTPROC  := SE1->E1_VENCREA
-		SIF->IF_BANCO	:= SE1->E1_PORTADO
-		SIF->IF_DESC	:= "Conciliado por GestFin"
-		SIF->IF_STATUS 	:= '1'
-		SIF->IF_ARQCFG	:= ""
-		SIF->IF_ARQIMP	:= ""
-		SIF->IF_ARQSUM	:= ""
-		SIF->(MsUnlock())
-
-		// Grava SIG
-		cSeqCon   := F473ProxNum("SIG")
-		RecLock("SIG",.T.)
-		SIG->IG_FILIAL 	:= xFilial("SIG")
-		SIG->IG_IDPROC	:= cIdProc
-		SIG->IG_ITEM	:= "00001"
-		SIG->IG_STATUS	:= '1'
-		SIG->IG_DTEXTR	:= SE1->E1_VENCREA
-		SIG->IG_DTMOVI	:= SE1->E1_VENCREA
-		SIG->IG_DOCEXT	:= SE1->E1_NUM
-		SIG->IG_SEQMOV  := cSeqCon
-		SIG->IG_VLREXT 	:= SE1->E1_VALOR
-		SIG->IG_TIPEXT	:= "001"
-		SIG->IG_CARTER	:= "02"
-		SIG->IG_AGEEXT  := cAgnCon
-		SIG->IG_CONEXT  := cCntCon
-		SIG->IG_HISTEXT := "Conciliado por GestFin"
-		SIG->IG_FILORIG := cFilAnt
-		SIG->(MsUnlock())
-
-		If nRecSE5 == 0
-			nRecSE5 := fFindSE5(SE1->E1_VENCREA, cBcoCon, cAgnCon, cCntCon, SE1->E1_TIPO,;
-				SE1->E1_PREFIXO, SE1->E1_NUM, SE1->E1_PARCELA, SE1->E1_CLIENTE, SE1->E1_LOJA)
-		EndIf
-		If nRecSE5 > 0
-			// fGrvSldBc(nRecSE5)
-			fConciliar(nRecSE5, cSeqCon)
-		EndIf
+	Else
+		fConciliar(nRecSE5, cSeqCon, lDesconc)
 	EndIf
 
 Return
@@ -539,10 +544,10 @@ Return
  | Func:  fConciliar                                                   |
  | Desc:  Função efetua conciliacao       				               |
  *---------------------------------------------------------------------*/
-Static Function fConciliar(nRECSE5, cSeqCon)
+Static Function fConciliar(nRECSE5, cSeqCon, lDesconc)
 	Local cStatus	:= ""
 	Local lAtuDtDisp:= .T.
-	Local lDesconc	:= .F.
+	// Local lDesconc	:= .F.
 	Local dDataExt	:= CTOD("")
 	Local dDataMov	:= CTOD("")
 	Local dDataNova	:= CTOD("")
@@ -561,7 +566,7 @@ Static Function fConciliar(nRECSE5, cSeqCon)
 	SA6->( DbSetOrder(1) )
 
 	cStatus	 := "1"
-	lDesconc := .F.
+	// lDesconc := .F.
 	dDataExt  := SE1->E1_VENCREA
 	dDataMov  := SE1->E1_VENCREA
 
@@ -878,9 +883,9 @@ User Function cEspXSEE()
    	cQuery += " FROM " + RetSqlName("SEE") + " SEE "
    	cQuery += " WHERE SEE.D_E_L_E_T_ = ' ' "
    	cQuery += " AND SEE.EE_FILIAL  = '" + xFilial("SEE") + "' "
-	// cQuery += " AND SEE.EE_SUBCTA  = 'ABC' "
-	cQuery += " AND SEE.EE_SUBCTA  = '4FI' "
-	cQuery += " AND SEE.EE_XTIPAPI  = 'A' "
+	cQuery += " AND SEE.EE_SUBCTA  = 'ABC' "
+	// cQuery += " AND SEE.EE_SUBCTA  = '4FI' "
+	// cQuery += " AND SEE.EE_XTIPAPI  = 'A' "
 
 	cQuery := ChangeQuery(cQuery)
 
