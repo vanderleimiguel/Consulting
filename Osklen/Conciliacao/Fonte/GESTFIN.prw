@@ -366,18 +366,18 @@ static function fnValid()
 	if ! (lRet := lRet .and. fnValid4fin())
 		Alert("falha na liberacao do acesso. Contatar o departamento comercial da Fas Solutions")
 	endif
-	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
-	// 	Alert("campo EE_XCONFIG nao criado")
-	// endif
-	// if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
-	// 	Alert("campo EE_XTIPAPI nao criado")
-	// endif
-	// if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
-	// 	Alert("campo A1_XEMLCOB nao criado")
-	// endif
-	// if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
-	// 	Alert("campo E1_XAPI nao criado")
-	// endif
+	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XCONFIG") > 0 ))
+		Alert("campo EE_XCONFIG nao criado")
+	endif
+	if ! (lRet := lRet .and. SEE->( FieldPos("EE_XTIPAPI") > 0 ))
+		Alert("campo EE_XTIPAPI nao criado")
+	endif
+	if ! (lRet := lRet .and. SA1->( FieldPos("A1_XEMLCOB") > 0 ))
+		Alert("campo A1_XEMLCOB nao criado")
+	endif
+	if ! (lRet := lRet .and. SE1->( FieldPos("E1_XAPI") > 0 ))
+		Alert("campo E1_XAPI nao criado")
+	endif
 return lRet
 
 static function fnValid4fin()

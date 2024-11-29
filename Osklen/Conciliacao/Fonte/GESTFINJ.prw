@@ -493,8 +493,8 @@ User Function XConcilia(nRecSE1, nRecSE5, lDesconc, cSeqCon)
 					SE1->E1_PREFIXO, SE1->E1_NUM, SE1->E1_PARCELA, SE1->E1_CLIENTE, SE1->E1_LOJA)
 			EndIf
 			If nRecSE5 > 0
-				// fGrvSldBc(nRecSE5)
 				fConciliar(nRecSE5, cSeqCon, lDesconc)
+				// fGrvSldBc(nRecSE5)
 			EndIf
 		EndIf
 	Else
@@ -556,6 +556,7 @@ Static Function fConciliar(nRECSE5, cSeqCon, lDesconc)
 	Local cFilFKA	:= ''
 	Local cIdOrig	:= ''
 	Local nRecDesco := 0
+	Default lDesconc := .F.
 
 	DbSelectArea("FKA")
 	DbSelectArea("FK5")
@@ -883,9 +884,9 @@ User Function cEspXSEE()
    	cQuery += " FROM " + RetSqlName("SEE") + " SEE "
    	cQuery += " WHERE SEE.D_E_L_E_T_ = ' ' "
    	cQuery += " AND SEE.EE_FILIAL  = '" + xFilial("SEE") + "' "
-	cQuery += " AND SEE.EE_SUBCTA  = 'ABC' "
-	// cQuery += " AND SEE.EE_SUBCTA  = '4FI' "
-	// cQuery += " AND SEE.EE_XTIPAPI  = 'A' "
+	// cQuery += " AND SEE.EE_SUBCTA  = 'ABC' "
+	cQuery += " AND SEE.EE_SUBCTA  = '4FI' "
+	cQuery += " AND SEE.EE_XTIPAPI  = 'A' "
 
 	cQuery := ChangeQuery(cQuery)
 

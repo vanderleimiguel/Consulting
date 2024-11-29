@@ -52,34 +52,20 @@ static function fnExec(cTmp)
 return
 
 static function fnEstBaix(cTmp)
-	Local lCancBx	:= .T.
 
 	if Type("cCadastro") != "U"
 		cBkp := cCadastro
 	endif
 
-	//verifica se titulo esta conciliado
-	// SE5->( DbSetOrder(7) )  
-	// If SE5->(DbSeek(xFilial("SE5")+SE1->(E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO+E1_CLIENTE+E1_LOJA)))
-	// 	While SE1->(E1_PREFIXO+E1_NUM+E1_PARCELA+E1_TIPO+E1_CLIENTE+E1_LOJA) == SE5->(E5_PREFIXO+E5_NUMERO+E5_PARCELA+E5_TIPO+E5_CLIFOR+E5_LOJA)
-	// 		If !Empty(SE5->E5_RECONC)
-	// 			lCancBx	:= .F.
-	// 		EndIf
-	// 		SE5->(DbSkip())
-	// 	EndDo
-	// endif
+	SetFunName("U_GESTFINK")
 
-	// If lCancBx
-		SetFunName("U_GESTFINK")
+	ALTERA := .F.
+	INCLUI := .F.
+	FINA070(,5,.T.)
+	
+	fnUpdGrid(cTmp)
 
-		ALTERA := .F.
-		INCLUI := .F.
-		FINA070(,5,.T.)
-		
-		fnUpdGrid(cTmp)
-
-		SetFunName("GESTFIN")
-	// endif
+	SetFunName("GESTFIN")
 
 	if cBkp != nil
 		cCadastro := cBkp
