@@ -3,25 +3,16 @@
 
 #define	_ENTER	Chr(13)+Chr(10)
 
-/*
-ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
-±±ºPrograma  ³ENVMAIL   ºAutor  ³SIGAWARE            º Data ³  24/06/18   º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºDesc.     ³ Rotina generica para envio de e-mail                       º±±
-±±º          ³                                                            º±±
-±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºUso       ³                                                            º±±
-±±º          ³                                                            º±±
-±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
-±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
-ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
-*/
+/*/{Protheus.doc} Z_EnvMail
+Função que envia e-mail
+@author Wagner Neves
+@since 28/11/2024
+@version 1.0
+@type function
+/*/
+user function Z_EnvMail(_cFrom,_cTo,_cSubject,cBody,aFiles,_cBcc,_cCc)
 
-user function EnvMail(_cFrom,_cTo,_cSubject,cBody,aFiles,_cBcc,_cCc)
-
-   Local lMailAuth   := SuperGetMv("MV_RELAUTH",,.F.)
+   Local lMailAuth   := SuperGetMv("MV_RELAUTH",,.T.)
    Local cMailServer := SuperGetMv("MV_RELSERV",, "")
    Local cMailConta  := SuperGetMV("MV_RELACNT",, "")
    Local cMailSenha  := SuperGetMV("MV_RELPSW" ,, "")
@@ -51,7 +42,6 @@ user function EnvMail(_cFrom,_cTo,_cSubject,cBody,aFiles,_cBcc,_cCc)
    private cBcc	   := _cBcc
    private cCc		   := _cCc
    
-
    //-- Valida se possui "FROM" 
    If Empty(cFrom)
       If At("@",cMailConta) > 0

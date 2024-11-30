@@ -1,0 +1,17 @@
+Passo-a-Passo para instalação da Separacao Ped Venda:
+==============================================================
+
+1. Compilar fontes: 
+	Separacao Ped Venda\Compatibilizador\updvid1.prw		- compatibilizador
+    Separacao Ped Venda\Ponto de Entrada\MTA440C9.prw  	    - P.E que acorre apos gravação de cada linha da SC9 na liberacao do pedido de venda.
+    Separacao Ped Venda\Fontes\Z_BRWPEDL.prw			    - Função para gerar separacao de pedidos de venda
+    Separacao Ped Venda\Fontes\Z_EnvMail.prw			    - Função que envia e-mail
+    Separacao Ped Venda\Fontes\Z_MTA440C9.prw			    - Funcao chamada do P.E MTA440C9
+
+2. Executar compatibilizador
+    Separacao Ped Venda\Compatibilizador\updvid1.prw	    - compatibilizador
+
+3. Criar Menu
+    SIGAFAT > Miscelanea > Especifico > Atualizacoes > Z_BRWPEDL
+
+.Fim
