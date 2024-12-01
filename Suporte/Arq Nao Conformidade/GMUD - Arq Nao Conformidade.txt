@@ -1,0 +1,13 @@
+Passo-a-Passo para instalação do Arq Nao conformidade:
+==============================================================
+
+1. Compilar fontes: 
+	Arq Nao Conformidade\Compatibilizador\updarq1.prw		- compatibilizador
+    Arq Nao Conformidade\Ponto de Entrada\A410CONS.prw  	- Ponto de entrada Inclusão de botões na enchoicebar
+    Arq Nao Conformidade\Fontes\Z_ABREARQ.prw			    - Função para abre arquivo na nao conformidade
+    Arq Nao Conformidade\Fontes\Z_GRAVARQ.prw			    - Função que grava arquivo na nao conformidade
+
+2. Executar compatibilizador
+    Arq Nao Conformidade\Compatibilizador\updarq1.prw	    - compatibilizador
+
+.Fim
