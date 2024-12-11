@@ -4,12 +4,12 @@
 /*/{Protheus.doc} Z_GRAVARQ
 Função para gravar arquivos de nao conformidade
 @author Wagner Neves
-@since 30/12/2024
+@since 30/11/2024
 @version 1.0
 @type function
 /*/
 User Function Z_GRAVARQ()
-    Local aAreaZZ1  := ZZ1->(GetArea())
+    Local aAreaZC1  := ZC1->(GetArea())
     Local aFiles    := {}
     Local aSizes    := {}
     Local cBinar    := ""
@@ -19,14 +19,22 @@ User Function Z_GRAVARQ()
     Local nExtens   := 0
     Local cExtens   := ""
     Local cNum      := ""
+    Local cModulo   := ""
+    Local cRotina   := ""
     Local cLimArq   := SuperGetMV("ZZ_LIMARQ",.F.,5)
     Local cLimSize  := SuperGetMV("ZZ_LIMSIZ",.F.,10000000)
 
     Private cAliasTmp := GetNextAlias()
 
     //Verifica local de chamada da rotina
-    If fwIsInCallStack('MATA410')
-        cNum      := SC5->C5_NUM
+    If fwIsInCallStack('QNCA030')
+        cNum      := QI3->QI3_CODIGO
+        cModulo   := "SIGAQNC"
+        cRotina   := "QNCA030"
+    ElseIf fwIsInCallStack('QIEA220')
+        cNum      := QEM->QEM_NNC
+        cModulo   := "SIGAQIE"
+        cRotina   := "QIEA220"
     EndIf
 
     //Mostra o Prompt para selecionar arquivos
@@ -61,12 +69,12 @@ User Function Z_GRAVARQ()
 
                     cQuery := ""
                     cQuery += " SELECT "
-                    cQuery += " MAX(ZZ1_SEQ) NEXTSEQ "
-                    cQuery += " FROM "+RetSQLName("ZZ1")+" ZZ1 (nolock) "
+                    cQuery += " MAX(ZC1_SEQ) NEXTSEQ "
+                    cQuery += " FROM "+RetSQLName("ZC1")+" ZC1 (nolock) "
                     cQuery += " WHERE "
-                    cQuery += " ZZ1_FILIAL = '"+xFilial("ZZ1")+"'  AND "
-                    cQuery += " ZZ1_NUM = '"+cNum+"' AND "
-                    cQuery += " ZZ1.D_E_L_E_T_ = ' ' "
+                    cQuery += " ZC1_FILIAL = '"+xFilial("ZC1")+"'  AND "
+                    cQuery += " ZC1_NUM = '"+cNum+"' AND "
+                    cQuery += " ZC1.D_E_L_E_T_ = ' ' "
                     cQuery := ChangeQuery(cQuery)
 
                     DbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cAliasTmp,.T.,.T.)
@@ -84,35 +92,41 @@ User Function Z_GRAVARQ()
                     cNomeArq    := Alltrim(cNum) +"_"+ Alltrim(cSeq) +"."+ cExtens
 
                     // Efetua a gravação do Registro
-                    RecLock("ZZ1", .T.)
-                        ZZ1->ZZ1_FILIAL := xFilial("ZZ1")
-                        ZZ1->ZZ1_SEQ    := cSeq
-                        ZZ1->ZZ1_NUM    := cNum
-                        ZZ1->ZZ1_EMISSA := dDatabase
-                        ZZ1->ZZ1_ARQ    := Encode64(cBinar)
-                        ZZ1->ZZ1_NOMEAR := cNomeArq
-                        ZZ1->ZZ1_EXTENS := cExtens
+                    RecLock("ZC1", .T.)
+                        ZC1->ZC1_FILIAL := xFilial("ZC1")
+                        ZC1->ZC1_SEQ    := cSeq
+                        ZC1->ZC1_NUM    := cNum
+                        ZC1->ZC1_EMISSA := dDatabase
+                        ZC1->ZC1_ARQ    := Encode64(cBinar)
+                        ZC1->ZC1_NOMEAR := cNomeArq
+                        ZC1->ZC1_EXTENS := cExtens
+                        ZC1->ZC1_MODORI := cModulo
+                        ZC1->ZC1_ROTORI := cRotina
+                        ZC1->ZC1_USRINC := __cUserID
+						ZC1->ZC1_NOMINC := UsrFullName(__cUserID )
+						ZC1->ZC1_HRINCL := TIME()
+						ZC1->ZC1_LGINCL := UsrRetName(__cUserID )
 
-                    ZZ1->(MsUnlock())
+                    ZC1->(MsUnlock())
 
-                    MsgInfo("Arquivo "+cExtens+" salvo com sucesso, na nao conformidade "+AllTrim(cNum)+" sequencia "+cSeq+" !", "Arquivo salvo")
+                    FWAlertInfo("Arquivo "+cExtens+" salvo com sucesso, na nao conformidade "+AllTrim(cNum)+" sequencia "+cSeq+" !", "Z_GRAVARQ - Mensagem ...")
 
                     // Fecha a consulta 
                     (cAliasTmp)->(dbCloseArea())
                     Else
-                        MsgStop("Quantidade de arquivos maior que o limite de "+cValToChar(cLimArq)+" por nao conformidade!", "Atenção")
+                        FWAlertError("Quantidade de arquivos maior que o limite de "+cValToChar(cLimArq)+" por nao conformidade!", "Z_GRAVARQ - Mensagem ...")
                     EndIf
                 Endif
             Else
-                MsgStop("Tamanho do arquivo maior que o limite de: "+cValToChar(cLimSize)+" Byte", "Atenção")
+                FWAlertError("Tamanho do arquivo maior que o limite de: "+cValToChar(cLimSize)+" Byte", "Z_GRAVARQ - Mensagem ...")
             EndIf
 		Else
-			MsgStop("Arquivo e/ou extensão inválida!", "Atenção")
+			FWAlertError("Arquivo e/ou extensão inválida!", "Z_GRAVARQ - Mensagem ...")
 		EndIf 
 
     EndIf
     
     // Restaura a area de trabalho
-    RestArea(aAreaZZ1)
+    RestArea(aAreaZC1)
 
 Return()

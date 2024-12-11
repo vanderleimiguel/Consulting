@@ -15,14 +15,16 @@ User Function Z_ABREARQ()
     Local btnGrv
     Local btnExcl
     Local cNum      := ""
-    Local cFil      := xFilial("ZZ1")
+    Local cFil      := xFilial("ZC1")
 	Private oDlg	:= Nil
 	Private oLbx	:= Nil
 	Private aVetor	:= {}
 
     //Verifica local de chamada da rotina
-    If fwIsInCallStack('MATA410')
-        cNum      := SC5->C5_NUM
+    If fwIsInCallStack('QNCA030')
+        cNum      := QI3->QI3_CODIGO
+    ElseIf fwIsInCallStack('QIEA220')
+        cNum      := QEM->QEM_NNC
     EndIf
 
 	If Select("TRB") > 0
@@ -33,17 +35,22 @@ User Function Z_ABREARQ()
 
         COLUMN EMISSAO AS DATE 
 
-        SELECT      NUM  			= isnull(ZZ1_NUM	,''),
-                    SEQ  			= isnull(ZZ1_SEQ	,''),
-                    EXTENSAO		= isnull(ZZ1_EXTENS	,''),
-                    EMISSAO			= isnull(ZZ1_EMISSA	,''),
-                    NOMEARQ		    = isnull(ZZ1_NOMEAR	,''),
-                    FILIAL			= isnull(ZZ1_FILIAL	,''), 
-                    ARQ             = isnull(ZZ1_ARQ	,'')
-        FROM        %Table:ZZ1% ZZ1 (nolock)
-        WHERE       ZZ1.%NotDel%
-            AND         ZZ1.ZZ1_FILIAL  = %Exp:cFil%
-            AND         ZZ1.ZZ1_NUM     = %Exp:cNum%
+        SELECT      NUM  			= isnull(ZC1_NUM	,''),
+                    SEQ  			= isnull(ZC1_SEQ	,''),
+                    EXTENSAO		= isnull(ZC1_EXTENS	,''),
+                    EMISSAO			= isnull(ZC1_EMISSA	,''),
+                    HORA			= isnull(ZC1_HRINCL	,''),
+                    USERID			= isnull(ZC1_USRINC	,''),
+                    USERNOME		= isnull(ZC1_LGINCL	,''),
+                    NOMEARQ		    = isnull(ZC1_NOMEAR	,''),
+                    MODULO		    = isnull(ZC1_MODORI	,''),
+                    ROTINA		    = isnull(ZC1_ROTORI	,''),
+                    FILIAL			= isnull(ZC1_FILIAL	,''), 
+                    ARQ             = isnull(ZC1_ARQ	,'')
+        FROM        %Table:ZC1% ZC1 (nolock)
+        WHERE       ZC1.%NotDel%
+            AND         ZC1.ZC1_FILIAL  = %Exp:cFil%
+            AND         ZC1.ZC1_NUM     = %Exp:cNum%
         ORDER BY    NUM, SEQ
 
     EndSql    
@@ -59,8 +66,13 @@ User Function Z_ABREARQ()
 						TRB->SEQ			,;	// - Sequencia
 						TRB->EXTENSAO		,;	// - Extensao do arquivo
                         TRB->NOMEARQ		,;	// - Nome do Arquivo
+                        TRB->USERNOME       ,;  // - Nome Usuario
+						TRB->HORA	    	,;	// - Hora
+                        TRB->USERID		    ,;	// - User Id
                         TRB->ARQ            ,;  // - ARQ em Base64
-                        TRB->EMISSAO		})  // - Emissao do arquivo 
+                        TRB->EMISSAO		,;  // - Emissao do arquivo 
+                        TRB->MODULO		    ,;	// - Modulo
+                        TRB->ROTINA         })  // - Rotina 
 
 		TRB->(dbSkip())
 	EndDo
@@ -78,18 +90,26 @@ User Function Z_ABREARQ()
 	@ 010,010 LISTBOX oLbx VAR cVar FIELDS HEADER ;
                             "Nao Conformidade",;
                             "Sequencia",;
-                            "Data Inclusao",;
                             "Extensao",;
-                            "Nome Arquivo" SIZE 490,150 OF oDlg PIXEL
+                            "Nome Arquivo" ,;
+                            "Modulo Origem" ,;
+                            "Rotina Origem" ,;
+                            "Data Inclusao",;
+                            "Hora Inclusao",;
+                            "Usuario Inclusao" SIZE 490,150 OF oDlg PIXEL
 
 	oLbx:SetArray( aVetor )
 	oLbx:bLine := {|| { aVetor[oLbx:nAt,01]  ,;
                         aVetor[oLbx:nAt,02]  ,;
-                        aVetor[oLbx:nAt,06]  ,;
                         aVetor[oLbx:nAt,03]  ,;
-                        aVetor[oLbx:nAt,04]  }}
+                        AllTrim(aVetor[oLbx:nAt,04])  ,;
+                        AllTrim(aVetor[oLbx:nAt,10])  ,;
+                        AllTrim(aVetor[oLbx:nAt,11])  ,;
+                        aVetor[oLbx:nAt,09]  ,;
+                        aVetor[oLbx:nAt,06]  ,;
+                        AllTrim(aVetor[oLbx:nAt,05])  }}
 
-	@ 180,200 Button btnGrv  PROMPT  "Abrir"  	Size 040,13 Action DinUnZip(aVetor[oLbx:nAt,05], aVetor[oLbx:nAt,04]) OF oDlg  PIXEL
+	@ 180,200 Button btnGrv  PROMPT  "Abrir"  	Size 040,13 Action DinUnZip(aVetor[oLbx:nAt,08], aVetor[oLbx:nAt,04]) OF oDlg  PIXEL
     @ 180,280 Button btnExcl PROMPT "Excluir"  	Size 040,13 Action CloseDLG(aVetor[oLbx:nAt,01], aVetor[oLbx:nAt,02], aVetor[oLbx:nAt,04]) OF oDlg  PIXEL
  	
     ACTIVATE DIALOG oDlg CENTERED
@@ -120,7 +140,7 @@ Static Function DinUnZip(cBinB64, cNomeArq)
     nFile := FCreate(cTemp + AllTrim(cNomeArq))
 
     IF nFile < 0
-        MsgInfo("Erro ao criar o arquivo temporário.")
+        FWAlertInfo("Erro ao criar o arquivo temporário.", "Z_ABREARQ - Mensagem ...")
         RETURN
     ENDIF
 
@@ -157,17 +177,17 @@ Static Function CloseDLG(cNum, cSeq, cNomeArq)
 		    return
 	    ElseIf nOpc == 1
             If FErase( cTemp + Alltrim(cNomeArq) ) == -1
-                MsgInfo('Nao foi possivel deletar arquivo.')
+                FWAlertInfo('Nao foi possivel deletar arquivo.', "Z_ABREARQ - Mensagem ...")
             Else
-                MsgInfo('Arquivo deletado com sucesso.')
+                FWAlertInfo('Arquivo deletado com sucesso.', "Z_ABREARQ - Mensagem ...")
             EndIf
         else
-            ZZ1->(DbSetOrder(1))
-            If ZZ1->(DbSeek(xFilial("ZZ1")+cNum + cSeq))
-                Reclock("ZZ1",.F.)
-                ZZ1->( dbDelete() )
-                ZZ1->( msUnlock() )
-                MsgInfo('Arquivo deletado com sucesso.')
+            ZC1->(DbSetOrder(1))
+            If ZC1->(DbSeek(xFilial("ZC1")+cNum + cSeq))
+                Reclock("ZC1",.F.)
+                ZC1->( dbDelete() )
+                ZC1->( msUnlock() )
+                FWAlertInfo('Arquivo deletado com sucesso.', "Z_ABREARQ - Mensagem ...")
             EndIf
         EndIf
     else
@@ -176,12 +196,12 @@ Static Function CloseDLG(cNum, cSeq, cNomeArq)
         If nOpc == 2
 		    return
         Else 
-            ZZ1->(DbSetOrder(1))
-            If ZZ1->(DbSeek(xFilial("ZZ1")+cNum + cSeq))
-                Reclock("ZZ1",.F.)
-                ZZ1->( dbDelete() )
-                ZZ1->( msUnlock() )
-                MsgInfo('Arquivo deletado com sucesso.')
+            ZC1->(DbSetOrder(1))
+            If ZC1->(DbSeek(xFilial("ZC1")+cNum + cSeq))
+                Reclock("ZC1",.F.)
+                ZC1->( dbDelete() )
+                ZC1->( msUnlock() )
+                FWAlertInfo('Arquivo deletado com sucesso.', "Z_ABREARQ - Mensagem ...")
             EndIf
         EndIf
     Endif
