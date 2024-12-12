@@ -8,43 +8,29 @@ Funcao chamada do P.E MTA440C9
 @type function
 /*/
 User Function Z_MTA440C9()
-    Local cFrom     := SuperGetMV("MV_RELFROM",,"" )
-    Local cTo       := SuperGetMV("ZZ_MAILPED",,"" )
-    Local cSubject  := ""
-    Local cBody     := ""
-    Local cFilNome  := ""
+    Local nIntWMS		:= GETMV( "MV_INTWMS" )
+    Local cPedido       := SC9->C9_PEDIDO
+    Local cItem         := SC9->C9_ITEM
+    Local cProduto      := SC9->C9_PRODUTO
 
-    //Gravo Logs da libercao
-    RecLock("SC9",.F.)
-        SC9->C9_ZZDTLIB  := Date()
-        SC9->C9_ZZHRLIB  := Time()
-        SC9->C9_ZZUSLIB  := UsrRetName(RetCodUsr())
-    SC9->(MsUnlock())
-
-    //Envia email
-    If ExistBlock("Z_EnvMail") .AND. !Empty(cFrom) .AND. !Empty(cTo)
-        cFilNome    := FwFilialName( cEmpAnt, cFilAnt, 1 )
-        cSubject    := "Pedido de Venda "+Alltrim(SC9->C9_PEDIDO)+" Liberado"
-        
-        cBody   := '<body>'
-        cBody   += '<table width="100%" border="0"> '
-        cBody   += ' <br>'
-        cBody   += '  <tr>'
-        cBody   += '   <td><font size="3" face="Arial, Helvetica, sans-serif">Pedido de venda '+Alltrim(SC9->C9_PEDIDO)+' liberado</font></td>'
-        cBody   += '  </tr>'
-        cBody   += '<table width="100%" border="0"> '
-        cBody   += ' <br>'
-        cBody   += '  <tr>'
-        cBody   += '   <td><font size="3" face="Arial, Helvetica, sans-serif">Atenciosamente</font></td>'
-        cBody   += '  </tr>'
-        cBody   += ' <br>'
-        cBody   += '  <tr>'
-        cBody   += '   <td><font size="3" face="Arial, Helvetica, sans-serif">Vidara '+cFilNome+'</font></td>'
-        cBody   += '  </tr>'
-        cBody   += ' <br>'
-        cBody   += '</table>'
-
-        U_Z_EnvMail(cFrom,cTo,cSubject,cBody)
+    //Verifica condições para bloquear pedido para liberacao e separacao
+    If !nIntWMS 
+        SC5->(DbSetOrder(1))
+        If SC5->(DbSeek(xFilial("SC5")+cPedido))
+            If SC5->C5_TIPO = "N"
+                SC6->(DbSetOrder(1))
+                If SC6->(DbSeek(xFilial("SC6")+cPedido+cItem+cProduto))
+                    SF4->(DbSetOrder(1))
+                    If SF4->(DbSeek(xFilial("SF4")+SC6->C6_TES)) 
+                        If SF4->F4_ESTOQUE  = "S"
+                            RecLock("SC9",.F.)
+                                SC9->C9_ZZFASE  := "B"
+                            SC9->(MsUnlock())
+                        EndIf
+                    EndIf
+                EndIf
+            EndIf
+        EndIf
     EndIf
-
+    
 Return

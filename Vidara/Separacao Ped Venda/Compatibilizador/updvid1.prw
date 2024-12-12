@@ -796,30 +796,6 @@ aEstrut := { "X6_FIL"    , "X6_VAR"    , "X6_TIPO"   , "X6_DESCRIC", "X6_DSCSPA"
 
 aAdd( aSX6, { ;
 	'  '																	, ; //X6_FIL
-	'ZZ_FILWMS'																, ; //X6_VAR
-	'C'																		, ; //X6_TIPO
-	'Filiais WMS'															, ; //X6_DESCRIC
-	''																		, ; //X6_DSCSPA
-	''																		, ; //X6_DSCENG
-	''																		, ; //X6_DESC1
-	''																		, ; //X6_DSCSPA1
-	''																		, ; //X6_DSCENG1
-	''																		, ; //X6_DESC2
-	''																		, ; //X6_DSCSPA2
-	''																		, ; //X6_DSCENG2
-	''																		, ; //X6_CONTEUD
-	''																		, ; //X6_CONTSPA
-	''																		, ; //X6_CONTENG
-	'U'																		, ; //X6_PROPRI
-	''																		, ; //X6_VALID
-	''																		, ; //X6_INIT
-	''																		, ; //X6_DEFPOR
-	''																		, ; //X6_DEFSPA
-	''																		, ; //X6_DEFENG
-	''																		} ) //X6_PYME
-
-aAdd( aSX6, { ;
-	'  '																	, ; //X6_FIL
 	'ZZ_MAILPED'															, ; //X6_VAR
 	'C'																		, ; //X6_TIPO
 	'Lista de envio de email de liberacao e separacao d'					, ; //X6_DESCRIC

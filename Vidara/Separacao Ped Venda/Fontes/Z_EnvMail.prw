@@ -47,7 +47,7 @@ user function Z_EnvMail(_cFrom,_cTo,_cSubject,cBody,aFiles,_cBcc,_cCc)
       If At("@",cMailConta) > 0
          cFrom := cMailConta
       Else
-         Msg("Remetente não definido!",.T.)
+         CONOUT("Remetente não definido!")
          Return .F.
       EndIf
    EndIf
@@ -86,7 +86,7 @@ user function Z_EnvMail(_cFrom,_cTo,_cSubject,cBody,aFiles,_cBcc,_cCc)
                nErro := oMail:SMTPAuth(cUsuario, cMailSenha)
                If nErro != 0
                
-                  Msg("Falha na conexão com servidor de e-mail:" + _ENTER + oMail:GetErrorString(nErro) ,.T.)		
+                  CONOUT("Falha na conexão com servidor de e-mail:" + _ENTER + oMail:GetErrorString(nErro) )		
                   Return .F.
                EndIf
             EndIf
@@ -115,7 +115,7 @@ user function Z_EnvMail(_cFrom,_cTo,_cSubject,cBody,aFiles,_cBcc,_cCc)
          
          If !(nErro == 0)
             cMsgErro := oMail:GetErrorString(nErro)
-			Msg("Falha no envio do e-mail: " + _ENTER + cMsgErro,.T.)
+			CONOUT("Falha no envio do e-mail: " + _ENTER + cMsgErro)
 			Return .F.
  		EndIf
 
@@ -194,3 +194,5 @@ Static Function Msg(cTexto,lErro)
    EndIf
 
 Return nil
+
+

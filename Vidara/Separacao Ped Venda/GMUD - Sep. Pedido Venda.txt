@@ -5,13 +5,23 @@ Passo-a-Passo para instalação da Separacao Ped Venda:
 	Separacao Ped Venda\Compatibilizador\updvid1.prw		- compatibilizador
     Separacao Ped Venda\Ponto de Entrada\MTA440C9.prw  	    - P.E que acorre apos gravação de cada linha da SC9 na liberacao do pedido de venda.
     Separacao Ped Venda\Fontes\Z_BRWPEDL.prw			    - Função para gerar separacao de pedidos de venda
-    Separacao Ped Venda\Fontes\Z_EnvMail.prw			    - Função que envia e-mail
+    Separacao Ped Venda\Fontes\Z_BRWLIBE.prw			    - Função para selecionar itens do pedido a separar
+    Separacao Ped Venda\Fontes\Z_BRWSEPA.prw			    - Função para selecionar itens do pedido a separar
     Separacao Ped Venda\Fontes\Z_MTA440C9.prw			    - Funcao chamada do P.E MTA440C9
-
+    Separacao Ped Venda\Fontes\Z_JOBPEDL.prw			    - Funcao chamada do P.E MTA440C9
+    Separacao Ped Venda\Fontes\Z_EnvMail.prw			    - Função que envia e-mail
+    
 2. Executar compatibilizador
     Separacao Ped Venda\Compatibilizador\updvid1.prw	    - compatibilizador
 
 3. Criar Menu
     SIGAFAT > Miscelanea > Especifico > Atualizacoes > Z_BRWPEDL
 
+4 - Ativar o Job
+	U_Z_JOBPEDL() - Rotina para consultar status do link de pagamento
+		Tempo de execução: a cada 60 minutos
+		Modulo: Faturamento
+		Empresa/Filial: ;
+		Execução: Diario / Sem data de termino / Descartar atrasados
+		Ambiente: 
 .Fim
